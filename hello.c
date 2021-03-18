@@ -108,7 +108,7 @@ int main(){
     int right = 0;
 
     int running = 1;
-    
+    int mouse = 0;
     int stage = 0;
     int bg_offset = (250 * 3);
 
@@ -180,14 +180,21 @@ int main(){
         
         // doing some mouse actions, this might be the point to figure out how keyboard and
         // mouse play nice together ...
-        
         int mouse_x, mouse_y;
         int buttons = SDL_GetMouseState(&mouse_x, &mouse_y);
+        // switch mouse control on and off
+        if(buttons & SDL_BUTTON(SDL_BUTTON_RIGHT)) mouse =  mouse ? 0:1; 
+        // switch behaviour of the sprite from huntig to running from mouse pointer
+        if(buttons & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+            x_velo = -x_velo;
+            y_velo = -y_velo;
+        }
         int target_x = mouse_x - dest.w / 2;
         int target_y = mouse_y - dest.h / 2;
         float delta_x = target_x - x_pos;
         float delta_y = target_y -y_pos;
         float distance = sqrt(delta_x * delta_x + delta_y * delta_y);
+        
 
         // we do the sprite selection based on a few time related things so we see the little 
         // guy moving in a sane way  ....
@@ -198,15 +205,28 @@ int main(){
         player_sprite.x = frame * 32;
         // move in the right direction ? This relates to mouse input and is shakey  at best
         // for keyboard we need to rething a little 
-        if ((delta_y < -5) &&(-5 > delta_x < 5))
-            player_sprite.y = 96;
-        if ((delta_y > 5) &&(-5 > delta_x < 5))
-            player_sprite.y = 0;
-        if ((delta_x < -5) &&(-5 > delta_y < 5))
-            player_sprite.y = 32 ;
-        if ((delta_x > 5) &&(-5 > delta_y < 5))
-            player_sprite.y = 64;
-        
+        if(mouse) {
+            if ((delta_y < -5) &&(-5 > delta_x < 5))
+                player_sprite.y = 96;
+            if ((delta_y > 5) &&(-5 > delta_x < 5))
+                player_sprite.y = 0;
+            if ((delta_x < -5) &&(-5 > delta_y < 5))
+                player_sprite.y = 32 ;
+            if ((delta_x > 5) &&(-5 > delta_y < 5))
+                player_sprite.y = 64;
+        } else {
+            if (up)
+                player_sprite.y = 96;
+            if (down)
+                player_sprite.y = 0;
+            if (left)
+                player_sprite.y = 32 ;
+            if (right)
+                player_sprite.y = 64;
+
+        }
+
+
 
         player_sprite.h = dest.h;
         player_sprite.w = dest.w;
@@ -215,15 +235,11 @@ int main(){
         if(distance < 5) {
             player_sprite.x = 0;
             x_velo = y_velo = 0;
-        } else {
+        } else if(mouse) {
             x_velo = delta_x * SCROLL_SPEED / distance;
             y_velo = delta_y * SCROLL_SPEED / distance;
         }
         // just make the mouse chase the sprite or the other way round 
-        if(buttons & SDL_BUTTON(SDL_BUTTON_LEFT)) {
-            x_velo = -x_velo;
-            y_velo = -y_velo;
-        }
 
         if(up && !down)
             y_velo = -SCROLL_SPEED;
