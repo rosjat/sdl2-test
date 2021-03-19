@@ -175,7 +175,10 @@ int main(){
 
     int running = 1;
     int mbutton = 0;
+    
     int screen_counter = 0;
+    
+    int bg_show = 1;
     int bg_offset_x = (260 * 2);
     int bg_offset_y = 736;
 
@@ -193,6 +196,10 @@ int main(){
                 case SDL_KEYDOWN:
                 {
                     switch(event.key.keysym.scancode) {
+                        case SDL_SCANCODE_B:
+                        {
+                            bg_show = 0;
+                        }break;
                         case SDL_SCANCODE_W:
                         case SDL_SCANCODE_UP:
                         {
@@ -218,6 +225,10 @@ int main(){
                 case SDL_KEYUP:
                 {
                     switch(event.key.keysym.scancode) {
+                        case SDL_SCANCODE_B:
+                        {
+                            bg_show =1;
+                        }break;
                         case SDL_SCANCODE_W:
                         case SDL_SCANCODE_UP:
                         {
@@ -367,7 +378,8 @@ int main(){
         dest.y = (int) y_pos;
         SDL_SetRenderDrawColor(renderer, 10,23,36,255);
         SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, bg, &bg_rect, &bg_part);
+        if(bg_show)
+            SDL_RenderCopy(renderer, bg, &bg_rect, &bg_part);
         SDL_RenderCopy(renderer, player, &player_sprite, &dest);
         // render some blocks
         for(int x = 0; x < stage_one.screens[screen_counter].block_count;x++) {
