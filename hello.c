@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define WINDOW_HEIGHT       (480)
-#define WINDOW_WIDTH        (640)
+#define WINDOW_HEIGHT       (230)//(480)
+#define WINDOW_WIDTH        (256)//(640)
 
 #define SCROLL_SPEED        (300)
 
@@ -17,10 +17,16 @@
 #define BLOCK_UNIT_HEIGHT   (32)
 
 #define SCREEN_COUNT        (3)
-#define SCREEN_HEIGHT       (225)
-#define SCREEN_WIDTH        (245)
+#define SCREEN_HEIGHT       (230)
+#define SCREEN_WIDTH        (256)
 
 #define STAGE_COUNT         (1)
+
+typedef struct {
+    int id;
+    SDL_Rect* trect;
+    SDL_Rect* brect;
+} block;
 
 typedef struct {
     int x;
@@ -28,7 +34,7 @@ typedef struct {
     int width;
     int height;
     int block_count;
-    SDL_Rect* blocks;
+    block* blocks;
 } screen;
 
 typedef struct {
@@ -41,7 +47,41 @@ int main(){
     SDL_Texture* player;
     SDL_Texture* bg;
     // prepares some things for the stage 
+    // TODO: figure out why  declaring stage stage_one; prevents
+    //       the inital drawing of the character sprite ...
     srand(time(0));
+    stage stage_one;
+    stage_one.screens = malloc(SCREEN_COUNT * sizeof *stage_one.screens);
+    memset(stage_one.screens, 0, SCREEN_COUNT * sizeof *stage_one.screens);
+    stage_one.screen_count = SCREEN_COUNT;
+    for(int x = 0; x < stage_one.screen_count; x++) {
+        screen s; 
+        s.width = SCREEN_WIDTH;
+        s.height = SCREEN_HEIGHT;
+        s.x = 0;
+        s.y = 0;
+        s.blocks = malloc(BLOCK_COUNT * sizeof *s.blocks);
+        memset(s.blocks, 0 , BLOCK_COUNT * sizeof *s.blocks);
+        s.block_count = 0;
+        stage_one.screens[x] = s;
+    }
+    stage_one.screens[0].block_count = 2;
+
+    stage_one.screens[0].blocks[0] = (block){ 0, &(SDL_Rect){221, 127, 
+                                                 BLOCK_UNIT_WIDTH,
+                                                 BLOCK_UNIT_HEIGHT}, 
+                                                 &(SDL_Rect){WINDOW_WIDTH - BLOCK_UNIT_WIDTH / 2, 
+                                                 BLOCK_UNIT_HEIGHT * 1.5 +4, 
+                                                 BLOCK_UNIT_WIDTH,
+                                                 BLOCK_UNIT_HEIGHT} };
+    stage_one.screens[0].blocks[1] = (block){ 1, &(SDL_Rect){189, 127, 
+                                                 BLOCK_UNIT_WIDTH,
+                                                 BLOCK_UNIT_HEIGHT}, 
+                                                 &(SDL_Rect){ WINDOW_WIDTH - BLOCK_UNIT_WIDTH  - BLOCK_UNIT_WIDTH / 2, 
+                                                 BLOCK_UNIT_HEIGHT * 1.5 +4, 
+                                                 BLOCK_UNIT_WIDTH,
+                                                 BLOCK_UNIT_HEIGHT} };                                             
+
 
     /* Initialize Start 
 
@@ -87,6 +127,8 @@ int main(){
     /* adding bitmaps to textures */ 
     player = SDL_CreateTextureFromSurface(renderer, surface);
     surface = IMG_Load("img/bg.png");
+    Uint32 colorkey = SDL_MapRGB(surface->format, 255, 255, 255);
+    SDL_SetColorKey(surface, SDL_TRUE, colorkey);
     bg = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
     if(!player || !bg) {
@@ -132,30 +174,11 @@ int main(){
     int right = 0;
 
     int running = 1;
-    int mouse = 0;
+    int mbutton = 0;
     int screen_counter = 0;
-    int bg_offset = (250 * 3);
+    int bg_offset_x = (260 * 2);
+    int bg_offset_y = 736;
 
-    stage stage_one;
-    /*
-    stage_one.screens = malloc(SCREEN_COUNT * sizeof *stage_one.screens);
-    memset(stage_one.screens, 0, SCREEN_COUNT * sizeof *stage_one.screens);
-    stage_one.screen_count = SCREEN_COUNT;
-    for(int x = 0; x < stage_one.screen_count; x++) {
-        screen s; 
-        s.blocks = malloc(BLOCK_COUNT * sizeof *s.blocks);
-        memset(s.blocks, 0 , BLOCK_COUNT * sizeof *s.blocks);
-        s.block_count = BLOCK_COUNT;
-        if(x > 0){
-            for(int y=0; y < s.block_count; y++) {
-                uint x_rand = (rand() % 640);
-                uint y_rand = (rand() % 480);
-                s.blocks[y] = (SDL_Rect){  x_rand+ 32, y_rand - 128, BLOCK_UNIT_WIDTH, BLOCK_UNIT_HEIGHT};;
-            }
-        }
-        stage_one.screens[x] = s;
-    }
-*/
     // the so called game loop, i guess we know what it does
     while(running) {
 
@@ -217,6 +240,14 @@ int main(){
                         }break;
                     }
                 }break;
+                case SDL_MOUSEBUTTONDOWN:
+                {
+                    mbutton = 1;
+                }break; 
+                case SDL_MOUSEBUTTONUP:
+                {
+                    mbutton = 0;
+                }break;
                 default:
                     break;
             }
@@ -228,17 +259,10 @@ int main(){
         // mouse play nice together ...
         int mouse_x, mouse_y;
         int buttons = SDL_GetMouseState(&mouse_x, &mouse_y);
-        // switch mouse control on and off
-        if(buttons & SDL_BUTTON(SDL_BUTTON_RIGHT)) mouse =  mouse ? 0:1; 
-        // switch behaviour of the sprite from huntig to running from mouse pointer
-        if(buttons & SDL_BUTTON(SDL_BUTTON_LEFT)) {
-            x_velo = -x_velo;
-            y_velo = -y_velo;
-        }
         int target_x = mouse_x - dest.w / 2;
         int target_y = mouse_y - dest.h / 2;
         float delta_x = target_x - x_pos;
-        float delta_y = target_y -y_pos;
+        float delta_y = target_y -y_pos * 0.4;
         float distance = sqrt(delta_x * delta_x + delta_y * delta_y);
         
 
@@ -251,7 +275,7 @@ int main(){
         player_sprite.x = frame * 32;
         // move in the right direction ? This relates to mouse input and is shakey  at best
         // for keyboard we need to rething a little 
-        if(mouse) {
+        if(mbutton) {
             if ( (delta_y < -5) && ( (-5 > delta_x) || (delta_x < 5) ) )
                 player_sprite.y = 96;
             if ( (delta_y > 5) && ( (-5 > delta_x) || (delta_x < 5) ) )
@@ -281,7 +305,7 @@ int main(){
         if(distance < 5) {
             player_sprite.x = 0;
             x_velo = y_velo = 0;
-        } else if(mouse) {
+        } else if(mbutton) {
             x_velo = delta_x * SCROLL_SPEED / distance;
             y_velo = delta_y * SCROLL_SPEED / distance;
         }
@@ -307,8 +331,8 @@ int main(){
         bg_part.y = 0;
         bg_rect.w = SCREEN_WIDTH;
         bg_rect.h = SCREEN_HEIGHT;
-        bg_rect.x = 265 * 2;
-        bg_rect.y = bg_offset + (bg_rect.h * screen_counter);
+        bg_rect.x = bg_offset_x;
+        bg_rect.y = bg_offset_y + (bg_rect.h * screen_counter);
 
         //collition detection with the window bounds and setting the bg
         if(x_pos <= 0) {
@@ -341,17 +365,15 @@ int main(){
 
         dest.x = (int) x_pos;
         dest.y = (int) y_pos;
-        
+        SDL_SetRenderDrawColor(renderer, 10,23,36,255);
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, bg, &bg_rect, &bg_part);
         SDL_RenderCopy(renderer, player, &player_sprite, &dest);
         // render some blocks
-        /*
         for(int x = 0; x < stage_one.screens[screen_counter].block_count;x++) {
-           SDL_RenderFillRect(renderer, &stage_one.screens[screen_counter].blocks[x]);
+            SDL_RenderCopy(renderer, bg, (stage_one.screens[screen_counter].blocks[x].trect),
+                                         (stage_one.screens[screen_counter].blocks[x].brect));
         }
-*/
-
         SDL_RenderPresent(renderer);
     }
 
