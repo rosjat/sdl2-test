@@ -53,3 +53,4 @@ dkms.conf
 hello
 .vscode/
 .git/
+*.core

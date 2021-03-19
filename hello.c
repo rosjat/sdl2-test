@@ -7,17 +7,41 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define WINDOW_HEIGHT (480)
-#define WINDOW_WIDTH  (640)
+#define WINDOW_HEIGHT       (480)
+#define WINDOW_WIDTH        (640)
 
-#define SCROLL_SPEED  (300)
+#define SCROLL_SPEED        (300)
 
+#define BLOCK_COUNT         (5)
+#define BLOCK_UNIT_WIDTH    (32)
+#define BLOCK_UNIT_HEIGHT   (32)
+
+#define SCREEN_COUNT        (3)
+#define SCREEN_HEIGHT       (225)
+#define SCREEN_WIDTH        (245)
+
+#define STAGE_COUNT         (1)
+
+typedef struct {
+    int x;
+    int y;
+    int width;
+    int height;
+    int block_count;
+    SDL_Rect* blocks;
+} screen;
+
+typedef struct {
+    int screen_count;
+    screen* screens; 
+} stage;
 
 int main(){
 
-    
     SDL_Texture* player;
     SDL_Texture* bg;
+    // prepares some things for the stage 
+    srand(time(0));
 
     /* Initialize Start 
 
@@ -109,9 +133,29 @@ int main(){
 
     int running = 1;
     int mouse = 0;
-    int stage = 0;
+    int screen_counter = 0;
     int bg_offset = (250 * 3);
 
+    stage stage_one;
+    /*
+    stage_one.screens = malloc(SCREEN_COUNT * sizeof *stage_one.screens);
+    memset(stage_one.screens, 0, SCREEN_COUNT * sizeof *stage_one.screens);
+    stage_one.screen_count = SCREEN_COUNT;
+    for(int x = 0; x < stage_one.screen_count; x++) {
+        screen s; 
+        s.blocks = malloc(BLOCK_COUNT * sizeof *s.blocks);
+        memset(s.blocks, 0 , BLOCK_COUNT * sizeof *s.blocks);
+        s.block_count = BLOCK_COUNT;
+        if(x > 0){
+            for(int y=0; y < s.block_count; y++) {
+                uint x_rand = (rand() % 640);
+                uint y_rand = (rand() % 480);
+                s.blocks[y] = (SDL_Rect){  x_rand+ 32, y_rand - 128, BLOCK_UNIT_WIDTH, BLOCK_UNIT_HEIGHT};;
+            }
+        }
+        stage_one.screens[x] = s;
+    }
+*/
     // the so called game loop, i guess we know what it does
     while(running) {
 
@@ -173,6 +217,8 @@ int main(){
                         }break;
                     }
                 }break;
+                default:
+                    break;
             }
         }
         
@@ -206,13 +252,13 @@ int main(){
         // move in the right direction ? This relates to mouse input and is shakey  at best
         // for keyboard we need to rething a little 
         if(mouse) {
-            if ((delta_y < -5) &&(-5 > delta_x < 5))
+            if ( (delta_y < -5) && ( (-5 > delta_x) || (delta_x < 5) ) )
                 player_sprite.y = 96;
-            if ((delta_y > 5) &&(-5 > delta_x < 5))
+            if ( (delta_y > 5) && ( (-5 > delta_x) || (delta_x < 5) ) )
                 player_sprite.y = 0;
-            if ((delta_x < -5) &&(-5 > delta_y < 5))
+            if ( (delta_x < -5) && ( (-5 > delta_y) || (delta_y < 5) ) )
                 player_sprite.y = 32 ;
-            if ((delta_x > 5) &&(-5 > delta_y < 5))
+            if ( (delta_x > 5) && ( (-5 > delta_y) || (delta_y < 5) ) )
                 player_sprite.y = 64;
         } else {
             if (up)
@@ -259,19 +305,19 @@ int main(){
         bg_part.h = WINDOW_HEIGHT;
         bg_part.x = 0;
         bg_part.y = 0;
-        bg_rect.w = 245;
-        bg_rect.h = 225;
+        bg_rect.w = SCREEN_WIDTH;
+        bg_rect.h = SCREEN_HEIGHT;
         bg_rect.x = 265 * 2;
-        bg_rect.y = bg_offset + (bg_rect.h * stage);
+        bg_rect.y = bg_offset + (bg_rect.h * screen_counter);
 
         //collition detection with the window bounds and setting the bg
         if(x_pos <= 0) {
             x_pos = 0;
         }
         if(y_pos <= 0) {
-            if(stage > 0)
+            if(screen_counter > 0)
             {
-                stage--;
+                screen_counter--;
                 y_pos = 0 + dest.h;
             }
             else {
@@ -282,9 +328,9 @@ int main(){
             x_pos = WINDOW_WIDTH - dest.w;
         }
         if(y_pos >= WINDOW_HEIGHT - dest.h) {
-            if(stage < 2)
+            if(screen_counter < SCREEN_COUNT -1)
             {
-                stage++;
+                screen_counter++;
                 y_pos = 0 + dest.h;
             }
             else {
@@ -299,6 +345,13 @@ int main(){
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, bg, &bg_rect, &bg_part);
         SDL_RenderCopy(renderer, player, &player_sprite, &dest);
+        // render some blocks
+        /*
+        for(int x = 0; x < stage_one.screens[screen_counter].block_count;x++) {
+           SDL_RenderFillRect(renderer, &stage_one.screens[screen_counter].blocks[x]);
+        }
+*/
+
         SDL_RenderPresent(renderer);
     }
 
