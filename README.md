@@ -6,7 +6,12 @@ its basically a playground for myself to get used to some things in C and have a
 
 good place to start with sdl2: https://wiki.libsdl.org/
 
+### Update 2021/3/20
 
+ - added some structs to work with object and "screens", I need to refactor things if it should turn into something "playable"
+ - added a color key so i can have opacity 
+ - added simple collition detection for the added objects, the way that those objects are added needs to be made easier(maybe config file)
+ 
 ## acknowledgement
 
 Again, this is just here so i have a place to store it, there are no means of making that usefull to someone else!!!
