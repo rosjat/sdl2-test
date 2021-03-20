@@ -409,6 +409,10 @@ int main(){
                 }
             }
         }
+        //make the little guy stop running when we dont move around
+        if(!x_velo && !y_velo)
+            player_sprite.x = 0;
+            
         dest.x = (int) x_pos;
         dest.y = (int) y_pos;
     
