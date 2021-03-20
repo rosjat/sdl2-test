@@ -7,14 +7,16 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define WINDOW_HEIGHT       (230)//(480)
-#define WINDOW_WIDTH        (256)//(640)
+#define WINDOW_HEIGHT       (460)//(480)
+#define WINDOW_WIDTH        (512)//(640)
 
 #define SCROLL_SPEED        (300)
 
 #define BLOCK_COUNT         (5)
-#define BLOCK_UNIT_WIDTH    (32)
-#define BLOCK_UNIT_HEIGHT   (32)
+#define BLOCK_T_UNIT_HEIGHT (32)
+#define BLOCK_T_UNIT_WIDTH  (32)
+#define BLOCK_UNIT_WIDTH    (64)
+#define BLOCK_UNIT_HEIGHT   (64)
 
 #define SCREEN_COUNT        (3)
 #define SCREEN_HEIGHT       (230)
@@ -65,24 +67,36 @@ int main(){
         s.block_count = 0;
         stage_one.screens[x] = s;
     }
-    stage_one.screens[0].block_count = 2;
+    stage_one.screens[0].block_count = 4;
 
     stage_one.screens[0].blocks[0] = (block){ 0, &(SDL_Rect){221, 127, 
-                                                 BLOCK_UNIT_WIDTH,
-                                                 BLOCK_UNIT_HEIGHT}, 
-                                                 &(SDL_Rect){WINDOW_WIDTH - BLOCK_UNIT_WIDTH / 2, 
-                                                 BLOCK_UNIT_HEIGHT * 1.5 +4, 
+                                                 BLOCK_T_UNIT_WIDTH,
+                                                 BLOCK_T_UNIT_HEIGHT}, 
+                                                 &(SDL_Rect){WINDOW_WIDTH - BLOCK_UNIT_WIDTH / 2 - 2, 
+                                                 BLOCK_UNIT_HEIGHT * 1.5 + 6, 
                                                  BLOCK_UNIT_WIDTH,
                                                  BLOCK_UNIT_HEIGHT} };
     stage_one.screens[0].blocks[1] = (block){ 1, &(SDL_Rect){189, 127, 
-                                                 BLOCK_UNIT_WIDTH,
-                                                 BLOCK_UNIT_HEIGHT}, 
-                                                 &(SDL_Rect){ WINDOW_WIDTH - BLOCK_UNIT_WIDTH  - BLOCK_UNIT_WIDTH / 2, 
-                                                 BLOCK_UNIT_HEIGHT * 1.5 +4, 
+                                                 BLOCK_T_UNIT_WIDTH,
+                                                 BLOCK_T_UNIT_HEIGHT}, 
+                                                 &(SDL_Rect){ WINDOW_WIDTH - BLOCK_UNIT_WIDTH  - BLOCK_UNIT_WIDTH / 2 - 2, 
+                                                 BLOCK_UNIT_HEIGHT * 1.5 + 6, 
                                                  BLOCK_UNIT_WIDTH,
                                                  BLOCK_UNIT_HEIGHT} };                                             
-
-
+    stage_one.screens[0].blocks[2] = (block){ 2, &(SDL_Rect){0, 0, 
+                                                 10,
+                                                 5}, 
+                                                 &(SDL_Rect){ WINDOW_WIDTH - BLOCK_UNIT_WIDTH * 3 + 2, 
+                                                 BLOCK_UNIT_HEIGHT * 4 + BLOCK_UNIT_HEIGHT / 2 + 8, 
+                                                 BLOCK_UNIT_WIDTH * 3,
+                                                 BLOCK_UNIT_HEIGHT} };
+    stage_one.screens[0].blocks[3] = (block){ 3, &(SDL_Rect){0, 0, 
+                                                 10,
+                                                 5}, 
+                                                 &(SDL_Rect){ WINDOW_WIDTH - BLOCK_UNIT_WIDTH * 7 + BLOCK_UNIT_WIDTH/ 2 + 2, 
+                                                 BLOCK_UNIT_HEIGHT * 5 + BLOCK_UNIT_HEIGHT / 2 + 8, 
+                                                 BLOCK_UNIT_WIDTH * 4,
+                                                 BLOCK_UNIT_HEIGHT * 1.5} }; 
     /* Initialize Start 
 
         everything in this block is needed to get the SDL stuff going.
@@ -345,7 +359,7 @@ int main(){
         bg_rect.x = bg_offset_x;
         bg_rect.y = bg_offset_y + (bg_rect.h * screen_counter);
 
-        //collition detection with the window bounds and setting the bg
+        //collition detection with the window bounds and objects
         if(x_pos <= 0) {
             x_pos = 0;
         }
@@ -372,16 +386,38 @@ int main(){
                 y_pos = WINDOW_HEIGHT - dest.h;
             }
         }
-
-
+        for(int b = 0 ; b < stage_one.screens[screen_counter].block_count; b++) {
+            int bx = stage_one.screens[screen_counter].blocks[b].brect->x;
+            int by = stage_one.screens[screen_counter].blocks[b].brect->y;
+            int bh = stage_one.screens[screen_counter].blocks[b].brect->h;
+            int bw = stage_one.screens[screen_counter].blocks[b].brect->w;
+            // hit a block?
+            if (y_pos + dest.h > by && y_pos < by+bh) {
+                // at the left
+                if(x_pos + dest.w > bx && x_pos < bx ) {
+                    x_pos = bx - dest.w;
+                }else if(x_pos < bx + bw && x_pos + dest.w > bx + bw) {
+                    x_pos = bx + bw;
+                }
+            }
+            if(x_pos + dest.w > bx && x_pos < bx+bw ) {
+                //at the bottom?
+                if(y_pos < by + bh && y_pos > by) {
+                        y_pos = by + bh;
+                }else if(y_pos + dest.h > by && y_pos < by ) {
+                        y_pos = by - dest.h;
+                }
+            }
+        }
         dest.x = (int) x_pos;
         dest.y = (int) y_pos;
+    
         SDL_SetRenderDrawColor(renderer, 10,23,36,255);
         SDL_RenderClear(renderer);
         if(bg_show)
             SDL_RenderCopy(renderer, bg, &bg_rect, &bg_part);
         SDL_RenderCopy(renderer, player, &player_sprite, &dest);
-        // render some blocks
+        // render blocks
         for(int x = 0; x < stage_one.screens[screen_counter].block_count;x++) {
             SDL_RenderCopy(renderer, bg, (stage_one.screens[screen_counter].blocks[x].trect),
                                          (stage_one.screens[screen_counter].blocks[x].brect));
