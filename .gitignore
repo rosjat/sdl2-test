@@ -50,7 +50,7 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
-hello
+sdl2-test
 .vscode/
 .git/
 *.core

@@ -4,11 +4,11 @@ CFLAGS := `sdl2-config --libs --cflags` -ggdb3 -Wall -lSDL2_image -lm
 
 HDRS := 
 
-SCRS := hello.c
+SCRS := main.c
 
 OBJS := $(SCRS:.c=.o)
 
-EXEC := hello
+EXEC := sdl2-test
 
 all: $(EXEC)
 
