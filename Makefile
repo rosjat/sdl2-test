@@ -2,9 +2,9 @@ CC :=clang
 
 CFLAGS := `sdl2-config --libs --cflags` -ggdb3 -Wall -lSDL2_image -lm
 
-HDRS := 
+HDRS := sdl2-test.h
 
-SCRS := main.c
+SCRS := main.c utils.c
 
 OBJS := $(SCRS:.c=.o)
 
