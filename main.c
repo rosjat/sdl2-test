@@ -143,10 +143,10 @@ int main(){
             if ( (delta_x > 5) && ( (-5 > delta_y) || (delta_y < 5) ) )
                 player_sprite.y = 64;
         } else {
-            //if (prog_state.up)
-            //    player_sprite.y = 96;
-            //if (prog_state.down)
-            //    player_sprite.y = 0;
+            if (prog_state.up)
+                player_sprite.y = 96;
+            if (prog_state.down)
+                player_sprite.y = 96;
             if (prog_state.left)
                 player_sprite.y = 32 ;
             if (prog_state.right)
@@ -167,18 +167,7 @@ int main(){
             prog_state.x_velo = delta_x * SCROLL_SPEED / distance;
             prog_state.y_velo = delta_y * SCROLL_SPEED / distance;
         }
-        // just make the mouse chase the sprite or the other way round 
 
-        /* if(up && !down)
-            y_velo = -SCROLL_SPEED;
-        if(down && !up)
-            y_velo = SCROLL_SPEED; 
-        if(left && !right)
-            
-        if(right && !left)
-            x_velo = SCROLL_SPEED;
-            */
-        
         // setting up the background so we can change it when going up and down
         SDL_Rect bg_part;
         bg_part.w = WINDOW_WIDTH;
@@ -196,61 +185,7 @@ int main(){
         prog_state.y_velo += 10 * GRAVITY;
 
         //collition detection with the window bounds and objects
-        if(prog_state.x_pos <= 0) {
-            prog_state.x_pos = 0;
-        }
-        if(prog_state.y_pos <= 0) {
-            if(prog_state.screen_counter > 0)
-            {
-                prog_state.screen_counter--;
-                prog_state.y_pos = 0 + dest.h;
-            }
-            else {
-                prog_state.y_pos = 0;
-            }
-        }
-        if(prog_state.x_pos >= WINDOW_WIDTH - dest.w) {
-            prog_state.x_pos = WINDOW_WIDTH - dest.w;
-        }
-        if(prog_state.y_pos >= WINDOW_HEIGHT - dest.h) {
-            if(prog_state.screen_counter < SCREEN_COUNT -1)
-            {
-                prog_state.screen_counter++;
-                prog_state.y_pos = 0 + dest.h;
-            }
-            else {
-                prog_state.y_pos = WINDOW_HEIGHT - dest.h;
-                prog_state.y_velo = 0;
-            }
-        }
-
-        for(int b = 0 ; b < stage_one.screens[prog_state.screen_counter].block_count; b++) {
-            int bx = stage_one.screens[prog_state.screen_counter].blocks[b].brect->x;
-            int by = stage_one.screens[prog_state.screen_counter].blocks[b].brect->y;
-            int bh = stage_one.screens[prog_state.screen_counter].blocks[b].brect->h;
-            int bw = stage_one.screens[prog_state.screen_counter].blocks[b].brect->w;
-            // hit a block?
-            if (prog_state.y_pos + dest.h > by && prog_state.y_pos < by+bh) {
-                // at the left
-                if(prog_state.x_pos + dest.w > bx && prog_state.x_pos < bx ) {
-                    prog_state.x_pos = bx - dest.w;
-                }else if(prog_state.x_pos < bx + bw && prog_state.x_pos + dest.w > bx + bw) {
-                    prog_state.x_pos = bx + bw;
-                }
-                
-            }
-            if(prog_state.x_pos + dest.w > bx && prog_state.x_pos < bx+bw ) {
-                //at the bottom?
-                if(prog_state.y_pos < by + bh && prog_state.y_pos > by) {
-                        prog_state.y_pos = by + bh;
-                        prog_state.y_velo = 0;
-                }else if(prog_state.y_pos + dest.h > by && prog_state.y_pos < by ) {
-                        prog_state.y_pos = by - dest.h;
-                        prog_state.y_velo = 0;
-                }
-                
-            }
-        }
+        test_collision(&stage_one, &prog_state, &dest);
         //make the little guy stop running when we dont move around
         if(!prog_state.x_velo && !prog_state.y_velo)
             player_sprite.x = 0;
@@ -269,6 +204,7 @@ int main(){
                                          (stage_one.screens[prog_state.screen_counter].blocks[x].brect));
         }
         SDL_RenderPresent(renderer);
+        
     }
 
     SDL_DestroyTexture(player);

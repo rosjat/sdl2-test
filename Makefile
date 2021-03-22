@@ -1,6 +1,6 @@
 CC :=clang
 
-CFLAGS := `sdl2-config --libs --cflags` -ggdb3 -Wall -lSDL2_image -lm
+CFLAGS := `sdl2-config --libs --cflags` -ggdb3 -Wall -lSDL2_image -lm -mconsole
 
 HDRS := sdl2-test.h
 

@@ -30,6 +30,7 @@
 
 typedef struct {
     int id;
+    int enter;
     SDL_Rect* trect;
     SDL_Rect* brect;
 } block;
@@ -73,4 +74,5 @@ stage init_stage(void);
 
 void init_screens(stage* s);
 
+void test_collision(stage* stg, state* ps,SDL_Rect* sprite);
 #endif

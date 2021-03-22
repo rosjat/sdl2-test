@@ -8,6 +8,13 @@ its basically a playground for myself to get used to some things in C and have a
 
 good place to start with sdl2: https://wiki.libsdl.org/
 
+### Update 2021/3/22
+
+ - moved helper functions into seperate file
+ - added a header file
+ - refinded collision tests a little but its not very sophisticated still
+   - added "climbing" too
+ 
 ### Update 2021/3/21
 
  - moved event handling into seperate function (this might happen with all the main parts like event handling or redraw)
