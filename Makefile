@@ -1,8 +1,8 @@
 CC :=clang
 
-CFLAGS := `sdl2-config --libs --cflags` -ggdb3 -Wall -lSDL2_image -lm -mconsole
+CFLAGS := `sdl2-config --libs --cflags` -ggdb3 -Wall -lSDL2_image -lm #-mconsole
 
-HDRS := sdl2-test.h
+HDRS := sdl2-test_private.h sdl2-test.h
 
 SCRS := main.c utils.c
 

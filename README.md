@@ -8,6 +8,13 @@ its basically a playground for myself to get used to some things in C and have a
 
 good place to start with sdl2: https://wiki.libsdl.org/
 
+### Update 2021/3/23 
+
+- moved internal stuff in a private header file 
+- refactor functionality into seperate functions to get a api-like feeling 
+- make structs opaque in public header
+- TODO: fix some display bugs of the "player" sprite 
+
 ### Update 2021/3/22
 
  - moved helper functions into seperate file
