@@ -23,4 +23,7 @@ void sdl2_test_update(stage* stg, state* ps, sdl2_test* app);
 void sdl2_test_destroy(sdl2_test* app);
 
 void sdl2_test_event_process(state* prog_state);
+
+void sdl2_test_lua_execute(char *str);
+//void sdl2_test_lua_file_execute(char *filename)
 #endif
