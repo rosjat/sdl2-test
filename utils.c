@@ -108,6 +108,7 @@ SDL_Rect* init_rect(int x, int y, int w, int h)
     return rect;
 }
 
+
 //TODO: make this more useful and generic 
 void sdl2_test_screen_initialize(stage* stg)
 {
@@ -228,7 +229,7 @@ void sdl2_test_state_destroy(state* ps)
 {
     free(ps);
 }
-//void sdl2_test_state_create
+
 void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app) 
 {
     if(ps->x_pos <= 0) 
@@ -278,7 +279,6 @@ void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app)
         {
             intersection++;
             // at the left
-            // 1
             if(ps->x_pos + app->ps_rect.w > bx && ps->x_pos < bx ) 
             {
                 printf("block %i: hit: left x_pos: %i y_pos: %i y_velo: %i x_velo: %i\nintersections: %i",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo, intersection);
@@ -286,7 +286,6 @@ void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app)
                     ps->x_pos = bx - app->ps_rect.w;
                  ps->x_velo = 0;
             }
-            // 2
             else if(ps->x_pos < bx + bw && ps->x_pos + app->ps_rect.w > bx + bw) 
             {
                 printf("block %i: hit: right x_pos: %i y_pos: %i y_velo: %i x_velo: %i\n",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo);
@@ -298,7 +297,6 @@ void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app)
         if((ps->x_pos + app->ps_rect.w > bx && ps->x_pos < bx+bw)) 
         {
             //at the bottom?
-            // 3
             if(ps->y_pos < by + bh && ps->y_pos > by) 
             {
                 printf("block %i: hit: bottom x_pos: %i y_pos: %i y_velo: %i x_velo: %i\n",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo);
@@ -313,7 +311,6 @@ void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app)
                     ps->y_velo = SCROLL_SPEED;
                 }
             }
-            // 4
             else if(ps->y_pos + app->ps_rect.h  > by && ps->y_pos < by ) {
                 printf("block %i: hit: top x_pos: %i y_pos: %i y_velo: %i x_velo: %i\n",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo);
                 if(!can_enter)
@@ -450,6 +447,7 @@ void sdl2_test_update(stage* stg, state* ps, sdl2_test* app)
     int delayPerFrame = 100;
     int frame = (SDL_GetTicks() / delayPerFrame) % totalFrames;
     player_sprite.x = frame * 32;
+    player_sprite.y = 0;
     // move in the right direction ? This relates to mouse input and is shakey  at best
     // for keyboard we need to rething a little 
     if(ps->mbutton) {
