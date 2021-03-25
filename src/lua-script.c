@@ -13,7 +13,7 @@ void sdl2_test_lua_execute(char *str)
     }
     lua_close(L);
 }
-
+/*
 void sdl2_test_lua_file_execute(char *filename)
 {
     lua_State *L = luaL_newstate();
@@ -26,3 +26,4 @@ void sdl2_test_lua_file_execute(char *filename)
     }
     lua_close(L);
 }
+*/

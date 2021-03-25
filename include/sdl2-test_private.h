@@ -78,4 +78,6 @@ typedef struct {
 } sdl2_test;
 
 SDL_Rect* init_rect(int x, int y, int w, int h);
+
+block* sdl2_test_block_create(int id, int can_enter, SDL_Rect *trect, SDL_Rect *brect);
 #endif

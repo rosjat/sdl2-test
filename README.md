@@ -8,6 +8,17 @@ its basically a playground for myself to get used to some things in C and have a
 
 good place to start with sdl2: https://wiki.libsdl.org/
 
+### Update 2021/3/25
+
+- restructure of the project layout, adding a src and include dir
+- rework Makefile to handle the changes in the project structure
+  - this is a Makefile for a standard FreeBSD make tool so it looks kinda strange
+    compared to a GNU Makefile
+
+### Update 2021/3/24
+
+- adding an entrypoint for lua, since we might do some stuff with external script later on.
+
 ### Update 2021/3/23 
 
 - moved internal stuff in a private header file 
