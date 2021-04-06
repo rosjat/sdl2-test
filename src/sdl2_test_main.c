@@ -2,10 +2,13 @@
 
 int main(){ 
     srand(time(0));
-    
+    sdl2_test_configuration* config;
     state* prog_state;
     sdl2_test* app;
     stage* stage_one; 
+    char* fname = "scripts/sdl2_test.config";
+    config = sdl2_test_configuration_create();
+    sdl2_test_configuration_load(fname, config);
     app = sdl2_test_create();
     if(!app)
     {
@@ -34,5 +37,6 @@ int main(){
     sdl2_test_state_destroy(prog_state);
     sdl2_test_stage_destroy(stage_one);
     sdl2_test_destroy(app);
+    sdl2_test_configuration_destroy(config);
     return 0;
 }

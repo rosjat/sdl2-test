@@ -30,6 +30,16 @@
 
 #define GRAVITY             (0.8f)
 
+/* 
+   define some macros to ease the pain of using constants all the time 
+   the naming is odd and long but i guess descriptive enough to know what 
+   is intended to do.
+ */
+#define sdl2_test_std_block_trect_init(x,y) init_rect(x, y, \
+                                                      BLOCK_T_UNIT_WIDTH, \
+                                                      BLOCK_T_UNIT_HEIGHT)
+#define sdl2_test_transparent_block_trect_init(void) init_rect(0, 0, 2, 2)
+
 typedef struct {
     int id;
     int enter;
@@ -76,6 +86,21 @@ typedef struct {
     SDL_Window* window;
     SDL_Renderer* renderer;
 } sdl2_test;
+
+typedef struct {
+    int win_h;
+    int win_w;
+    int ss;
+    int blk_w;
+    int blk_h;
+    int blk_t_h;
+    int blk_t_w;
+    int scrn_count;
+    int scrn_h;
+    int scrn_w;
+    int stg_count;
+    float g;
+} sdl2_test_configuration;
 
 SDL_Rect* init_rect(int x, int y, int w, int h);
 

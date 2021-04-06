@@ -20,10 +20,10 @@ EXEC := sdl2-test
 all: $(EXEC)
 
 $(EXEC): $(OBJS) Makefile
-	$(CC) -o $@ $(OBJS) $(CFLAGS) 
+	$(CC) -o $@ $(OBJS) $(CFLAGS) ${LUAFLAGS}
 
 ${OBJS}: ${SCRS} ${HDIR} Makefile
-	$(CC)  -o $@  ${@:${BDIR}/%.o=${SDIR}/%.c} -c $(CFLAGS) ${HDIR:%=-I %} -v
+	$(CC)  -o $@  ${@:${BDIR}/%.o=${SDIR}/%.c} -c $(CFLAGS) ${LUAFLAGS} ${HDIR:%=-I %} -v
 
 clean:
 	rm -f $(EXEC) $(OBJS)

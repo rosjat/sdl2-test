@@ -1,6 +1,23 @@
 #include "sdl2-test_private.h"
 //#include "sdl2-test.h"
 
+sdl2_test_configuration* sdl2_test_configuration_create(void)
+{
+    sdl2_test_configuration* config = malloc(sizeof *config);
+    if(!config)
+        return 0;
+    memset(config, 0, sizeof *config);
+    return config;
+}
+void sdl2_test_configuration_destroy(sdl2_test_configuration* config)
+{
+    free(config);
+}
+void sdl2_test_configuration_print(sdl2_test_configuration* config)
+{
+        printf("WINDOW_HEIGHT: %i\n", config->win_h);
+        printf("WINDOW_WIDTH: %i\n", config->win_w);
+}
 int sdl2_test_state_get_running(state* ps)
 {
     return ps->running;
@@ -108,37 +125,46 @@ SDL_Rect* init_rect(int x, int y, int w, int h)
     return rect;
 }
 
-
 //TODO: make this more useful and generic 
 void sdl2_test_screen_initialize(stage* stg)
 {
+    /* we need to figure out a way to get the stage, screen and block infos 
+       from some external source, maybe with the lua script approach??? 
+    int sc = stg->screen_count;
+    
+    
+    for(int s = 0; s < sc; s++) 
+    {
+        int bc = stg->screens[s].block_count = 5;
+        for(int b = 0; b < bc; bc++)
+        {
+           stg->screens[s].blocks[b] = sdl2_test_block_create(b, 0, 
+        }
+    }
+    */
     stg->screens[0].block_count = 5;
-    stg->screens[0].blocks[0] = (block) { 0, 0, init_rect(221, 127,
-                                                        BLOCK_T_UNIT_WIDTH,
-                                                        BLOCK_T_UNIT_HEIGHT), 
-                                              init_rect(WINDOW_WIDTH - BLOCK_UNIT_WIDTH / 2 - 2, 
+    stg->screens[0].blocks[0] = (block) { 0, 0, sdl2_test_std_block_trect_init(221, 127), 
+                                                init_rect(WINDOW_WIDTH - BLOCK_UNIT_WIDTH / 2 - 2, 
                                                         BLOCK_UNIT_HEIGHT * 1.5 + 6, 
                                                         BLOCK_UNIT_WIDTH,
                                                         BLOCK_UNIT_HEIGHT) };
-    stg->screens[0].blocks[1] = (block) { 1, 0, init_rect(189, 127, 
-                                                        BLOCK_T_UNIT_WIDTH,
-                                                        BLOCK_T_UNIT_HEIGHT), 
-                                             init_rect(WINDOW_WIDTH - BLOCK_UNIT_WIDTH  - BLOCK_UNIT_WIDTH / 2 - 2, 
+    stg->screens[0].blocks[1] = (block) { 1, 0, sdl2_test_std_block_trect_init(189, 127), 
+                                                init_rect(WINDOW_WIDTH - BLOCK_UNIT_WIDTH  - BLOCK_UNIT_WIDTH / 2 - 2, 
                                                        BLOCK_UNIT_HEIGHT * 1.5 + 6, 
                                                        BLOCK_UNIT_WIDTH,
                                                        BLOCK_UNIT_HEIGHT) };                                             
-    stg->screens[0].blocks[2] = (block){ 2, 0, init_rect(0, 0, 5, 5), //10,5
-                                             init_rect(WINDOW_WIDTH - BLOCK_UNIT_WIDTH * 3 + 2, 
+    stg->screens[0].blocks[2] = (block){ 2, 0, sdl2_test_transparent_block_trect_init(), //10,5
+                                               init_rect(WINDOW_WIDTH - BLOCK_UNIT_WIDTH * 3 + 2, 
                                                        BLOCK_UNIT_HEIGHT * 4 + BLOCK_UNIT_HEIGHT / 2 + 8, 
                                                        BLOCK_UNIT_WIDTH * 3,
                                                        BLOCK_UNIT_HEIGHT) };
-    stg->screens[0].blocks[3] = (block){ 3, 0, init_rect(0, 0, 2, 2), 
-                                             init_rect(WINDOW_WIDTH - BLOCK_UNIT_WIDTH * 7 + BLOCK_UNIT_WIDTH/ 2 + 2, 
+    stg->screens[0].blocks[3] = (block){ 3, 0, sdl2_test_transparent_block_trect_init(), 
+                                               init_rect(WINDOW_WIDTH - BLOCK_UNIT_WIDTH * 7 + BLOCK_UNIT_WIDTH/ 2 + 2, 
                                                        BLOCK_UNIT_HEIGHT * 5 + BLOCK_UNIT_HEIGHT / 2 + 8, 
                                                        BLOCK_UNIT_WIDTH * 4,
                                                        BLOCK_UNIT_HEIGHT * 1.5) }; 
-    stg->screens[0].blocks[4] = (block){ 4, 0, init_rect(0, 0, 2, 2), 
-                                             init_rect(WINDOW_WIDTH - BLOCK_UNIT_WIDTH * 7 + 5, 
+    stg->screens[0].blocks[4] = (block){ 4, 0, sdl2_test_transparent_block_trect_init(), 
+                                               init_rect(WINDOW_WIDTH - BLOCK_UNIT_WIDTH * 7 + 5, 
                                                        WINDOW_HEIGHT - BLOCK_UNIT_HEIGHT * 1.5, 
                                                        BLOCK_UNIT_WIDTH / 2,
                                                        BLOCK_UNIT_HEIGHT * 1.5) };

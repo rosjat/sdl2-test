@@ -6,7 +6,16 @@
 typedef void stage;
 typedef void state;
 typedef void sdl2_test;
+typedef void sdl2_test_configuration;
 #endif
+
+#ifndef __sdl2_test_lua_h__
+typedef void lua_State;
+#endif
+
+sdl2_test_configuration* sdl2_test_configuration_create(void);
+void sdl2_test_configuration_destroy(sdl2_test_configuration* config);
+void sdl2_test_configuration_print(sdl2_test_configuration* config);
 
 stage* sdl2_test_stage_create(void);
 void sdl2_test_stage_destroy(stage* stg);
@@ -24,6 +33,5 @@ void sdl2_test_destroy(sdl2_test* app);
 
 void sdl2_test_event_process(state* prog_state);
 
-void sdl2_test_lua_execute(char *str);
-//void sdl2_test_lua_file_execute(char *filename)
+void sdl2_test_configuration_load(char* fname, sdl2_test_configuration* config);
 #endif
