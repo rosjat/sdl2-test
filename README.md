@@ -8,6 +8,10 @@ its basically a playground for myself to get used to some things in C and have a
 
 good place to start with sdl2: https://wiki.libsdl.org/
 
+### Update 2021/4/6
+
+- adding functionality to read config values from an external file via LUA
+  - this is the first iteration and not perfect but it give the general idea of getting settings from an external file so we could replace some hardcoded #define values 
 ### Update 2021/3/25
 
 - restructure of the project layout, adding a src and include dir
