@@ -22,7 +22,7 @@ int sdl2_test_state_get_running(state* ps)
 {
     return ps->running;
 }
-void sdl2_test_event_process(state* ps)
+void sdl2_test_event_process(state* ps, sdl2_test_configuration *config)
 {
     SDL_Event event;
     while(SDL_PollEvent(&event)) 
@@ -44,25 +44,25 @@ void sdl2_test_event_process(state* ps)
                         case SDL_SCANCODE_UP:
                         {
                             if(ps->y_velo == 0)
-                                ps->y_velo = -SCROLL_SPEED ;
+                                ps->y_velo = -config->ss ;
                             ps->up = 1;
                         }break;
                         case SDL_SCANCODE_A:
                         case SDL_SCANCODE_LEFT:
                         {
-                            ps->x_velo = -SCROLL_SPEED;
+                            ps->x_velo = -config->ss;
                             ps->left = 1;
                         }break;
                         case SDL_SCANCODE_S:
                         case SDL_SCANCODE_DOWN:
                         {   
-                            ps->y_velo = SCROLL_SPEED;
+                            ps->y_velo = config->ss;
                             ps->down = 1;
                         }break;
                         case SDL_SCANCODE_D:
                         case SDL_SCANCODE_RIGHT:
                         {
-                            ps->x_velo = SCROLL_SPEED;
+                            ps->x_velo = config->ss;
                             ps->right = 1;
                         }break;
                     }
@@ -126,7 +126,7 @@ SDL_Rect* init_rect(int x, int y, int w, int h)
 }
 
 //TODO: make this more useful and generic 
-void sdl2_test_screen_initialize(stage* stg)
+void sdl2_test_screen_initialize(stage* stg, sdl2_test_configuration* config)
 {
     /* we need to figure out a way to get the stage, screen and block infos 
        from some external source, maybe with the lua script approach??? 
@@ -143,47 +143,47 @@ void sdl2_test_screen_initialize(stage* stg)
     }
     */
     stg->screens[0].block_count = 5;
-    stg->screens[0].blocks[0] = (block) { 0, 0, sdl2_test_std_block_trect_init(221, 127), 
-                                                init_rect(WINDOW_WIDTH - BLOCK_UNIT_WIDTH / 2 - 2, 
-                                                        BLOCK_UNIT_HEIGHT * 1.5 + 6, 
-                                                        BLOCK_UNIT_WIDTH,
-                                                        BLOCK_UNIT_HEIGHT) };
-    stg->screens[0].blocks[1] = (block) { 1, 0, sdl2_test_std_block_trect_init(189, 127), 
-                                                init_rect(WINDOW_WIDTH - BLOCK_UNIT_WIDTH  - BLOCK_UNIT_WIDTH / 2 - 2, 
-                                                       BLOCK_UNIT_HEIGHT * 1.5 + 6, 
-                                                       BLOCK_UNIT_WIDTH,
-                                                       BLOCK_UNIT_HEIGHT) };                                             
+    stg->screens[0].blocks[0] = (block) { 0, 0, init_rect(221, 127, config->blk_t_w, config->blk_t_h), 
+                                                init_rect(config->win_w - config->blk_w / 2 - 2, 
+                                                        config->blk_h * 1.5 + 6, 
+                                                        config->blk_w,
+                                                        config->blk_h) };
+    stg->screens[0].blocks[1] = (block) { 1, 0, init_rect(189, 127, config->blk_t_w, config->blk_t_h), 
+                                                init_rect(config->win_w - config->blk_w  - config->blk_w / 2 - 2, 
+                                                       config->blk_h * 1.5 + 6, 
+                                                       config->blk_w,
+                                                       config->blk_h) };                                             
     stg->screens[0].blocks[2] = (block){ 2, 0, sdl2_test_transparent_block_trect_init(), //10,5
-                                               init_rect(WINDOW_WIDTH - BLOCK_UNIT_WIDTH * 3 + 2, 
-                                                       BLOCK_UNIT_HEIGHT * 4 + BLOCK_UNIT_HEIGHT / 2 + 8, 
-                                                       BLOCK_UNIT_WIDTH * 3,
-                                                       BLOCK_UNIT_HEIGHT) };
+                                               init_rect(config->win_w - config->blk_w * 3 + 2, 
+                                                       config->blk_h * 4 + config->blk_h / 2 + 8, 
+                                                       config->blk_w * 3,
+                                                       config->blk_h) };
     stg->screens[0].blocks[3] = (block){ 3, 0, sdl2_test_transparent_block_trect_init(), 
-                                               init_rect(WINDOW_WIDTH - BLOCK_UNIT_WIDTH * 7 + BLOCK_UNIT_WIDTH/ 2 + 2, 
-                                                       BLOCK_UNIT_HEIGHT * 5 + BLOCK_UNIT_HEIGHT / 2 + 8, 
-                                                       BLOCK_UNIT_WIDTH * 4,
-                                                       BLOCK_UNIT_HEIGHT * 1.5) }; 
+                                               init_rect(config->win_w - config->blk_w * 7 + config->blk_w/ 2 + 2, 
+                                                       config->blk_h * 5 + config->blk_h / 2 + 8, 
+                                                       config->blk_w * 4,
+                                                       config->blk_h * 1.5) }; 
     stg->screens[0].blocks[4] = (block){ 4, 0, sdl2_test_transparent_block_trect_init(), 
-                                               init_rect(WINDOW_WIDTH - BLOCK_UNIT_WIDTH * 7 + 5, 
-                                                       WINDOW_HEIGHT - BLOCK_UNIT_HEIGHT * 1.5, 
-                                                       BLOCK_UNIT_WIDTH / 2,
-                                                       BLOCK_UNIT_HEIGHT * 1.5) };
+                                               init_rect(config->win_w - config->blk_w * 7 + 5, 
+                                                       config->win_h - config->blk_h * 1.5, 
+                                                       config->blk_w / 2,
+                                                       config->blk_h * 1.5) };
 }
 
-stage *sdl2_test_stage_create(void) 
+stage *sdl2_test_stage_create(sdl2_test_configuration *config) 
 {
     stage* stg;
     stg = malloc(sizeof *stg);
     if(!stg)
         return 0;
-    stg->screen_count = SCREEN_COUNT;
-    stg->screens = malloc(SCREEN_COUNT * sizeof *stg->screens);
+    stg->screen_count = config->scrn_count;
+    stg->screens = malloc(config->scrn_count * sizeof *stg->screens);
     if(!stg->screens)
     {
         free(stg);
         return 0;
     }
-    memset(stg->screens, 0, SCREEN_COUNT * sizeof *stg->screens);
+    memset(stg->screens, 0, config->scrn_count * sizeof *stg->screens);
     for(int x = 0; x < stg->screen_count; x++) 
     {
         screen* s;
@@ -194,8 +194,8 @@ stage *sdl2_test_stage_create(void)
             free(stg);
             return 0;
         }
-        s->width = SCREEN_WIDTH;
-        s->height = SCREEN_HEIGHT;
+        s->width = config->scrn_w;
+        s->height = config->scrn_h;
         s->x = 0;
         s->y = 0;
         s->block_count = 0;
@@ -222,15 +222,15 @@ void sdl2_test_stage_destroy(stage* stg)
     free(stg->screens);
 }
 
-state *sdl2_test_state_create(void)
+state *sdl2_test_state_create(sdl2_test_configuration* config)
 {
     state* ps = malloc(sizeof *ps);
     if(!ps)
         return 0;
     memset(ps, 0, sizeof *ps);
 
-    ps->x_pos = WINDOW_WIDTH / 2;
-    ps->y_pos = WINDOW_HEIGHT / 2;
+    ps->x_pos = config->win_w / 2;
+    ps->y_pos = config->win_h / 2;
 
     ps->x_velo = 0;
     ps->y_velo = 0;
@@ -256,7 +256,7 @@ void sdl2_test_state_destroy(state* ps)
     free(ps);
 }
 
-void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app) 
+void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app, sdl2_test_configuration* config) 
 {
     if(ps->x_pos <= 0) 
     {
@@ -274,20 +274,20 @@ void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app)
             ps->y_pos = 0;
         }
     }
-    if(ps->x_pos >= WINDOW_WIDTH - app->ps_rect.w) 
+    if(ps->x_pos >= config->win_w - app->ps_rect.w) 
     {
-        ps->x_pos = WINDOW_WIDTH - app->ps_rect.w;
+        ps->x_pos = config->win_w - app->ps_rect.w;
     }
-    if(ps->y_pos >= WINDOW_HEIGHT - app->ps_rect.h) 
+    if(ps->y_pos >= config->win_h - app->ps_rect.h) 
     {
-        if(ps->screen_counter < SCREEN_COUNT -1)
+        if(ps->screen_counter < config->scrn_count -1)
         {
             ps->screen_counter++;
             ps->y_pos = 0 + app->ps_rect.h;
         }
         else 
         {
-            ps->y_pos = WINDOW_HEIGHT - app->ps_rect.h;
+            ps->y_pos = config->win_h - app->ps_rect.h;
             ps->y_velo = 0;
         }
     }
@@ -334,7 +334,7 @@ void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app)
                 } 
                 else 
                 {
-                    ps->y_velo = SCROLL_SPEED;
+                    ps->y_velo = config->ss;
                 }
             }
             else if(ps->y_pos + app->ps_rect.h  > by && ps->y_pos < by ) {
@@ -348,14 +348,14 @@ void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app)
                 else 
                 {
                     ps->y_pos = by;
-                    ps->y_velo = -SCROLL_SPEED;
+                    ps->y_velo = -config->ss;
                 }
             }              
         }
     }
 }
 
-sdl2_test *sdl2_test_create(void)
+sdl2_test *sdl2_test_create(sdl2_test_configuration* config)
 {
     sdl2_test * app;
     SDL_Texture* bg;
@@ -368,7 +368,7 @@ sdl2_test *sdl2_test_create(void)
     SDL_Window* window = SDL_CreateWindow("Hello",
                                           SDL_WINDOWPOS_CENTERED,
                                           SDL_WINDOWPOS_CENTERED,
-                                          WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+                                          config->win_w, config->win_h, 0);
 
     if(!window) {
         printf("Unable to create Window: %s\n", SDL_GetError());
@@ -456,7 +456,7 @@ sdl2_test *sdl2_test_create(void)
     return app;
 }
 
-void sdl2_test_update(stage* stg, state* ps, sdl2_test* app)
+void sdl2_test_update(stage* stg, state* ps, sdl2_test* app, sdl2_test_configuration* config)
 {
     // doing some mouse actions, this might be the point to figure out how keyboard and
     // mouse play nice together ...
@@ -504,28 +504,28 @@ void sdl2_test_update(stage* stg, state* ps, sdl2_test* app)
         player_sprite.x = 0;
         ps->x_velo = ps->y_velo = 0;
     } else if(ps->mbutton) {
-        ps->x_velo = delta_x * SCROLL_SPEED / distance;
-        ps->y_velo = delta_y * SCROLL_SPEED / distance;
+        ps->x_velo = delta_x * config->ss / distance;
+        ps->y_velo = delta_y * config->ss / distance;
     }
 
     // setting up the background so we can change it when going up and down
-    app->bg_rect.w = SCREEN_WIDTH;
+    app->bg_rect.w = config->scrn_w;
     SDL_Rect bg_part;
-    bg_part.w = WINDOW_WIDTH;
-    bg_part.h = WINDOW_HEIGHT;
+    bg_part.w = config->win_w;
+    bg_part.h = config->win_h;
     bg_part.x = 0;
     bg_part.y = 0;
-    app->bg_rect.h = SCREEN_HEIGHT;
+    app->bg_rect.h = config->scrn_h;
     app->bg_rect.x = ps->bg_offset_x;
     app->bg_rect.y = ps->bg_offset_y + (app->bg_rect.h * ps->screen_counter);
 
-    // build in some gravity here 
+    // build in some GRAVITY here 
     ps->x_pos += ps->x_velo / 60;
     ps->y_pos += ps->y_velo / 60;
-    ps->y_velo += 10 * GRAVITY;
+    ps->y_velo += 10 * config->g;
 
     //collition detection with the window bounds and objects
-    sdl2_test_collision(stg, ps, app);
+    sdl2_test_collision(stg, ps, app, config);
     //make the little guy stop running when we dont move around
     if(!ps->x_velo && !ps->y_velo)
         player_sprite.x = 0;

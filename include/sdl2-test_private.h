@@ -10,34 +10,13 @@
 #include <math.h>
 
 
-
-#define WINDOW_HEIGHT       (460)//(480)
-#define WINDOW_WIDTH        (512)//(640)
-
-#define SCROLL_SPEED        (300)
-
 #define BLOCK_COUNT         (5)
-#define BLOCK_T_UNIT_HEIGHT (32)
-#define BLOCK_T_UNIT_WIDTH  (32)
-#define BLOCK_UNIT_WIDTH    (64)
-#define BLOCK_UNIT_HEIGHT   (64)
-
-#define SCREEN_COUNT        (1)
-#define SCREEN_HEIGHT       (230)
-#define SCREEN_WIDTH        (256)
-
-#define STAGE_COUNT         (1)
-
-#define GRAVITY             (0.8f)
 
 /* 
    define some macros to ease the pain of using constants all the time 
    the naming is odd and long but i guess descriptive enough to know what 
    is intended to do.
  */
-#define sdl2_test_std_block_trect_init(x,y) init_rect(x, y, \
-                                                      BLOCK_T_UNIT_WIDTH, \
-                                                      BLOCK_T_UNIT_HEIGHT)
 #define sdl2_test_transparent_block_trect_init(void) init_rect(0, 0, 2, 2)
 
 typedef struct {

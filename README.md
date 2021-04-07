@@ -8,6 +8,11 @@ its basically a playground for myself to get used to some things in C and have a
 
 good place to start with sdl2: https://wiki.libsdl.org/
 
+### Update 2021/4/7
+
+- using the configuration struct to replace most of the #define values in sdl2-test.h
+  - its not perfect but a start ...
+  
 ### Update 2021/4/6
 
 - adding functionality to read config values from an external file via LUA
