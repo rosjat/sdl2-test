@@ -8,6 +8,12 @@ its basically a playground for myself to get used to some things in C and have a
 
 good place to start with sdl2: https://wiki.libsdl.org/
 
+### Update 2021/4/14
+
+- implemting first iteration of loading stage setup from external lua file 
+  - function needs some refactoring to make it more readable i guess but we will see
+-removing code that was used to setup stage screens 
+
 ### Update 2021/4/7
 
 - using the configuration struct to replace most of the #define values in sdl2-test.h

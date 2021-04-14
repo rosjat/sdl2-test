@@ -10,15 +10,16 @@ typedef void sdl2_test_configuration;
 #endif
 
 #define sdl2_test_default_configuration_load(config) sdl2_test_configuration_load("scripts/sdl2_test.config", config);
+#define sdl2_test_default_stage_load(config) sdl2_test_stage_load("scripts/sdl2_test_stages.config", config);
 
 sdl2_test_configuration* sdl2_test_configuration_create(void);
 void sdl2_test_configuration_destroy(sdl2_test_configuration* config);
 void sdl2_test_configuration_print(sdl2_test_configuration* config);
 void sdl2_test_configuration_load(char* fname, sdl2_test_configuration* config);
 
+stage *sdl2_test_stage_load(char* fname, sdl2_test_configuration* config);
 stage* sdl2_test_stage_create(sdl2_test_configuration *config);
 void sdl2_test_stage_destroy(stage* stg);
-void sdl2_test_screen_initialize(stage* stg, sdl2_test_configuration* config);
 
 state* sdl2_test_state_create(sdl2_test_configuration* config);
 void sdl2_test_state_destroy(state* ps);

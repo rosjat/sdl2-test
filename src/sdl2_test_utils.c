@@ -1,5 +1,4 @@
 #include "sdl2-test_private.h"
-//#include "sdl2-test.h"
 
 sdl2_test_configuration* sdl2_test_configuration_create(void)
 {
@@ -123,51 +122,6 @@ SDL_Rect* init_rect(int x, int y, int w, int h)
     rect->w = w;
     rect->h = h;
     return rect;
-}
-
-//TODO: make this more useful and generic 
-void sdl2_test_screen_initialize(stage* stg, sdl2_test_configuration* config)
-{
-    /* we need to figure out a way to get the stage, screen and block infos 
-       from some external source, maybe with the lua script approach??? 
-    int sc = stg->screen_count;
-    
-    
-    for(int s = 0; s < sc; s++) 
-    {
-        int bc = stg->screens[s].block_count = 5;
-        for(int b = 0; b < bc; bc++)
-        {
-           stg->screens[s].blocks[b] = sdl2_test_block_create(b, 0, 
-        }
-    }
-    */
-    stg->screens[0].block_count = 5;
-    stg->screens[0].blocks[0] = (block) { 0, 0, init_rect(221, 127, config->blk_t_w, config->blk_t_h), 
-                                                init_rect(config->win_w - config->blk_w / 2 - 2, 
-                                                        config->blk_h * 1.5 + 6, 
-                                                        config->blk_w,
-                                                        config->blk_h) };
-    stg->screens[0].blocks[1] = (block) { 1, 0, init_rect(189, 127, config->blk_t_w, config->blk_t_h), 
-                                                init_rect(config->win_w - config->blk_w  - config->blk_w / 2 - 2, 
-                                                       config->blk_h * 1.5 + 6, 
-                                                       config->blk_w,
-                                                       config->blk_h) };                                             
-    stg->screens[0].blocks[2] = (block){ 2, 0, sdl2_test_transparent_block_trect_init(), //10,5
-                                               init_rect(config->win_w - config->blk_w * 3 + 2, 
-                                                       config->blk_h * 4 + config->blk_h / 2 + 8, 
-                                                       config->blk_w * 3,
-                                                       config->blk_h) };
-    stg->screens[0].blocks[3] = (block){ 3, 0, sdl2_test_transparent_block_trect_init(), 
-                                               init_rect(config->win_w - config->blk_w * 7 + config->blk_w/ 2 + 2, 
-                                                       config->blk_h * 5 + config->blk_h / 2 + 8, 
-                                                       config->blk_w * 4,
-                                                       config->blk_h * 1.5) }; 
-    stg->screens[0].blocks[4] = (block){ 4, 0, sdl2_test_transparent_block_trect_init(), 
-                                               init_rect(config->win_w - config->blk_w * 7 + 5, 
-                                                       config->win_h - config->blk_h * 1.5, 
-                                                       config->blk_w / 2,
-                                                       config->blk_h * 1.5) };
 }
 
 stage *sdl2_test_stage_create(sdl2_test_configuration *config) 
@@ -294,6 +248,8 @@ void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app, sdl2_test_config
     int intersection = 0;
     for(int b = 0 ; b < stg->screens[ps->screen_counter].block_count; b++) 
     {
+        stage foo = *stg;
+    
         int can_enter = stg->screens[ps->screen_counter].blocks[b].enter;
         int bid = stg->screens[ps->screen_counter].blocks[b].id;
         int bx = stg->screens[ps->screen_counter].blocks[b].brect->x;

@@ -3,12 +3,13 @@
 int main(){ 
     srand(time(0));
     sdl2_test_configuration* config;
-    state* prog_state;
-    sdl2_test* app;
-    stage* stage_one; 
     config = sdl2_test_configuration_create();
     sdl2_test_default_configuration_load(config);
-    sdl2_test_configuration_print(config);
+    sdl2_test_configuration_print(config);   
+    
+    state* prog_state;
+    sdl2_test* app;
+    stage *stages;
     app = sdl2_test_create(config);
     if(!app)
     {
@@ -23,20 +24,18 @@ int main(){
         return 1;
     }
     
-    stage_one = sdl2_test_stage_create(config);
-    if(!stage_one)
+    stages = sdl2_test_default_stage_load(config);
+    if(!stages)
     {
-        printf("something went wrong with stage_one!");
+        printf("something went wrong with stages!");
         return 1;
     }
-    sdl2_test_screen_initialize(stage_one, config);
     while(sdl2_test_state_get_running(prog_state)) {
         sdl2_test_event_process(prog_state, config);
-        sdl2_test_update(stage_one, prog_state, app, config);
+        sdl2_test_update(stages, prog_state, app, config);
     }
     sdl2_test_state_destroy(prog_state);
-    sdl2_test_stage_destroy(stage_one);
+    sdl2_test_stage_destroy(stages);
     sdl2_test_destroy(app);
     sdl2_test_configuration_destroy(config);
-    return 0;
 }
