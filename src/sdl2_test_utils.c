@@ -22,7 +22,7 @@ int sdl2_test_state_get_running(state* ps)
 {
     return ps->running;
 }
-void sdl2_test_event_process(state* ps, sdl2_test_configuration *config)
+void sdl2_test_event_process(sdl2_test* app, state* ps, sdl2_test_configuration *config)
 {
     SDL_Event event;
     while(SDL_PollEvent(&event)) 
@@ -82,7 +82,7 @@ void sdl2_test_event_process(state* ps, sdl2_test_configuration *config)
                         } break;
                         case SDL_SCANCODE_B:
                         {
-                            ps->bg_show =1;
+                            ps->bg_show = 1;
                         } break;
                         case SDL_SCANCODE_A:
                         case SDL_SCANCODE_LEFT:
@@ -101,6 +101,18 @@ void sdl2_test_event_process(state* ps, sdl2_test_configuration *config)
                         {
                             ps->x_velo = 0;
                             ps->right = 0;
+                        } break;
+                        case SDL_SCANCODE_T:
+                        {
+                            ps->blk_show = !ps->blk_show;
+                            if(ps->blk_show)
+                            {
+                                sdl2_test_set_bg_colorkey(app, 255, 0, 255);
+                            }
+                            else
+                            {
+                                sdl2_test_set_bg_colorkey(app, 255, 255, 255);
+                            };
                         } break;
                     }
                 } break;
@@ -170,6 +182,7 @@ state *sdl2_test_state_create(sdl2_test_configuration* config)
     ps->screen_counter = 0;
     ps->stage_counter = 0;
     ps->bg_show = 1;
+    ps->blk_show = 0;
     ps->bg_offset_x = (260 * 2);
     ps->bg_offset_y = 736;
     return ps;
@@ -326,6 +339,7 @@ sdl2_test *sdl2_test_create(sdl2_test_configuration* config)
     /* adding bitmaps to textures */ 
     player = SDL_CreateTextureFromSurface(renderer, surface);
     surface = IMG_Load("img/bg.png");
+    // TODO; figure out how to change the color key on runtime so tranperency value can be changed 
     Uint32 colorkey = SDL_MapRGB(surface->format, 255, 0, 255);
     SDL_SetColorKey(surface, SDL_TRUE, colorkey);
     bg = SDL_CreateTextureFromSurface(renderer, surface);
@@ -486,4 +500,25 @@ void sdl2_test_destroy(sdl2_test* app)
     SDL_Quit();
     // do we need to do this or not?
     //free(app);
+}
+
+int sdl2_test_set_bg_colorkey(sdl2_test* app, int r, int g, int b)
+{
+    SDL_Texture* bg;
+    SDL_Surface* surface = IMG_Load("img/bg.png");
+    if(!surface) {
+        printf("Unable to create Surface: %s\n", SDL_GetError());
+        return 0;
+    }
+    Uint32 colorkey = SDL_MapRGB(surface->format, r, g, b);
+    SDL_SetColorKey(surface, SDL_TRUE, colorkey);
+    bg = SDL_CreateTextureFromSurface(app->renderer, surface);
+    SDL_FreeSurface(surface);
+    if(!bg) {
+        printf("Unable to create Texture: %s\n", SDL_GetError());
+        return 0;
+    }
+    free(app->bg);
+    app->bg = bg;
+    return 1;
 }

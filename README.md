@@ -23,6 +23,7 @@ good place to start with sdl2: https://wiki.libsdl.org/
   - moving the state into the config and make it persitent throughout the runtime of the application
   - implementing a simple reload function for a script (first iteration, simply hard code stuff)
   - now the script can be edited and the changes can be reloaded on runtime, without restarting the application
+  - we can now make blocks visible/invisible on runtime 
 
 ### Update 2021/4/14
 

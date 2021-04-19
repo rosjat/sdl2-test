@@ -60,6 +60,7 @@ typedef struct {
     int screen_counter;
     int stage_counter;
     int bg_show;
+    int blk_show;
     int bg_offset_x;
     int bg_offset_y;
 } state;

@@ -32,6 +32,7 @@ void sdl2_test_initialize(state* ps, sdl2_test* app);
 void sdl2_test_update(stage* stg, state* ps, sdl2_test* app, sdl2_test_configuration* config);
 void sdl2_test_destroy(sdl2_test* app);
 
-void sdl2_test_event_process(state* prog_state, sdl2_test_configuration* config);
+void sdl2_test_event_process(sdl2_test* app, state* prog_state, sdl2_test_configuration* config);
+int sdl2_test_set_bg_colorkey(sdl2_test* app, int r, int g, int b);
 
 #endif

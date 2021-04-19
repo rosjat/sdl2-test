@@ -38,7 +38,7 @@ int main(){
         return 1;
     }
     while(sdl2_test_state_get_running(prog_state)) {
-        sdl2_test_event_process(prog_state, config);
+        sdl2_test_event_process(app, prog_state, config);
         sdl2_test_update(stages, prog_state, app, config);
     }
     sdl2_test_state_destroy(prog_state);

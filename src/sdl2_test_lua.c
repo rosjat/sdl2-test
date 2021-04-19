@@ -40,6 +40,7 @@ void sdl2_test_configuration_load(char* fname, sdl2_test_configuration* config)
     //lua_close(L);
 }
 
+// TODO: just make it more generic ...
 state *sdl2_test_stage_load(char* fname, sdl2_test_configuration* config) 
 {  
     if (luaL_loadfile(config->L, fname) || lua_pcall(config->L, 0, 0, 0))
