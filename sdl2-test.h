@@ -18,8 +18,9 @@ void sdl2_test_configuration_print(sdl2_test_configuration* config);
 void sdl2_test_configuration_load(char* fname, sdl2_test_configuration* config);
 
 stage *sdl2_test_stage_load(char* fname, sdl2_test_configuration* config);
-stage* sdl2_test_stage_create(sdl2_test_configuration *config);
+void sdl2_test_stage_reload(stage* stages, char* fname, sdl2_test_configuration* config);
 void sdl2_test_stage_destroy(stage* stg);
+int sdl2_test_stage_count(stage* stg);
 
 state* sdl2_test_state_create(sdl2_test_configuration* config);
 void sdl2_test_state_destroy(state* ps);

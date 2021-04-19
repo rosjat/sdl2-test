@@ -8,6 +8,22 @@ its basically a playground for myself to get used to some things in C and have a
 
 good place to start with sdl2: https://wiki.libsdl.org/
 
+## some keys you might wanna checkout
+
+ - w, arrow up -> move up
+ - s, arrow down -> move down
+ - d, arrow right -> move right
+ - a, arrow left -> move left
+ - b -> on holding down, makes background disapear (mainly for debugging)
+ - r -> reload the stage script 
+ 
+### Update 2021/4/19
+
+- another iteration for the lua script use
+  - moving the state into the config and make it persitent throughout the runtime of the application
+  - implementing a simple reload function for a script (first iteration, simply hard code stuff)
+  - now the script can be edited and the changes can be reloaded on runtime, without restarting the application
+
 ### Update 2021/4/14
 
 - implemting first iteration of loading stage setup from external lua file 

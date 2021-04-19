@@ -9,6 +9,10 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+
 
 #define BLOCK_COUNT         (5)
 
@@ -27,6 +31,7 @@ typedef struct {
 } block;
 
 typedef struct {
+    int id;
     int x;
     int y;
     int width;
@@ -37,6 +42,7 @@ typedef struct {
 
 typedef struct {
     int screen_count;
+    int screen_active;
     screen* screens; 
 } stage;
 
@@ -52,6 +58,7 @@ typedef struct {
     int running;
     int mbutton;
     int screen_counter;
+    int stage_counter;
     int bg_show;
     int bg_offset_x;
     int bg_offset_y;
@@ -74,11 +81,12 @@ typedef struct {
     int blk_h;
     int blk_t_h;
     int blk_t_w;
-    int scrn_count;
     int scrn_h;
     int scrn_w;
     int stg_count;
+    int stg_reload;
     float g;
+    lua_State* L;
 } sdl2_test_configuration;
 
 SDL_Rect* init_rect(int x, int y, int w, int h);

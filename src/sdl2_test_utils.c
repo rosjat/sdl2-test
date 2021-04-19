@@ -10,6 +10,7 @@ sdl2_test_configuration* sdl2_test_configuration_create(void)
 }
 void sdl2_test_configuration_destroy(sdl2_test_configuration* config)
 {
+    lua_close(config->L);
     free(config);
 }
 void sdl2_test_configuration_print(sdl2_test_configuration* config)
@@ -75,6 +76,10 @@ void sdl2_test_event_process(state* ps, sdl2_test_configuration *config)
                         {                     
                             ps->up = 0;
                         } break;
+                        case SDL_SCANCODE_R:
+                        {
+                            config->stg_reload =1;
+                        } break;
                         case SDL_SCANCODE_B:
                         {
                             ps->bg_show =1;
@@ -124,49 +129,6 @@ SDL_Rect* init_rect(int x, int y, int w, int h)
     return rect;
 }
 
-stage *sdl2_test_stage_create(sdl2_test_configuration *config) 
-{
-    stage* stg;
-    stg = malloc(sizeof *stg);
-    if(!stg)
-        return 0;
-    stg->screen_count = config->scrn_count;
-    stg->screens = malloc(config->scrn_count * sizeof *stg->screens);
-    if(!stg->screens)
-    {
-        free(stg);
-        return 0;
-    }
-    memset(stg->screens, 0, config->scrn_count * sizeof *stg->screens);
-    for(int x = 0; x < stg->screen_count; x++) 
-    {
-        screen* s;
-        s = malloc(sizeof *s);
-        if(!s)
-        {
-            free(stg->screens);
-            free(stg);
-            return 0;
-        }
-        s->width = config->scrn_w;
-        s->height = config->scrn_h;
-        s->x = 0;
-        s->y = 0;
-        s->block_count = 0;
-        s->blocks = malloc(BLOCK_COUNT * sizeof *s->blocks);
-        if(!s->blocks)
-        {
-            free(s);
-            free(stg->screens);
-            free(stg);
-            return 0;
-        }
-        memset(s->blocks, 0 , BLOCK_COUNT * sizeof *s->blocks);
-        stg->screens[x] = *s;
-    }
-    return stg;
-}
-
 void sdl2_test_stage_destroy(stage* stg)
 {
     for(int x = 0; x < stg->screen_count; x++) 
@@ -174,6 +136,14 @@ void sdl2_test_stage_destroy(stage* stg)
         free(stg->screens[x].blocks);
     }
     free(stg->screens);
+}
+
+int sdl2_test_stage_count(stage* stg)
+{
+    int s1 = sizeof(stg);
+    int s2 = sizeof(stage*);
+    int c =  s1/s2; 
+    return c;
 }
 
 state *sdl2_test_state_create(sdl2_test_configuration* config)
@@ -198,7 +168,7 @@ state *sdl2_test_state_create(sdl2_test_configuration* config)
     ps->mbutton = 0;
     
     ps->screen_counter = 0;
-    
+    ps->stage_counter = 0;
     ps->bg_show = 1;
     ps->bg_offset_x = (260 * 2);
     ps->bg_offset_y = 736;
@@ -221,6 +191,7 @@ void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app, sdl2_test_config
         if(ps->screen_counter > 0)
         {
             ps->screen_counter--;
+            
             ps->y_pos = 0 + app->ps_rect.h;
         }
         else 
@@ -234,7 +205,7 @@ void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app, sdl2_test_config
     }
     if(ps->y_pos >= config->win_h - app->ps_rect.h) 
     {
-        if(ps->screen_counter < config->scrn_count -1)
+        if(ps->screen_counter < stg->screen_count -1)
         {
             ps->screen_counter++;
             ps->y_pos = 0 + app->ps_rect.h;
@@ -245,11 +216,10 @@ void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app, sdl2_test_config
             ps->y_velo = 0;
         }
     }
+    stg->screen_active = ps->screen_counter;
     int intersection = 0;
     for(int b = 0 ; b < stg->screens[ps->screen_counter].block_count; b++) 
     {
-        stage foo = *stg;
-    
         int can_enter = stg->screens[ps->screen_counter].blocks[b].enter;
         int bid = stg->screens[ps->screen_counter].blocks[b].id;
         int bx = stg->screens[ps->screen_counter].blocks[b].brect->x;
@@ -356,7 +326,7 @@ sdl2_test *sdl2_test_create(sdl2_test_configuration* config)
     /* adding bitmaps to textures */ 
     player = SDL_CreateTextureFromSurface(renderer, surface);
     surface = IMG_Load("img/bg.png");
-    Uint32 colorkey = SDL_MapRGB(surface->format, 255, 255, 255);
+    Uint32 colorkey = SDL_MapRGB(surface->format, 255, 0, 255);
     SDL_SetColorKey(surface, SDL_TRUE, colorkey);
     bg = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
@@ -414,6 +384,11 @@ sdl2_test *sdl2_test_create(sdl2_test_configuration* config)
 
 void sdl2_test_update(stage* stg, state* ps, sdl2_test* app, sdl2_test_configuration* config)
 {
+    if(config->stg_reload)
+    {
+        config->stg_reload = 0;
+        sdl2_test_stage_reload(stg, "scripts/sdl2_test_stages.config", config);
+    }
     // doing some mouse actions, this might be the point to figure out how keyboard and
     // mouse play nice together ...
     int mouse_x, mouse_y;
