@@ -304,7 +304,7 @@ sdl2_test *sdl2_test_create(sdl2_test_configuration* config)
         printf("Unable to initialize SDL: %s\n", SDL_GetError());
         return 0;
     }
-    SDL_Window* window = SDL_CreateWindow("Hello",
+    SDL_Window* window = SDL_CreateWindow("SDL2 Test",
                                           SDL_WINDOWPOS_CENTERED,
                                           SDL_WINDOWPOS_CENTERED,
                                           config->win_w, config->win_h, 0);
@@ -340,7 +340,7 @@ sdl2_test *sdl2_test_create(sdl2_test_configuration* config)
     player = SDL_CreateTextureFromSurface(renderer, surface);
     surface = IMG_Load("img/bg.png");
     // TODO; figure out how to change the color key on runtime so tranperency value can be changed 
-    Uint32 colorkey = SDL_MapRGB(surface->format, 255, 0, 255);
+    Uint32 colorkey = SDL_MapRGB(surface->format, 255, 255, 255);
     SDL_SetColorKey(surface, SDL_TRUE, colorkey);
     bg = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);

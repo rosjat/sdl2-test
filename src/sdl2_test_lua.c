@@ -76,8 +76,7 @@ state *sdl2_test_stage_load(char* fname, sdl2_test_configuration* config)
             return 0;
         }
         memset(stg->screens, 0, stg->screen_count * sizeof(screen));
-        
-        // here we need to push screens at the top of the stack to iterate through it 
+
         lua_getfield(config->L, -1, "screens");
         luaL_checktype(config->L, -1, LUA_TTABLE);
         for(int x = 1; x <= stg->screen_count; x++) 
@@ -233,6 +232,16 @@ void sdl2_test_stage_reload(stage* stages, char* fname, sdl2_test_configuration*
             }
             luaL_checktype(config->L, -1, LUA_TTABLE);
             screen *s = stg->screens + (x-1);
+            sdl2_test_lua_screen_get(config, s);
+            lua_pop(config->L, 1);
+        }
+        lua_pop(config->L, 1);
+    }  
+    lua_settop(config->L, 0);
+}
+
+void sdl2_test_lua_screen_get(sdl2_test_configuration* config, screen* s)
+{
             lua_getfield(config->L, -1, "id");
             s->id = (int)lua_tointeger(config->L, -1);
             lua_pop(config->L, 1);
@@ -262,71 +271,53 @@ void sdl2_test_stage_reload(stage* stages, char* fname, sdl2_test_configuration*
                 }
                 luaL_checktype(config->L, -1, LUA_TTABLE);    
                 block *blk = s->blocks + (b -1);
-
-                lua_getfield(config->L, -1, "id");
-                blk->id = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-
-                lua_getfield(config->L, -1, "enter");
-                blk->enter = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-
-                lua_getfield(config->L, -1, "trect");
-
-                lua_pushstring(config->L, "x");
-                lua_gettable(config->L, -2); 
-                int tx = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-
-                lua_pushstring(config->L, "y");
-                lua_gettable(config->L, -2); 
-                int ty = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-
-                lua_pushstring(config->L, "w");
-                lua_gettable(config->L, -2); 
-                int tw = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-
-                lua_pushstring(config->L, "h");
-                lua_gettable(config->L, -2); 
-                int th = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-                free(blk->trect);
-                blk->trect = init_rect(tx, ty, tw, th);
-                lua_pop(config->L, 1);
-
-                lua_getfield(config->L, -1, "brect");
-                luaL_checktype(config->L, -1, LUA_TTABLE);
-                lua_pushstring(config->L, "x");
-                lua_gettable(config->L, -2); 
-                int bx = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-
-                lua_pushstring(config->L, "y");
-                lua_gettable(config->L, -2);
-                int by = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-
-                lua_pushstring(config->L, "w");
-                lua_gettable(config->L, -2); 
-                int bw = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-
-                lua_pushstring(config->L, "h");
-                lua_gettable(config->L, -2); 
-                int bh = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-                free(blk->brect);
-                blk->brect = init_rect(bx, by, bw, bh);
-                
-                lua_pop(config->L, 1);
+                sdl2_test_lua_block_get(config, blk);
+                //lua_pop(config->L, 1);
                 lua_pop(config->L, 1);
             }
             lua_pop(config->L, 1);
-            lua_pop(config->L, 1);
-        }
-        lua_pop(config->L, 1);
-    }  
-    lua_settop(config->L, 0);
+}
+
+void sdl2_test_lua_block_get(sdl2_test_configuration* config, block* blk)
+{
+    lua_getfield(config->L, -1, "id");
+    blk->id = (int)lua_tointeger(config, -1);
+    lua_pop(config->L, 1);
+
+    lua_getfield(config->L, -1, "enter");
+    blk->enter = (int)lua_tointeger(config, -1);
+    lua_pop(config->L, 1);
+
+    lua_getfield(config->L, -1, "trect");
+    blk->trect = sdl2_test_lua_rect_get(config);
+    lua_pop(config->L, 1);
+    lua_getfield(config->L, -1, "brect");
+    blk->brect = sdl2_test_lua_rect_get(config);
+    lua_pop(config->L, 1);
+}
+
+SDL_Rect* sdl2_test_lua_rect_get(sdl2_test_configuration* config)
+{
+
+    lua_pushstring(config->L, "x");
+    lua_gettable(config->L, -2); 
+    int x = (int)lua_tointeger(config->L, -1);
+    lua_pop(config->L, 1);
+
+    lua_pushstring(config->L, "y");
+    lua_gettable(config->L, -2); 
+    int y = (int)lua_tointeger(config->L, -1);
+    lua_pop(config->L, 1);
+
+    lua_pushstring(config->L, "w");
+    lua_gettable(config->L, -2); 
+    int w = (int)lua_tointeger(config->L, -1);
+    lua_pop(config->L, 1);
+
+    lua_pushstring(config->L, "h");
+    lua_gettable(config->L, -2); 
+    int h = (int)lua_tointeger(config->L, -1);
+    lua_pop(config->L, 1);
+
+    return init_rect(x, y, w, h);
 }
