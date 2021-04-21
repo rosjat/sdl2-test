@@ -2,7 +2,7 @@
 SHELL = /bin/csh
 CC :=clang
 
-CFLAGS := `sdl2-config --libs --cflags` -ggdb3 -Wall -lSDL2_image -lm 
+CFLAGS := `sdl2-config --libs --cflags ` -ggdb3 -Wall -lSDL2_image -lSDL2_ttf  -lm 
 
 LUAFLAGS := -llua-5.2 -L/usr/local/lib/lua/5.2 -I/usr/local/include/lua52 
 

@@ -11,7 +11,9 @@ void sdl2_test_configuration_load(char* fname, sdl2_test_configuration* config)
                         "BLOCK_T_UNIT_WIDTH",
                         "SCREEN_HEIGHT",
                         "SCREEN_WIDTH",
-                        "GRAVITY"};
+                        "GRAVITY",
+                        "BG_PATH",
+                        "PSRITE_PATH" };
 
     config->L = luaL_newstate();
     luaL_openlibs(config->L);
@@ -19,7 +21,7 @@ void sdl2_test_configuration_load(char* fname, sdl2_test_configuration* config)
         printf("cannot run configuration file: %s",
                  lua_tostring(config->L, -1));
     
-    for(int i = 0; i < 10; i++)
+    for(int i = 0; i < 12; i++)
     {
         lua_getglobal(config->L, values[i]);
     }
@@ -34,6 +36,10 @@ void sdl2_test_configuration_load(char* fname, sdl2_test_configuration* config)
     config->scrn_h = (int)lua_tointeger(config->L, 8);
     config->scrn_w = (int)lua_tointeger(config->L, 9);
     config->g = (float)lua_tonumber(config->L, 10);
+    
+    //config->bg_img = malloc( sizeof((char*)lua_tostring(config->L, 11)));
+    config->bg_img = lua_tostring(config->L, 11);
+    config->ps_img = lua_tostring(config->L, 12);
     config->stg_count = 0;
     config->stg_reload = 0;
     lua_settop(config->L, 0);

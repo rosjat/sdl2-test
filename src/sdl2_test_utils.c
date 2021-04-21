@@ -193,7 +193,7 @@ void sdl2_test_state_destroy(state* ps)
     free(ps);
 }
 
-void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app, sdl2_test_configuration* config) 
+char *sdl2_test_collision(stage* stg, state* ps, sdl2_test* app, sdl2_test_configuration* config) 
 {
     if(ps->x_pos <= 0) 
     {
@@ -231,6 +231,7 @@ void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app, sdl2_test_config
     }
     stg->screen_active = ps->screen_counter;
     int intersection = 0;
+    char *msg = malloc(sizeof(char) * 200);
     for(int b = 0 ; b < stg->screens[ps->screen_counter].block_count; b++) 
     {
         int can_enter = stg->screens[ps->screen_counter].blocks[b].enter;
@@ -246,14 +247,14 @@ void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app, sdl2_test_config
             // at the left
             if(ps->x_pos + app->ps_rect.w > bx && ps->x_pos < bx ) 
             {
-                printf("block %i: hit: left x_pos: %i y_pos: %i y_velo: %i x_velo: %i\nintersections: %i",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo, intersection);
+                snprintf(msg, 255,"block %i: hit: left x_pos: %i y_pos: %i y_velo: %i x_velo: %i\nintersections: %i", bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo, intersection);
                 if(intersection == 1)
                     ps->x_pos = bx - app->ps_rect.w;
                  ps->x_velo = 0;
             }
             else if(ps->x_pos < bx + bw && ps->x_pos + app->ps_rect.w > bx + bw) 
             {
-                printf("block %i: hit: right x_pos: %i y_pos: %i y_velo: %i x_velo: %i\n",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo);
+                snprintf(msg, 255,"block %i: hit: right x_pos: %i y_pos: %i y_velo: %i x_velo: %i\n",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo);
                 if(intersection == 1)
                     ps->x_pos = bx + bw;
                 ps->x_velo = 0;
@@ -264,7 +265,7 @@ void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app, sdl2_test_config
             //at the bottom?
             if(ps->y_pos < by + bh && ps->y_pos > by) 
             {
-                printf("block %i: hit: bottom x_pos: %i y_pos: %i y_velo: %i x_velo: %i\n",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo);
+                snprintf(msg, 255,"block %i: hit: bottom x_pos: %i y_pos: %i y_velo: %i x_velo: %i\n",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo);
                 if(!can_enter)
                 {
                     if(intersection == 1)
@@ -277,7 +278,7 @@ void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app, sdl2_test_config
                 }
             }
             else if(ps->y_pos + app->ps_rect.h  > by && ps->y_pos < by ) {
-                printf("block %i: hit: top x_pos: %i y_pos: %i y_velo: %i x_velo: %i\n",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo);
+                snprintf(msg, 255 ,"block %i: hit: top x_pos: %i y_pos: %i y_velo: %i x_velo: %i\n",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo);
                 if(!can_enter)
                 {
                     if(intersection == 1)
@@ -289,9 +290,10 @@ void sdl2_test_collision(stage* stg, state* ps, sdl2_test* app, sdl2_test_config
                     ps->y_pos = by;
                     ps->y_velo = -config->ss;
                 }
-            }              
+            }
         }
     }
+    return msg;
 }
 
 sdl2_test *sdl2_test_create(sdl2_test_configuration* config)
@@ -299,11 +301,11 @@ sdl2_test *sdl2_test_create(sdl2_test_configuration* config)
     sdl2_test * app;
     SDL_Texture* bg;
     SDL_Texture* player;
-    
     if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER) != 0) {
         printf("Unable to initialize SDL: %s\n", SDL_GetError());
         return 0;
     }
+    TTF_Init();
     SDL_Window* window = SDL_CreateWindow("SDL2 Test",
                                           SDL_WINDOWPOS_CENTERED,
                                           SDL_WINDOWPOS_CENTERED,
@@ -327,7 +329,7 @@ sdl2_test *sdl2_test_create(sdl2_test_configuration* config)
     /* Initialze End */
 
     /* getting a container for some bitmaps we want to load and apply it  textures */
-    SDL_Surface* surface = IMG_Load("img/test.png");
+    SDL_Surface* surface = IMG_Load(config->ps_img);
     if(!surface) {
         printf("Unable to create Surface: %s\n", SDL_GetError());
         SDL_DestroyRenderer(renderer);
@@ -338,7 +340,7 @@ sdl2_test *sdl2_test_create(sdl2_test_configuration* config)
 
     /* adding bitmaps to textures */ 
     player = SDL_CreateTextureFromSurface(renderer, surface);
-    surface = IMG_Load("img/bg.png");
+    surface = IMG_Load(config->bg_img);
     // TODO; figure out how to change the color key on runtime so tranperency value can be changed 
     Uint32 colorkey = SDL_MapRGB(surface->format, 255, 255, 255);
     SDL_SetColorKey(surface, SDL_TRUE, colorkey);
@@ -470,7 +472,7 @@ void sdl2_test_update(stage* stg, state* ps, sdl2_test* app, sdl2_test_configura
     ps->y_velo += 10 * config->g;
 
     //collition detection with the window bounds and objects
-    sdl2_test_collision(stg, ps, app, config);
+    char* msg = sdl2_test_collision(stg, ps, app, config);
     //make the little guy stop running when we dont move around
     if(!ps->x_velo && !ps->y_velo)
         player_sprite.x = 0;
@@ -488,7 +490,9 @@ void sdl2_test_update(stage* stg, state* ps, sdl2_test* app, sdl2_test_configura
         SDL_RenderCopy(app->renderer, app->bg, (stg->screens[ps->screen_counter].blocks[x].trect),
                                      (stg->screens[ps->screen_counter].blocks[x].brect));
     }
+    sdl2_test_text_render(app, msg); 
     SDL_RenderPresent(app->renderer);
+    free(msg);
 }
 
 void sdl2_test_destroy(sdl2_test* app)
@@ -497,6 +501,7 @@ void sdl2_test_destroy(sdl2_test* app)
     SDL_DestroyTexture(app->bg);
     SDL_DestroyRenderer(app->renderer);
     SDL_DestroyWindow(app->window);
+    TTF_Quit();
     SDL_Quit();
     // do we need to do this or not?
     //free(app);
@@ -521,4 +526,35 @@ int sdl2_test_set_bg_colorkey(sdl2_test* app, int r, int g, int b)
     free(app->bg);
     app->bg = bg;
     return 1;
+}
+
+void sdl2_test_text_render(sdl2_test* app, char* msg)
+{
+    
+    TTF_Font* Sans = TTF_OpenFont("fonts/monserat.ttf", 12); //this opens a font style and sets a size
+    if(!Sans) 
+    {
+            printf("Unable to create Texture: %s\n", SDL_GetError());    
+    }
+    SDL_Rect Message_rect; //create a rect
+    Message_rect.x = 0;  //controls the rect's x coordinate 
+    Message_rect.y = 0; // controls the rect's y coordinte
+    Message_rect.w = 400; // controls the width of the rect
+    Message_rect.h = 30; // controls the height of the rect
+
+    SDL_Color White = {255, 255, 255};  // this is the color in rgb format, maxing out all would give you the color white, and it will be your text's color
+    SDL_Color black = {255, 255, 255};
+   
+    SDL_Surface* surfaceMessage = SDL_CreateRGBSurface(0, 400, 30, 32, 0, 0, 0, 0);
+    SDL_FillRect(surfaceMessage, NULL, SDL_MapRGB(surfaceMessage->format, 0, 0, 0));
+    SDL_Texture* Message = SDL_CreateTextureFromSurface(app->renderer, surfaceMessage);
+    SDL_RenderCopy(app->renderer, Message, NULL, &Message_rect);
+    
+    surfaceMessage = TTF_RenderText_Solid(Sans, msg, White); // as TTF_RenderText_Solid could only be used on SDL_Surface then you have to create the surface first
+    Message = SDL_CreateTextureFromSurface(app->renderer, surfaceMessage); //now you can convert it into a texture
+    SDL_RenderCopy(app->renderer, Message, NULL, &Message_rect); //you put the renderer's name first, the Message, the crop size(you can ignore this if you don't want to dabble with cropping), and the rect which is the size and coordinate of your texture
+    
+    //Don't forget to free your surface and texture
+    SDL_FreeSurface(surfaceMessage);
+    SDL_DestroyTexture(Message);
 }

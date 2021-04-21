@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -87,6 +88,8 @@ typedef struct {
     int stg_count;
     int stg_reload;
     float g;
+    char* bg_img;
+    char* ps_img;
     lua_State* L;
 } sdl2_test_configuration;
 
@@ -97,4 +100,5 @@ void sdl2_test_lua_block_get(sdl2_test_configuration* config, block* blk);
 void sdl2_test_lua_screen_get(sdl2_test_configuration* config, screen* s);
 
 block* sdl2_test_block_create(int id, int can_enter, SDL_Rect *trect, SDL_Rect *brect);
+void sdl2_test_text_render(sdl2_test* app, char* msg);
 #endif

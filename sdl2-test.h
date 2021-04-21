@@ -27,7 +27,7 @@ void sdl2_test_state_destroy(state* ps);
 int sdl2_test_state_get_running(state* ps);
 
 sdl2_test *sdl2_test_create(sdl2_test_configuration* config);
-void sdl2_test_collision(stage* stg, state* ps,sdl2_test* app, sdl2_test_configuration* config);
+char *sdl2_test_collision(stage* stg, state* ps,sdl2_test* app, sdl2_test_configuration* config);
 void sdl2_test_initialize(state* ps, sdl2_test* app);
 void sdl2_test_update(stage* stg, state* ps, sdl2_test* app, sdl2_test_configuration* config);
 void sdl2_test_destroy(sdl2_test* app);
