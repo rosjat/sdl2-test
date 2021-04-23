@@ -531,18 +531,18 @@ int sdl2_test_set_bg_colorkey(sdl2_test* app, int r, int g, int b)
 void sdl2_test_text_render(sdl2_test* app, char* msg)
 {
     
-    TTF_Font* Sans = TTF_OpenFont("fonts/monserat.ttf", 12); //this opens a font style and sets a size
+    TTF_Font* Sans = TTF_OpenFont("fonts/monserat.ttf", 12);
     if(!Sans) 
     {
             printf("Unable to create Texture: %s\n", SDL_GetError());    
     }
-    SDL_Rect Message_rect; //create a rect
-    Message_rect.x = 0;  //controls the rect's x coordinate 
-    Message_rect.y = 0; // controls the rect's y coordinte
-    Message_rect.w = 400; // controls the width of the rect
-    Message_rect.h = 30; // controls the height of the rect
+    SDL_Rect Message_rect;
+    Message_rect.x = 0; 
+    Message_rect.y = 0;
+    Message_rect.w = 400;
+    Message_rect.h = 30;
 
-    SDL_Color White = {255, 255, 255};  // this is the color in rgb format, maxing out all would give you the color white, and it will be your text's color
+    SDL_Color White = {255, 255, 255};
     SDL_Color black = {255, 255, 255};
    
     SDL_Surface* surfaceMessage = SDL_CreateRGBSurface(0, 400, 30, 32, 0, 0, 0, 0);
@@ -550,11 +550,10 @@ void sdl2_test_text_render(sdl2_test* app, char* msg)
     SDL_Texture* Message = SDL_CreateTextureFromSurface(app->renderer, surfaceMessage);
     SDL_RenderCopy(app->renderer, Message, NULL, &Message_rect);
     
-    surfaceMessage = TTF_RenderText_Solid(Sans, msg, White); // as TTF_RenderText_Solid could only be used on SDL_Surface then you have to create the surface first
-    Message = SDL_CreateTextureFromSurface(app->renderer, surfaceMessage); //now you can convert it into a texture
-    SDL_RenderCopy(app->renderer, Message, NULL, &Message_rect); //you put the renderer's name first, the Message, the crop size(you can ignore this if you don't want to dabble with cropping), and the rect which is the size and coordinate of your texture
+    surfaceMessage = TTF_RenderText_Solid(Sans, msg, White);
+    Message = SDL_CreateTextureFromSurface(app->renderer, surfaceMessage);
+    SDL_RenderCopy(app->renderer, Message, NULL, &Message_rect);
     
-    //Don't forget to free your surface and texture
     SDL_FreeSurface(surfaceMessage);
     SDL_DestroyTexture(Message);
 }

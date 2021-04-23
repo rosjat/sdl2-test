@@ -1,49 +1,27 @@
 #include "sdl2-test_private.h"
 
-void sdl2_test_configuration_load(char* fname, sdl2_test_configuration* config)
+sdl2_test_configuration* sdl2_test_configuration_load(char* fname)
 {
-   char* values[12] = { "WINDOW_HEIGHT",
-                        "WINDOW_WIDTH",
-                        "SCROLL_SPEED",
-                        "BLOCK_UNIT_WIDTH",
-                        "BLOCK_UNIT_HEIGHT",
-                        "BLOCK_T_UNIT_HEIGHT",
-                        "BLOCK_T_UNIT_WIDTH",
-                        "SCREEN_HEIGHT",
-                        "SCREEN_WIDTH",
-                        "GRAVITY",
-                        "BG_PATH",
-                        "PSRITE_PATH" };
-
-    config->L = luaL_newstate();
-    luaL_openlibs(config->L);
-    if (luaL_loadfile(config->L, fname) || lua_pcall(config->L, 0, 0, 0))
-        printf("cannot run configuration file: %s",
-                 lua_tostring(config->L, -1));
-    
-    for(int i = 0; i < 12; i++)
+    sdl2_test_configuration* config;
+    configuration_wrapper* wrapper;
+    lua_State* L = luaL_newstate(); 
+    luaL_openlibs(L);
+    sdl2_test_lua_register (L);
+    if (luaL_dofile(L, fname))
     {
-        lua_getglobal(config->L, values[i]);
-    }
+        char* err = lua_tostring(L, -1);
+        printf("cannot run configuration file: %s", err);
+    }    
+    lua_getglobal(L, "config");
+    if(lua_isuserdata(L, -1))
+    {
+        wrapper = (configuration_wrapper*)lua_touserdata(L, -1);
+        config = &wrapper->config;
+        config->L = L;
+        lua_settop(config->L, 0);
 
-    config->win_h = (int)lua_tointeger(config->L, 1);
-    config->win_w = (int)lua_tointeger(config->L, 2);
-    config->ss = (int)lua_tointeger(config->L, 3);
-    config->blk_w = (int)lua_tointeger(config->L, 4);
-    config->blk_h = (int)lua_tointeger(config->L, 5);
-    config->blk_t_h = (int)lua_tointeger(config->L, 6);
-    config->blk_t_w = (int)lua_tointeger(config->L, 7);
-    config->scrn_h = (int)lua_tointeger(config->L, 8);
-    config->scrn_w = (int)lua_tointeger(config->L, 9);
-    config->g = (float)lua_tonumber(config->L, 10);
-    
-    //config->bg_img = malloc( sizeof((char*)lua_tostring(config->L, 11)));
-    config->bg_img = lua_tostring(config->L, 11);
-    config->ps_img = lua_tostring(config->L, 12);
-    config->stg_count = 0;
-    config->stg_reload = 0;
-    lua_settop(config->L, 0);
-    //lua_close(L);
+    } 
+    return config;
 }
 
 // TODO: just make it more generic ...
@@ -326,4 +304,140 @@ SDL_Rect* sdl2_test_lua_rect_get(sdl2_test_configuration* config)
     lua_pop(config->L, 1);
 
     return init_rect(x, y, w, h);
+}
+
+
+/*
+ first iteration for a mata table to access config members in lua an set it 
+
+ - we define getter and setter for types we want to set like int, char* and float
+ - we define some helper functions to build up an register metatable, metamethods and methods
+   that we want to use in lua scripts
+ - we define our methods for the manipulation of objects in lua 
+
+*/
+
+static int sdl2_test_lua_configuration_push(lua_State* L)
+{   
+    configuration_wrapper* wrapper  = (configuration_wrapper*)lua_newuserdata(L,sizeof(configuration_wrapper));
+    wrapper->config = *sdl2_test_configuration_create();
+    luaL_getmetatable(L, "ConfigMeta");
+    lua_setmetatable(L, -2);
+    return 1;
+}
+
+/* setter and getter functions */
+
+static int sdl2_test_lua_get_int (lua_State *L, void *v)
+{
+  lua_pushnumber(L, *(int*)v);
+  return 1;
+}
+
+static int sdl2_test_lua_set_int (lua_State *L, void *v)
+{
+  *(int*)v = luaL_checkint(L, 3);
+  return 0;
+}
+
+static int sdl2_test_lua_get_number (lua_State *L, void *v)
+{
+  lua_pushnumber(L, *(lua_Number*)v);
+  return 1;
+}
+
+static int sdl2_test_lua_set_number (lua_State *L, void *v)
+{
+  *(float*)v = luaL_checknumber(L, 3);
+  return 0;
+}
+
+static int sdl2_test_lua_get_string (lua_State *L, void *v)
+{
+  lua_pushstring(L, *((char**)v) );
+  return 1;
+}
+
+static int sdl2_test_lua_set_string (lua_State *L, void *v)
+{
+    *((char**)v) = luaL_checkstring(L, 3);
+    return 0;
+}
+
+/* helper functions for registation of c functions with lua */
+static void sdl2_test_lua_add (lua_State *L, lua_reg l)
+{
+  for (; l->name; l++) {
+    lua_pushstring(L, l->name);
+    lua_pushlightuserdata(L, (void*)l);
+    lua_settable(L, -3);
+  }
+}
+
+static int sdl2_test_lua_call (lua_State *L)
+{
+  /* for get: stack has userdata, index, lightuserdata */
+  /* for set: stack has userdata, index, value, lightuserdata */
+  lua_reg m = (lua_reg)lua_touserdata(L, -1);  /* member info */
+  lua_pop(L, 1);                               /* drop lightuserdata */
+  luaL_checktype(L, 1, LUA_TUSERDATA);
+  return m->func(L, (void *)((char *)lua_touserdata(L, 1) + m->offset));
+}
+static int sdl2_test_lua_index_handler (lua_State *L)
+{
+  /* stack has userdata, index */
+  lua_pushvalue(L, 2);                     /* dup index */
+  lua_rawget(L, lua_upvalueindex(1));      /* lookup member by name */
+  if (!lua_islightuserdata(L, -1)) {
+    lua_pop(L, 1);                         /* drop value */
+    lua_pushvalue(L, 2);                   /* dup index */
+    lua_gettable(L, lua_upvalueindex(2));  /* else try methods */
+    if (lua_isnil(L, -1))                  /* invalid member */
+      luaL_error(L, "cannot get member '%s'", lua_tostring(L, 2));
+    return 1;
+  }
+  return sdl2_test_lua_call(L);                      /* call get function */
+}
+
+static int sdl2_test_lua_newindex_handler (lua_State *L)
+{
+  lua_pushvalue(L, 2);                     
+  lua_rawget(L, lua_upvalueindex(1));      
+  if (!lua_islightuserdata(L, -1))         
+    luaL_error(L, "cannot set member '%s'", lua_tostring(L, 2));
+  return sdl2_test_lua_call(L);                     
+}
+
+int sdl2_test_lua_register (lua_State *L)
+{
+  int metatable, methods;
+
+  /* create methods table, & add it to the table of globals */
+  luaL_openlib(L, "sdl2_test_configuration", sdl2_test_lua_methods, 0);
+  methods = lua_gettop(L);
+
+  /* create metatable for your_t, & add it to the registry */
+  luaL_newmetatable(L, "ConfigMeta");
+  luaL_openlib(L, 0, sdl2_test_lua_meta_methods, 0);  /* fill metatable */
+  metatable = lua_gettop(L);
+
+  lua_pushliteral(L, "__metatable");
+  lua_pushvalue(L, methods);    /* dup methods table*/
+  lua_rawset(L, metatable);     /* hide metatable:
+                                   metatable.__metatable = methods */
+  lua_pushliteral(L, "__index");
+  lua_pushvalue(L, metatable);  /* upvalue index 1 */
+  sdl2_test_lua_add(L, sdl2_test_configuration_getters);     /* fill metatable with getters */
+  lua_pushvalue(L, methods);    /* upvalue index 2 */
+  lua_pushcclosure(L, sdl2_test_lua_index_handler, 2);
+  lua_rawset(L, metatable);     /* metatable.__index = index_handler */
+
+  lua_pushliteral(L, "__newindex");
+  lua_newtable(L);              /* table for members you can set */
+  sdl2_test_lua_add(L, sdl2_test_configuration_setters);     /* fill with setters */
+  lua_pushcclosure(L, sdl2_test_lua_newindex_handler, 1);
+  lua_rawset(L, metatable);     /* metatable.__newindex = newindex_handler */
+
+  lua_pop(L, 1);                /* drop metatable */
+  return 1;                     /* return methods on the stack */
 }

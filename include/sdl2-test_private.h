@@ -93,6 +93,79 @@ typedef struct {
     lua_State* L;
 } sdl2_test_configuration;
 
+typedef struct {
+    sdl2_test_configuration config;
+} configuration_wrapper;
+
+typedef int (*lua_func) (lua_State *L, void *v);
+
+
+typedef const struct{
+  const char *name;  /* member name */
+  lua_func func;
+  size_t offset;     /* offset of member within your_t */
+}  lua_reg_pre;
+
+typedef lua_reg_pre * lua_reg;
+
+static int sdl2_test_lua_get_int (lua_State *L, void *v);
+static int sdl2_test_lua_set_int (lua_State *L, void *v);
+static int sdl2_test_lua_get_number (lua_State *L, void *v);
+static int sdl2_test_lua_set_number (lua_State *L, void *v);
+static int sdl2_test_lua_get_string (lua_State *L, void *v);
+static int sdl2_test_lua_set_string (lua_State *L, void *v);
+static void sdl2_test_lua_add (lua_State *L, lua_reg l);
+static int sdl2_test_lua_index_handler (lua_State *L);
+static int sdl2_test_lua_newindex_handler (lua_State *L);
+static int sdl2_test_lua_call (lua_State *L);
+int sdl2_test_lua_register (lua_State *L);
+static int sdl2_test_lua_configuration_push(lua_State* L);
+
+static const luaL_Reg sdl2_test_lua_meta_methods[] = {
+    {0,0}
+};
+
+static const luaL_Reg sdl2_test_lua_methods[] = {
+    {"InitConfig", sdl2_test_lua_configuration_push},
+    {0,0}
+};
+
+static const lua_reg_pre sdl2_test_configuration_getters[] = {
+    {"win_h",    sdl2_test_lua_get_int, offsetof(configuration_wrapper, config.win_h)    },
+    {"win_w",    sdl2_test_lua_get_int, offsetof(configuration_wrapper, config.win_w)    },
+    {"ss",    sdl2_test_lua_get_int, offsetof(configuration_wrapper, config.ss)    },
+    {"blk_w",    sdl2_test_lua_get_int, offsetof(configuration_wrapper, config.blk_w)    },
+    {"blk_h",    sdl2_test_lua_get_int, offsetof(configuration_wrapper, config.blk_h)    },
+    {"blk_t_w",    sdl2_test_lua_get_int, offsetof(configuration_wrapper, config.blk_t_w)    },
+    {"blk_t_h",    sdl2_test_lua_get_int, offsetof(configuration_wrapper, config.blk_t_h)    },
+    {"scrn_w",    sdl2_test_lua_get_int, offsetof(configuration_wrapper, config.scrn_w)    },
+    {"scrn_h",    sdl2_test_lua_get_int, offsetof(configuration_wrapper, config.scrn_h)    },
+    {"stg_count",    sdl2_test_lua_get_int, offsetof(configuration_wrapper, config.stg_count)    },
+    {"stg_reload",    sdl2_test_lua_get_int, offsetof(configuration_wrapper, config.stg_reload)    },
+    {"g",    sdl2_test_lua_get_number, offsetof(configuration_wrapper, config.g)    },
+    {"bg_img",    sdl2_test_lua_get_string, offsetof(configuration_wrapper, config.bg_img)    },
+    {"ps_img",    sdl2_test_lua_get_string, offsetof(configuration_wrapper, config.ps_img)    },
+    {0,0}
+};
+
+static const lua_reg_pre sdl2_test_configuration_setters[] = {
+    {"win_h",  sdl2_test_lua_set_int, offsetof(configuration_wrapper, config.win_h)  },
+    {"win_w",  sdl2_test_lua_set_int, offsetof(configuration_wrapper, config.win_w)    },
+    {"ss",    sdl2_test_lua_set_int, offsetof(configuration_wrapper, config.ss)    },
+    {"blk_w",    sdl2_test_lua_set_int, offsetof(configuration_wrapper, config.blk_w)    },
+    {"blk_h",    sdl2_test_lua_set_int, offsetof(configuration_wrapper, config.blk_h)    },
+    {"blk_t_w",    sdl2_test_lua_set_int, offsetof(configuration_wrapper, config.blk_t_w)    },
+    {"blk_t_h",    sdl2_test_lua_set_int, offsetof(configuration_wrapper, config.blk_t_h)    },
+    {"scrn_w",    sdl2_test_lua_set_int, offsetof(configuration_wrapper, config.scrn_w)    },
+    {"scrn_h",    sdl2_test_lua_set_int, offsetof(configuration_wrapper, config.scrn_h)    },
+    {"stg_count",    sdl2_test_lua_set_int, offsetof(configuration_wrapper, config.stg_count)    },
+    {"stg_reload",    sdl2_test_lua_set_int, offsetof(configuration_wrapper, config.stg_reload)    },
+    {"g",    sdl2_test_lua_set_number, offsetof(configuration_wrapper, config.g)    },
+    {"bg_img",    sdl2_test_lua_set_string, offsetof(configuration_wrapper, config.bg_img)    },
+    {"ps_img",    sdl2_test_lua_set_string, offsetof(configuration_wrapper, config.ps_img)    },
+    {0,0}
+};
+
 SDL_Rect* init_rect(int x, int y, int w, int h);
 SDL_Rect* sdl2_test_lua_rect_get(sdl2_test_configuration* config);
 
@@ -101,4 +174,7 @@ void sdl2_test_lua_screen_get(sdl2_test_configuration* config, screen* s);
 
 block* sdl2_test_block_create(int id, int can_enter, SDL_Rect *trect, SDL_Rect *brect);
 void sdl2_test_text_render(sdl2_test* app, char* msg);
+
+sdl2_test_configuration* sdl2_test_configuration_create(void);
+
 #endif

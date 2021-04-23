@@ -3,8 +3,7 @@
 int main(){ 
     srand(time(0));
     sdl2_test_configuration* config;
-    config = sdl2_test_configuration_create();
-    sdl2_test_default_configuration_load(config);
+    config = sdl2_test_default_configuration_load(config); 
     sdl2_test_configuration_print(config);   
     
     state* prog_state;

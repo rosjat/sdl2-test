@@ -8,6 +8,8 @@ its basically a playground for myself to get used to some things in C and have a
 
 good place to start with sdl2: https://wiki.libsdl.org/
 
+help with most of the lua code: lua-users.org , and some videos on youtube of course
+
 ## some keys you might wanna checkout
 
  - w, arrow up -> move up
@@ -16,7 +18,26 @@ good place to start with sdl2: https://wiki.libsdl.org/
  - a, arrow left -> move left
  - b -> on holding down, makes background disapear (mainly for debugging)
  - r -> reload the stage script 
+
+## some kind of a roadmap ...
  
+  - implementing basic features to debug (maybe some kind of console)
+  - implementing more lua interaction features so we can make more changes by scripts
+  - revisting the "game" design after we make the existing code more robust 
+
+---
+
+### Update 2021/4/23
+
+- refactoring the way app is creating the configuration from a lua file
+  - now there are functions to define a metatable and methods to asign values in lua 
+  - now we only need to register those "libraries" once we create the lua state and can access them 
+    in the scripts (for now only in the config script).  
+### Update 2021/4/21
+
+- adding more InApp debugging
+  - a small info about collition detected (need more work to make it useable)
+
 ### Update 2021/4/19
 
 - another iteration for the lua script use
@@ -77,6 +98,7 @@ good place to start with sdl2: https://wiki.libsdl.org/
  - added a color key so i can have opacity 
  - added simple collition detection for the added objects, the way that those objects are added needs to be made easier(maybe config file)
 
+---
 
 ## Acknowledgement
 
