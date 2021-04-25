@@ -256,12 +256,6 @@ static const lua_reg_pre sdl2_test_block_setters[] = {
 };
 
 SDL_Rect* init_rect(int x, int y, int w, int h);
-SDL_Rect* sdl2_test_lua_rect_get(sdl2_test_configuration* config);
-
-void sdl2_test_lua_block_get(sdl2_test_configuration* config, block* blk);
-void sdl2_test_lua_screen_get(sdl2_test_configuration* config, screen* s);
-
-block* sdl2_test_block_create(int id, int can_enter, SDL_Rect *trect, SDL_Rect *brect);
 void sdl2_test_text_render(sdl2_test* app, char* msg);
 
 sdl2_test_configuration* sdl2_test_configuration_create(void);
