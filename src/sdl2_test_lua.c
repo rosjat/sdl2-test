@@ -24,22 +24,21 @@ sdl2_test_configuration* sdl2_test_configuration_load(char* fname)
     return config;
 }
 
-// TODO: just make it more generic ...
-state *sdl2_test_stage_load(char* fname, sdl2_test_configuration* config) 
+stage *sdl2_test_stage_load(char* fname, sdl2_test_configuration* config) 
 {  
-    if (luaL_loadfile(config->L, fname) || lua_pcall(config->L, 0, 0, 0))
-        printf("cannot run stage file: %s", lua_tostring(config->L, -1));
-    lua_getglobal(config->L, "stages");
-    if (!lua_istable(config->L, -1))
-        printf("not a table: %s", lua_tostring(config->L, -1));
-    config->stg_count = (int)lua_rawlen(config->L,1);
-    stage *stages = malloc(sizeof(stage) * config->stg_count);
-    if(!stages)
-        return 0;
-    memset(stages, 0, sizeof(stage) * config->stg_count);
-    for(int scr=1; scr<= config->stg_count; scr++)
+    stage* stages;
+    stage_wrapper* wrapper;
+    if (luaL_dofile(config->L, fname))
     {
-        stage *stg = (stages + scr-1);
+        char* err = lua_tostring(config->L, -1);
+        printf("cannot run stage file: %s", err);
+    }
+    lua_getglobal(config->L, "stages");
+    if (lua_istable(config->L, -1))
+    {
+      int sc = lua_gettop(config->L);
+      for(int scr=1; scr<= sc; scr++)
+      {
         // at this point we should have a stage on the top of the stage
         lua_rawgeti(config->L, -1, scr);
         // when you get nil, you're done
@@ -47,181 +46,25 @@ state *sdl2_test_stage_load(char* fname, sdl2_test_configuration* config)
             lua_pop(config->L,1);
             break;
         }
-        luaL_checktype(config->L, -1, LUA_TTABLE);
-        lua_getfield(config->L, -1, "screen_count");
-        stg->screen_count = (int)lua_tointeger(config->L, -1);
-        lua_pop(config->L, 1);
-        lua_getfield(config->L, -1, "screen_active");
-        stg->screen_active = (int)lua_tointeger(config->L, -1);
-        lua_pop(config->L, 1);
-        stg->screens = malloc(stg->screen_count * sizeof(screen));
-        if(!stg->screens)
+        if(lua_isuserdata(config->L, -1))
         {
-            return 0;
+            wrapper = (stage_wrapper*)lua_touserdata(config->L, -1);
+            stages = &(wrapper->stg);
+            lua_pop(config->L, 1);
+            lua_settop(config->L, 0);
+
         }
-        memset(stg->screens, 0, stg->screen_count * sizeof(screen));
-
-        lua_getfield(config->L, -1, "screens");
-        luaL_checktype(config->L, -1, LUA_TTABLE);
-        for(int x = 1; x <= stg->screen_count; x++) 
-        {
-            lua_rawgeti(config->L, -1, x);
-            if (lua_isnil(config->L, -1)) {
-                lua_pop(config->L,1);
-                break;
-            }
-            luaL_checktype(config->L, -1, LUA_TTABLE);
-            screen *s = stg->screens + (x-1);
-            lua_getfield(config->L, -1, "id");
-            s->id = (int)lua_tointeger(config->L, -1);
-            lua_pop(config->L, 1);
-            lua_getfield(config->L, -1, "x");
-            s->x = (int)lua_tointeger(config->L, -1);
-            lua_pop(config->L, 1);
-            lua_getfield(config->L, -1, "y");
-            s->y = (int)lua_tointeger(config->L, -1);
-            lua_pop(config->L, 1);
-            lua_getfield(config->L, -1, "width");
-            s->width = (int)lua_tointeger(config->L, -1);
-            lua_pop(config->L, 1);
-            lua_getfield(config->L, -1, "height");
-            s->height = (int)lua_tointeger(config->L, -1);
-            lua_pop(config->L, 1);
-            lua_getfield(config->L, -1, "block_count");
-            s->block_count = (int)lua_tointeger(config->L, -1);
-            lua_pop(config->L, 1);
-            s->blocks = malloc(s->block_count * sizeof(block));
-            if(!s->blocks)
-            {
-                free(stg->screens);
-                return 0;
-            }
-            memset(s->blocks, 0 , s->block_count * sizeof(block));
-            lua_getfield(config->L, -1, "blocks");
-            luaL_checktype(config->L, -1, LUA_TTABLE);
-            for(int b = 1; b <= s->block_count; b++) 
-            {
-                lua_rawgeti(config->L, -1, b);
-                if (lua_isnil(config->L, -1)) {
-                    lua_pop(config->L,1);
-                    break;
-                }
-                luaL_checktype(config->L, -1, LUA_TTABLE);    
-                block *blk = s->blocks + (b -1);
-
-                lua_getfield(config->L, -1, "id");
-                blk->id = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-
-                lua_getfield(config->L, -1, "enter");
-                blk->enter = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-
-                lua_getfield(config->L, -1, "trect");
-
-                lua_pushstring(config->L, "x");
-                lua_gettable(config->L, -2); 
-                int tx = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-
-                lua_pushstring(config->L, "y");
-                lua_gettable(config->L, -2); 
-                int ty = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-
-                lua_pushstring(config->L, "w");
-                lua_gettable(config->L, -2); 
-                int tw = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-
-                lua_pushstring(config->L, "h");
-                lua_gettable(config->L, -2); 
-                int th = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-
-                blk->trect = init_rect(tx, ty, tw, th);
-                lua_pop(config->L, 1);
-
-                lua_getfield(config->L, -1, "brect");
-                luaL_checktype(config->L, -1, LUA_TTABLE);
-                lua_pushstring(config->L, "x");
-                lua_gettable(config->L, -2); 
-                int bx = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-
-                lua_pushstring(config->L, "y");
-                lua_gettable(config->L, -2);
-                int by = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-
-                lua_pushstring(config->L, "w");
-                lua_gettable(config->L, -2); 
-                int bw = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-
-                lua_pushstring(config->L, "h");
-                lua_gettable(config->L, -2); 
-                int bh = (int)lua_tointeger(config->L, -1);
-                lua_pop(config->L, 1);
-
-                blk->brect = init_rect(bx, by, bw, bh);
-                
-                lua_pop(config->L, 1);
-                lua_pop(config->L, 1);
-            }
-            lua_pop(config->L, 1);
-            lua_pop(config->L, 1);
-        }
-        lua_pop(config->L, 1);
-    }  
-    lua_settop(config->L, 0);
+        lua_pop(config->L, 1); 
+      } 
+      lua_pop(config->L, 1);
+    }
+    
     return stages;
 }
 
 void sdl2_test_stage_reload(stage* stages, char* fname, sdl2_test_configuration* config) 
 {  
-    if (luaL_loadfile(config->L, fname) || lua_pcall(config->L, 0, 0, 0))
-        printf("cannot run stage file: %s", lua_tostring(config->L, -1));
-    lua_getglobal(config->L, "stages");
-    if (!lua_istable(config->L, -1))
-        printf("not a table: %s", lua_tostring(config->L, -1));
-    config->stg_count = (int)lua_rawlen(config->L,1);
-    for(int scr=1; scr<= config->stg_count; scr++)
-    {
-        stage *stg = (stages + scr-1);
-        // at this point we should have a stage on the top of the stage
-        lua_rawgeti(config->L, -1, scr);
-        // when you get nil, you're done
-        if (lua_isnil(config->L, -1)) {
-            lua_pop(config->L,1);
-            break;
-        }
-        luaL_checktype(config->L, -1, LUA_TTABLE);
-        lua_getfield(config->L, -1, "screen_count");
-        stg->screen_count = (int)lua_tointeger(config->L, -1);
-        lua_pop(config->L, 1);
-        lua_getfield(config->L, -1, "screen_active");
-        stg->screen_active = (int)lua_tointeger(config->L, -1);
-        lua_pop(config->L, 1);
-        
-        // here we need to push screens at the top of the stack to iterate through it 
-        lua_getfield(config->L, -1, "screens");
-        luaL_checktype(config->L, -1, LUA_TTABLE);
-        for(int x = 1; x <= stg->screen_count; x++) 
-        {
-            lua_rawgeti(config->L, -1, x);
-            if (lua_isnil(config->L, -1)) {
-                lua_pop(config->L,1);
-                break;
-            }
-            luaL_checktype(config->L, -1, LUA_TTABLE);
-            screen *s = stg->screens + (x-1);
-            sdl2_test_lua_screen_get(config, s);
-            lua_pop(config->L, 1);
-        }
-        lua_pop(config->L, 1);
-    }  
-    lua_settop(config->L, 0);
+    stages = sdl2_test_stage_load(fname,config);
 }
 
 void sdl2_test_lua_screen_get(sdl2_test_configuration* config, screen* s)
@@ -308,16 +151,15 @@ SDL_Rect* sdl2_test_lua_rect_get(sdl2_test_configuration* config)
 
 
 /*
- first iteration for a mata table to access config members in lua an set it 
+ 2nd iteration for a mata table to access config members in lua an set it 
 
- - we define getter and setter for types we want to set like int, char* and float
- - we define some helper functions to build up an register metatable, metamethods and methods
-   that we want to use in lua scripts
- - we define our methods for the manipulation of objects in lua 
+ - we refactor the functions so that we can load blocks in a more generic manner.
+   A screen should consist of a fix width defined by an amount of blocks and the 
+   same for the height.
 
 */
 
-static int sdl2_test_lua_configuration_push(lua_State* L)
+static int sdl2_test_lua_configuration_init(lua_State* L)
 {   
     configuration_wrapper* wrapper  = (configuration_wrapper*)lua_newuserdata(L,sizeof(configuration_wrapper));
     wrapper->config = *sdl2_test_configuration_create();
@@ -326,6 +168,121 @@ static int sdl2_test_lua_configuration_push(lua_State* L)
     return 1;
 }
 
+static int sdl2_test_lua_stage_init(lua_State* L, int sc, int sa)
+{   
+
+    int screen_count, screen_active;
+    screen_active = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    screen_count = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    stage_wrapper* wrapper  = (stage_wrapper*)lua_newuserdata(L,sizeof(stage_wrapper));
+    wrapper->stg = *((stage *)malloc(sizeof(stage)));
+    wrapper->stg.screen_count = screen_count;
+    wrapper->stg.screen_active = screen_active;
+    wrapper->stg.screens = (screen *)malloc(sizeof(screen) * wrapper->stg.screen_count);
+    if(wrapper->stg.screens)
+    {
+        memset(wrapper->stg.screens, 0, sizeof(screen) * wrapper->stg.screen_count);
+    }
+    luaL_getmetatable(L, "StageMeta");
+    lua_setmetatable(L, -2);
+    return 1;
+}
+
+static int sdl2_test_lua_screen_init(lua_State* L, void* v, int id, int x, int y, int w, int h, int bc)
+{   
+    int _id, _x, _y, _w, _h, _bc;
+    _bc = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    _h = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    _w = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    _y = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    _x = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    _id = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    if(lua_isuserdata(L, -1))
+    {
+        stage_wrapper* wrapper  = (stage_wrapper*)lua_touserdata(L, 1);
+        stage stg = wrapper->stg; 
+        screen *s = &stg.screens[_id];
+        s->id = _id;
+        s->x = _x;
+        s->y = _y;
+        s->width = _w;
+        s->height = _h;
+        s->block_count = _bc;
+        s->blocks = (block *)malloc(sizeof(block) * _bc);
+        if(s->blocks)
+        {
+            memset(s->blocks, 0, sizeof(block) * _bc);
+        }
+    }
+    return 0;
+}
+
+static int sdl2_test_lua_block_init(lua_State* L, void* v, int s, int id, int enter)
+{   
+    int _s, _id, _enter;
+    _enter = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    _id = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    _s = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    if(lua_isuserdata(L, -1))
+    {
+        stage_wrapper* wrapper  = (stage_wrapper*)lua_touserdata(L, 1);
+        stage stg = wrapper->stg; 
+        screen *s = &stg.screens[_s];  
+        block *b = &s->blocks[_id];  
+        b->id = _id;
+        b->enter = _enter;
+    }
+    return 0;
+}
+
+static int sdl2_test_lua_init_rect(lua_State* L, void* v, int s, int b, int t, int x, int y, int w , int h)
+{
+    int rx, ry, rw, rh, rt , _s, _b;
+    rh = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    rw = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    ry = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    rx = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    rt = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    _b = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    _s = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    if(lua_isuserdata(L, -1))
+    {
+      stage_wrapper* wrapper  = (stage_wrapper*)lua_touserdata(L, 1);
+      stage stg = wrapper->stg; 
+      screen *s = &stg.screens[_s];  
+      block *b = &s->blocks[_b]; 
+      switch(rt)
+      {
+        case 0:
+        {
+          b->trect = init_rect(rx, ry, rw, rh);
+        } break;
+        case 1:
+        {
+          b->brect = init_rect(rx, ry, rw, rh);
+        } break;
+      }
+    }
+    return 0;
+}
 /* setter and getter functions */
 
 static int sdl2_test_lua_get_int (lua_State *L, void *v)
@@ -364,6 +321,48 @@ static int sdl2_test_lua_set_string (lua_State *L, void *v)
     return 0;
 }
 
+static int sdl2_test_lua_get_stage (lua_State *L, void *v)
+{
+  lua_pushlightuserdata(L, *((stage**)v) );
+  return 1;
+}
+
+static int sdl2_test_lua_get_screen (lua_State *L, void *v)
+{
+  lua_pushlightuserdata(L, *((screen**)v) );
+  return 1;
+}
+
+static int sdl2_test_lua_set_screen (lua_State *L, void *v)
+{
+  *((screen**)v) = lua_touserdata(L, 3);
+  return 0;
+}
+
+static int sdl2_test_lua_get_block (lua_State *L, void *v)
+{
+  lua_pushlightuserdata(L, *((block**)v) );
+  return 1;
+}
+
+static int sdl2_test_lua_set_block (lua_State *L, void *v)
+{
+  *((block**)v) = lua_touserdata(L, 3);
+  return 0;
+}
+
+static int sdl2_test_lua_get_rect (lua_State *L, void *v)
+{
+  lua_pushlightuserdata(L, *((SDL_Rect**)v) );
+  return 1;
+}
+
+static int sdl2_test_lua_set_rect (lua_State *L, void *v)
+{
+  *((SDL_Rect**)v) = lua_touserdata(L, 3);
+  return 0;
+}
+
 /* helper functions for registation of c functions with lua */
 static void sdl2_test_lua_add (lua_State *L, lua_reg l)
 {
@@ -376,27 +375,25 @@ static void sdl2_test_lua_add (lua_State *L, lua_reg l)
 
 static int sdl2_test_lua_call (lua_State *L)
 {
-  /* for get: stack has userdata, index, lightuserdata */
-  /* for set: stack has userdata, index, value, lightuserdata */
-  lua_reg m = (lua_reg)lua_touserdata(L, -1);  /* member info */
-  lua_pop(L, 1);                               /* drop lightuserdata */
+  lua_reg m = (lua_reg)lua_touserdata(L, -1);
+  lua_pop(L, 1);
   luaL_checktype(L, 1, LUA_TUSERDATA);
   return m->func(L, (void *)((char *)lua_touserdata(L, 1) + m->offset));
 }
+
 static int sdl2_test_lua_index_handler (lua_State *L)
 {
-  /* stack has userdata, index */
-  lua_pushvalue(L, 2);                     /* dup index */
-  lua_rawget(L, lua_upvalueindex(1));      /* lookup member by name */
+  lua_pushvalue(L, 2);
+  lua_rawget(L, lua_upvalueindex(1));
   if (!lua_islightuserdata(L, -1)) {
-    lua_pop(L, 1);                         /* drop value */
-    lua_pushvalue(L, 2);                   /* dup index */
-    lua_gettable(L, lua_upvalueindex(2));  /* else try methods */
-    if (lua_isnil(L, -1))                  /* invalid member */
+    lua_pop(L, 1);
+    lua_pushvalue(L, 2);
+    lua_gettable(L, lua_upvalueindex(2));
+    if (lua_isnil(L, -1))
       luaL_error(L, "cannot get member '%s'", lua_tostring(L, 2));
     return 1;
   }
-  return sdl2_test_lua_call(L);                      /* call get function */
+  return sdl2_test_lua_call(L);
 }
 
 static int sdl2_test_lua_newindex_handler (lua_State *L)
@@ -408,36 +405,54 @@ static int sdl2_test_lua_newindex_handler (lua_State *L)
   return sdl2_test_lua_call(L);                     
 }
 
-int sdl2_test_lua_register (lua_State *L)
+void sdl2_test_lua_metatable_register(lua_State* L, char* name, 
+                                      luaL_Reg methods[],
+                                      lua_reg_pre getter[],
+                                      lua_reg_pre setter[])
+{
+    int _metatable, _methods;
+    luaL_newmetatable(L, name);
+    luaL_openlib(L, 0, methods, 0); 
+    _metatable = lua_gettop(L);
+    lua_pushliteral(L, "__metatable");
+    lua_pushvalue(L, _methods);
+    lua_rawset(L, _metatable);
+    lua_pushliteral(L, "__index");
+    lua_pushvalue(L, _metatable);
+    sdl2_test_lua_add(L, getter);
+    lua_pushvalue(L, _methods);
+    lua_pushcclosure(L, sdl2_test_lua_index_handler, 2);
+    lua_rawset(L, _metatable);
+    lua_pushliteral(L, "__newindex");
+    lua_newtable(L);
+    sdl2_test_lua_add(L, setter);
+    lua_pushcclosure(L, sdl2_test_lua_newindex_handler, 1);
+    lua_rawset(L, _metatable);
+    lua_pop(L, 1);
+}
+
+int sdl2_test_lua_register(lua_State *L)
 {
   int metatable, methods;
-
-  /* create methods table, & add it to the table of globals */
-  luaL_openlib(L, "sdl2_test_configuration", sdl2_test_lua_methods, 0);
+  luaL_openlib(L, "sdl2_test_lua", sdl2_test_lua_methods, 0);
   methods = lua_gettop(L);
 
-  /* create metatable for your_t, & add it to the registry */
-  luaL_newmetatable(L, "ConfigMeta");
-  luaL_openlib(L, 0, sdl2_test_lua_meta_methods, 0);  /* fill metatable */
-  metatable = lua_gettop(L);
-
-  lua_pushliteral(L, "__metatable");
-  lua_pushvalue(L, methods);    /* dup methods table*/
-  lua_rawset(L, metatable);     /* hide metatable:
-                                   metatable.__metatable = methods */
-  lua_pushliteral(L, "__index");
-  lua_pushvalue(L, metatable);  /* upvalue index 1 */
-  sdl2_test_lua_add(L, sdl2_test_configuration_getters);     /* fill metatable with getters */
-  lua_pushvalue(L, methods);    /* upvalue index 2 */
-  lua_pushcclosure(L, sdl2_test_lua_index_handler, 2);
-  lua_rawset(L, metatable);     /* metatable.__index = index_handler */
-
-  lua_pushliteral(L, "__newindex");
-  lua_newtable(L);              /* table for members you can set */
-  sdl2_test_lua_add(L, sdl2_test_configuration_setters);     /* fill with setters */
-  lua_pushcclosure(L, sdl2_test_lua_newindex_handler, 1);
-  lua_rawset(L, metatable);     /* metatable.__newindex = newindex_handler */
-
-  lua_pop(L, 1);                /* drop metatable */
-  return 1;                     /* return methods on the stack */
+  sdl2_test_lua_metatable_register(L, "ConfigMeta", 
+                                 sdl2_test_lua_configuration_meta_methods,
+                                 sdl2_test_configuration_getters,
+                                 sdl2_test_configuration_setters);
+  sdl2_test_lua_metatable_register(L, "StageMeta", 
+                                 sdl2_test_lua_stage_meta_methods,
+                                 sdl2_test_stage_getters,
+                                 sdl2_test_stage_setters);
+  sdl2_test_lua_metatable_register(L, "ScreenMeta", 
+                                 sdl2_test_lua_screen_meta_methods,
+                                 sdl2_test_screen_getters,
+                                 sdl2_test_screen_setters);          
+  sdl2_test_lua_metatable_register(L, "BlockMeta", 
+                                 sdl2_test_lua_block_meta_methods,
+                                 sdl2_test_block_getters,
+                                 sdl2_test_block_setters);
+  return 1;
 }
+

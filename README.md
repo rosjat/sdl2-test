@@ -27,6 +27,15 @@ help with most of the lua code: lua-users.org , and some videos on youtube of co
 
 ---
 
+### Update 2021/4/25
+
+- still working on lua functionality
+  - added some functions for metatables
+  - added functions to call from lua and set data 
+  - changed lua script to use functions 
+- drawback, reload of the stages is broken now
+  - since the lua state seems to not gc correctly the way the script is written
+ 
 ### Update 2021/4/23
 
 - refactoring the way app is creating the configuration from a lua file

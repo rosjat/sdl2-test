@@ -145,9 +145,16 @@ void sdl2_test_stage_destroy(stage* stg)
 {
     for(int x = 0; x < stg->screen_count; x++) 
     {
-        free(stg->screens[x].blocks);
+
+        for(int b = 0; b < stg->screens[x].block_count; b++)
+        {
+            free(&stg->screens[x].blocks[b].trect);
+            free(&stg->screens[x].blocks[b].brect);
+        }
+        free(&stg->screens[x].blocks);
     }
-    free(stg->screens);
+    free(&stg->screens);
+    free(stg);
 }
 
 int sdl2_test_stage_count(stage* stg)
@@ -403,7 +410,8 @@ void sdl2_test_update(stage* stg, state* ps, sdl2_test* app, sdl2_test_configura
     if(config->stg_reload)
     {
         config->stg_reload = 0;
-        sdl2_test_stage_reload(stg, "scripts/sdl2_test_stages.config", config);
+        // tODO: figure out how to proper realod stage now ...
+        //sdl2_test_stage_reload(stg, "scripts/sdl2_test_stages.config", config);
     }
     // doing some mouse actions, this might be the point to figure out how keyboard and
     // mouse play nice together ...

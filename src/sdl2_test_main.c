@@ -29,13 +29,6 @@ int main(){
         printf("something went wrong with stages!");
         return 1;
     }
-    sdl2_test_stage_destroy(stages);
-    stages = sdl2_test_default_stage_load(config);
-    if(!stages)
-    {
-        printf("something went wrong with stages!");
-        return 1;
-    }
     while(sdl2_test_state_get_running(prog_state)) {
         sdl2_test_event_process(app, prog_state, config);
         sdl2_test_update(stages, prog_state, app, config);
