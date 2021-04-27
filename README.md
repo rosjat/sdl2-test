@@ -27,6 +27,21 @@ help with most of the lua code: lua-users.org , and some videos on youtube of co
 
 ---
 
+### Update 2021/04/27
+
+- it's not really an update, i still struggle with the representation of the stages/screens/blogs.
+  But to make the lua integation less painful i need to rework it anyway, so i will go down the 
+  "Tile" Road and will define a fixed amount of tiles.
+  
+- also started to test ways of moving functions that would be useful in lua (no c function), from 
+  the script into the c code with a hardcoded string. So I might be able to restict the used libraries later on.
+
+- moved away from the wrapper struct for now, I basically figured that its not needed, as long as  
+  the lua state in open, a userdata won't be garbage collected. That said, i might change it all anyway.
+
+- fixed a problem with the TTF Font that showed after a while caused by the bruteforce loading in 
+  every update of the screen. The font lives now in the config and might be moved later to some place that deals with rendering text more useful.
+  
 ### Update 2021/4/25
 
 - still working on lua functionality

@@ -1,5 +1,15 @@
 #include "sdl2-test_private.h"
 
+int sdl2_test_lua_check_script(lua_State* L, int result)
+{
+  if(result != LUA_OK)
+  {
+    char* err = lua_tostring(L, -1);
+    printf("lua error: %s\n", err);
+    return 0;
+  }
+  return 1;
+}
 sdl2_test_configuration* sdl2_test_configuration_load(char* fname)
 {
     sdl2_test_configuration* config;
@@ -7,72 +17,65 @@ sdl2_test_configuration* sdl2_test_configuration_load(char* fname)
     lua_State* L = luaL_newstate(); 
     luaL_openlibs(L);
     sdl2_test_lua_register (L);
-    if (luaL_dofile(L, fname))
+    if (sdl2_test_lua_check_script(L,luaL_dofile(L, fname)))
     {
-        char* err = lua_tostring(L, -1);
-        printf("cannot run configuration file: %s", err);
+      lua_getglobal(L, "config");
+      if(lua_isuserdata(L, -1))
+      {
+          wrapper = (configuration_wrapper*)lua_touserdata(L, -1);
+          config = &wrapper->config;
+          config->L = L;
+          lua_settop(config->L, 0);
+      } 
     }    
-    lua_getglobal(L, "config");
-    if(lua_isuserdata(L, -1))
-    {
-        wrapper = (configuration_wrapper*)lua_touserdata(L, -1);
-        config = &wrapper->config;
-        config->L = L;
-        lua_settop(config->L, 0);
-
-    } 
     return config;
 }
 
 stage *sdl2_test_stage_load(char* fname, sdl2_test_configuration* config) 
 {  
     stage* stages;
-    stage_wrapper* wrapper;
-    if (luaL_dofile(config->L, fname))
+    if (sdl2_test_lua_check_script(config->L, luaL_dofile(config->L, fname)))
     {
-        char* err = lua_tostring(config->L, -1);
-        printf("cannot run stage file: %s", err);
-    }
-    lua_getglobal(config->L, "stages");
-    if (lua_istable(config->L, -1))
-    {
-      int sc = lua_gettop(config->L);
-      for(int scr=1; scr<= sc; scr++)
-      {
-        // at this point we should have a stage on the top of the stage
-        lua_rawgeti(config->L, -1, scr);
-        // when you get nil, you're done
-        if (lua_isnil(config->L, -1)) {
-            lua_pop(config->L,1);
-            break;
-        }
-        if(lua_isuserdata(config->L, -1))
+        lua_getglobal(config->L, "stages");
+        if (lua_istable(config->L, -1))
         {
-            wrapper = (stage_wrapper*)lua_touserdata(config->L, -1);
-            stages = &(wrapper->stg);
-            lua_pop(config->L, 1);
-            lua_settop(config->L, 0);
-
+          int sc = lua_gettop(config->L);
+          for(int scr=1; scr<= sc; scr++)
+          {
+            lua_rawgeti(config->L, -1, scr);
+            if (lua_isnil(config->L, -1)) {
+                lua_pop(config->L,1);
+                break;
+            }
+            if(lua_isuserdata(config->L, -1))
+            {
+                stages = (stage *)lua_touserdata(config->L, -1);
+                lua_pop(config->L, 1);
+                lua_settop(config->L, 0);
+            }
+            lua_pop(config->L, 1); 
+          } 
+          lua_pop(config->L, 1);
         }
-        lua_pop(config->L, 1); 
-      } 
-      lua_pop(config->L, 1);
-    }
-    
+    }   
     return stages;
 }
 
 void sdl2_test_stage_reload(stage* stages, char* fname, sdl2_test_configuration* config) 
-{  
+{ 
     stages = sdl2_test_stage_load(fname,config);
 }
 
 /*
- 2nd iteration for a mata table to access config members in lua an set it 
+ 3nd iteration for a mata table to access config members in lua an set it 
 
- - we refactor the functions so that we can load blocks in a more generic manner.
-   A screen should consist of a fix width defined by an amount of blocks and the 
-   same for the height.
+ - at this stage there needs to be a revisit of stage and screens representation to 
+   meet a useful setup process of a stage in the application. The data structures need 
+   to be redefined to provide this. Also a random number of blocks in a stage is not really
+   practical so there will be a "definition" of cols and rows to repesent a set of tiles
+ 
+ - also testing / implementing  execution of strings hardcoded that provide lua functions for the 
+   scripts
 
 */
 
@@ -93,17 +96,33 @@ static int sdl2_test_lua_stage_init(lua_State* L, int sc, int sa)
     lua_pop(L,1);
     screen_count = (int)lua_tointeger(L, -1);
     lua_pop(L,1);
-    stage_wrapper* wrapper  = (stage_wrapper*)lua_newuserdata(L,sizeof(stage_wrapper));
-    wrapper->stg = *((stage *)malloc(sizeof(stage)));
-    wrapper->stg.screen_count = screen_count;
-    wrapper->stg.screen_active = screen_active;
-    wrapper->stg.screens = (screen *)malloc(sizeof(screen) * wrapper->stg.screen_count);
-    if(wrapper->stg.screens)
-    {
-        memset(wrapper->stg.screens, 0, sizeof(screen) * wrapper->stg.screen_count);
-    }
+    stage* stg  = (stage *)lua_newuserdata(L, sizeof(stage));
+    stg->screen_count = screen_count;
+    stg-> screen_active = screen_active;
+    int t = lua_gettop(L);
     luaL_getmetatable(L, "StageMeta");
-    lua_setmetatable(L, -2);
+    lua_setmetatable(L, t);
+    lua_newtable(L);
+    sdl2_test_lua_add(L,sdl2_test_lua_stage_methods); 
+    t = lua_gettop(L);
+    lua_setuservalue(L,t);
+
+    stg->screens = (screen *)malloc(sizeof(screen) * stg->screen_count);
+    if(stg->screens)
+    {
+        memset(stg->screens, 0, sizeof(screen) * stg->screen_count);
+    }
+
+    /*
+    // the approach for screen[1] in struct stage
+    stage *stg; 
+    stg = (screen *)malloc(sizeof(*stg) + sizeof(screen) * (screen_count -1));
+    if(stg)
+    {
+        memset(stg, 0, sizeof(*stg) + sizeof(screen) * (screen_count -1));
+    }
+    */
+
     return 1;
 }
 
@@ -124,9 +143,8 @@ static int sdl2_test_lua_screen_init(lua_State* L, void* v, int id, int x, int y
     lua_pop(L,1);
     if(lua_isuserdata(L, -1))
     {
-        stage_wrapper* wrapper  = (stage_wrapper*)lua_touserdata(L, 1);
-        stage stg = wrapper->stg; 
-        screen *s = &stg.screens[_id];
+        stage * stg  = (stage *)lua_touserdata(L, 1);
+        screen *s = &stg->screens[_id];
         s->id = _id;
         s->x = _x;
         s->y = _y;
@@ -153,9 +171,8 @@ static int sdl2_test_lua_block_init(lua_State* L, void* v, int s, int id, int en
     lua_pop(L,1);
     if(lua_isuserdata(L, -1))
     {
-        stage_wrapper* wrapper  = (stage_wrapper*)lua_touserdata(L, 1);
-        stage stg = wrapper->stg; 
-        screen *s = &stg.screens[_s];  
+        stage * stg  = (stage *)lua_touserdata(L, 1);
+        screen *s = &stg->screens[_s];  
         block *b = &s->blocks[_id];  
         b->id = _id;
         b->enter = _enter;
@@ -182,9 +199,8 @@ static int sdl2_test_lua_init_rect(lua_State* L, void* v, int s, int b, int t, i
     lua_pop(L,1);
     if(lua_isuserdata(L, -1))
     {
-      stage_wrapper* wrapper  = (stage_wrapper*)lua_touserdata(L, 1);
-      stage stg = wrapper->stg; 
-      screen *s = &stg.screens[_s];  
+      stage * stg = (stage *)lua_touserdata(L, 1);
+      screen *s = &stg->screens[_s];  
       block *b = &s->blocks[_b]; 
       switch(rt)
       {
@@ -197,6 +213,29 @@ static int sdl2_test_lua_init_rect(lua_State* L, void* v, int s, int b, int t, i
           b->brect = init_rect(rx, ry, rw, rh);
         } break;
       }
+    }
+    return 0;
+}
+
+static int sdl2_test_lua_configuration_font_init(lua_State* L, void* v, char* font, int size)
+{   
+    int _s;
+    char* _f;
+    _s = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    _f = (char *)lua_tostring(L, -1);
+    lua_pop(L,1);
+    if(lua_isuserdata(L, -1))
+    {
+      configuration_wrapper* wrapper  = (configuration_wrapper*)lua_touserdata(L, -1);
+      TTF_Init();
+      TTF_Font* f = TTF_OpenFont(_f, _s);
+      if(!f)
+      {
+        TTF_Quit();
+        return 0;
+      }
+      wrapper->config.font = f; 
     }
     return 0;
 }
@@ -373,3 +412,36 @@ int sdl2_test_lua_register(lua_State *L)
   return 1;
 }
 
+static int sdl2_test_lua_function_string_register(lua_State *L)
+{
+  char* str = "function file_exists(file) \
+  local f = io.open(file, \"rb\") \
+  if f then f:close() end \
+  return f ~= nil \
+end \
+function lines_from(file) \
+  if not file_exists(file) then return {} end \
+  lines = {} \
+  for line in io.lines(file) do \ 
+    lines[#lines + 1] = line \
+  end \
+  return lines \
+end \
+function lvl_extract(lines) \
+   local _lvl = {} \
+   local function lvl_info(n) \
+      s, e = n:match('(%d)(%d)') \
+      l = { solid = tonumber(s), enter = tonumber(e) } \
+      _lvl[#_lvl+1]=l \
+   end \
+   for k,v in pairs(lines) do \
+      v:gsub('%d%d',lvl_info) \
+   end \
+   return _lvl \
+end";
+  if (sdl2_test_lua_check_script(L,luaL_dostring(L, str)))
+  {
+
+  }
+  return 0;
+}
