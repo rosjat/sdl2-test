@@ -10,6 +10,7 @@ int sdl2_test_lua_check_script(lua_State* L, int result)
   }
   return 1;
 }
+
 sdl2_test_configuration* sdl2_test_configuration_load(char* fname)
 {
     sdl2_test_configuration* config;
@@ -63,7 +64,15 @@ stage *sdl2_test_stage_load(char* fname, sdl2_test_configuration* config)
 
 void sdl2_test_stage_reload(stage* stages, char* fname, sdl2_test_configuration* config) 
 { 
-    stages = sdl2_test_stage_load(fname,config);
+
+    lua_getglobal(config->L, "ReloadStage");
+    if (lua_isfunction(config->L, -1))
+    {
+        lua_pushnumber(config->L, 1);
+        lua_pcall(config->L,1,0,0);
+    }
+    lua_pop(config->L, 1);
+    //stages = sdl2_test_stage_load(fname,config);
 }
 
 /*
@@ -126,10 +135,10 @@ static int sdl2_test_lua_stage_init(lua_State* L, int sc, int sa)
     return 1;
 }
 
-static int sdl2_test_lua_screen_init(lua_State* L, void* v, int id, int x, int y, int w, int h, int bc)
+static int sdl2_test_lua_screen_init(lua_State* L, void* v, int id, int x, int y, int w, int h, int exits)
 {   
-    int _id, _x, _y, _w, _h, _bc;
-    _bc = (int)lua_tointeger(L, -1);
+    int _id, _x, _y, _w, _h, _exits;
+    _exits = (int)lua_tointeger(L, -1);
     lua_pop(L,1);
     _h = (int)lua_tointeger(L, -1);
     lua_pop(L,1);
@@ -150,19 +159,16 @@ static int sdl2_test_lua_screen_init(lua_State* L, void* v, int id, int x, int y
         s->y = _y;
         s->width = _w;
         s->height = _h;
-        s->block_count = _bc;
-        s->blocks = (block *)malloc(sizeof(block) * _bc);
-        if(s->blocks)
-        {
-            memset(s->blocks, 0, sizeof(block) * _bc);
-        }
+        s->exits = _exits;
     }
     return 0;
 }
 
-static int sdl2_test_lua_block_init(lua_State* L, void* v, int s, int id, int enter)
+static int sdl2_test_lua_block_init(lua_State* L, void* v, int s, int id, int enter, int solid)
 {   
-    int _s, _id, _enter;
+    int _s, _id, _enter, _solid;
+    _solid = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
     _enter = (int)lua_tointeger(L, -1);
     lua_pop(L,1);
     _id = (int)lua_tointeger(L, -1);
@@ -176,6 +182,7 @@ static int sdl2_test_lua_block_init(lua_State* L, void* v, int s, int id, int en
         block *b = &s->blocks[_id];  
         b->id = _id;
         b->enter = _enter;
+        b->solid = _solid;
     }
     return 0;
 }
@@ -215,6 +222,57 @@ static int sdl2_test_lua_init_rect(lua_State* L, void* v, int s, int b, int t, i
       }
     }
     return 0;
+}
+
+static int sdl2_test_lua_mod_rect(lua_State* L, void* v, int s, int b, int t, int x, int y, int w , int h)
+{
+    int rx, ry, rw, rh, rt , _s, _b;
+    rh = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    rw = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    ry = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    rx = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    rt = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    _b = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    _s = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    if(lua_isuserdata(L, -1))
+    {
+      stage * stg = (stage *)lua_touserdata(L, 1);
+      screen *s = &stg->screens[_s];  
+      block *b = &s->blocks[_b]; 
+      switch(rt)
+      {
+        case 0:
+        {
+          b->trect->x = rx;
+          b->trect->y = ry;
+          b->trect->w = rw;
+          b->trect->h = rh;
+        } break;
+        case 1:
+        {
+          b->brect->x = rx;
+          b->brect->y = ry;
+          b->brect->w = rw;
+          b->brect->h = rh;
+        } break;
+      }
+    }
+    return 0;
+}
+static int sdl2_test_lua_pause(lua_State* L, int ms)
+{
+    int _ms;
+    _ms = (int)lua_tointeger(L, -1);
+    lua_pop(L,1);
+    usleep(_ms* 1000);
+  return 0;
 }
 
 static int sdl2_test_lua_configuration_font_init(lua_State* L, void* v, char* font, int size)
@@ -430,14 +488,53 @@ end \
 function lvl_extract(lines) \
    local _lvl = {} \
    local function lvl_info(n) \
+      n = n:gsub(\" \", \"\") \
       s, e = n:match('(%d)(%d)') \
       l = { solid = tonumber(s), enter = tonumber(e) } \
       _lvl[#_lvl+1]=l \
    end \
    for k,v in pairs(lines) do \
-      v:gsub('%d%d',lvl_info) \
+      if string.len(v) == 0 then \
+        print(\"empty line at \" .. k) \
+      else \
+        v:gsub('%d%d',lvl_info) \
+      end \
    end \
    return _lvl \
+end \
+function load_levels(fname) \
+   local function _make_tables(tbl, tbl2, index) \
+      local _t = {} \
+      for k,v in pairs(tbl) do \
+         if string.sub(v,1,string.len(\"--screen\"))== \"--screen\" then \
+            tbl[k] = nil \
+            _make_tables(tbl, tbl2, k) \
+         else \
+            table.insert(_t, v) \
+            tbl[k] = nil \
+         end \
+      end \
+      table.insert(tbl2, _t) \
+      return _t \
+   end \
+   local _lines = lines_from(fname) \
+   local _tables = {} \
+   _make_tables(_lines, _tables, 1) \
+   for i = #_tables, 1, -1 do \
+      if type(_tables[i]) == \"table\" then \
+         _tables[i] = lvl_extract(_tables[i]) \
+      end \
+   end \
+   return _tables \
+end \
+function read_entire_file_text(path) \
+    local f, err = io.open(path, 'r') \
+    if err ~= nil then \
+        return nil, err \
+    end \
+    local text = f:read('*a') \
+    f:close() \
+    return text, nil \
 end";
   if (sdl2_test_lua_check_script(L,luaL_dostring(L, str)))
   {

@@ -154,7 +154,7 @@ void sdl2_test_stage_destroy(stage* stg)
     for(int x = 0; x < stg->screen_count; x++) 
     {
 
-        for(int b = 0; b < stg->screens[x].block_count; b++)
+        for(int b = 0; b < 240 ; b++)
         {
             free(&stg->screens[x].blocks[b].trect);
             free(&stg->screens[x].blocks[b].brect);
@@ -197,8 +197,8 @@ state *sdl2_test_state_create(sdl2_test_configuration* config)
     ps->screen_counter = 0;
     ps->stage_counter = 0;
     ps->d_info = (debug_info){ 1, 0, 0 };
-    ps->bg_offset_x = (260 * 2);
-    ps->bg_offset_y = 736;
+    ps->bg_offset_x = 10; //(260*2);
+    ps->bg_offset_y =4787;//736;
     return ps;
 
 }
@@ -209,32 +209,45 @@ void sdl2_test_state_destroy(state* ps)
 
 char *sdl2_test_collision(stage* stg, state* ps, sdl2_test* app, sdl2_test_configuration* config) 
 {
-    if(ps->x_pos <= 0) 
+    char *msg = malloc(sizeof(char) * 255);
+    if(ps->x_pos < 0 ) 
     {
+        if(stg->screens[stg->screen_active].exits & SD_LEFT && stg->screen_active > 0)
+        {
+            ps->x_pos = config->win_w - app->ps_rect.w;
+            ps->screen_counter--;
+        }
+        else
             ps->x_pos = 0;
     }
-    if(ps->y_pos <= 0) 
+    else if(ps->x_pos > config->win_w - app->ps_rect.w)
     {
-        if(ps->screen_counter > 0)
+        if(stg->screens[stg->screen_active].exits & SD_RIGHT && stg->screen_active < stg->screen_count)
         {
-            ps->screen_counter--;
-            
-            ps->y_pos = 0 + app->ps_rect.h;
+            ps->x_pos = 0;
+            ps->screen_counter++;
+        }
+        else
+            ps->x_pos = config->win_w - app->ps_rect.w;
+    }
+    if(ps->y_pos < 0) 
+    {
+
+        if(stg->screens[stg->screen_active].exits & SD_UP && stg->screen_active < stg->screen_count)
+        {
+            ps->screen_counter++;
+            ps->y_pos = 0 + config->win_h - app->ps_rect.h;
         }
         else 
         {
             ps->y_pos = 0;
         }
     }
-    if(ps->x_pos >= config->win_w - app->ps_rect.w) 
+    else if(ps->y_pos > config->win_h - app->ps_rect.h) 
     {
-        ps->x_pos = config->win_w - app->ps_rect.w;
-    }
-    if(ps->y_pos >= config->win_h - app->ps_rect.h) 
-    {
-        if(ps->screen_counter < stg->screen_count -1)
+        if(stg->screens[stg->screen_active].exits & SD_DOWN && stg->screen_active > 0)
         {
-            ps->screen_counter++;
+            ps->screen_counter--;
             ps->y_pos = 0 + app->ps_rect.h;
         }
         else 
@@ -243,67 +256,86 @@ char *sdl2_test_collision(stage* stg, state* ps, sdl2_test* app, sdl2_test_confi
             ps->y_velo = 0;
         }
     }
+    snprintf(msg, 255,"exit: %i screen: %i", stg->screens[stg->screen_active].exits,stg->screen_active);    
     stg->screen_active = ps->screen_counter;
     int intersection = 0;
-    char *msg = malloc(sizeof(char) * 255);
-    for(int b = 0 ; b < stg->screens[ps->screen_counter].block_count; b++) 
+    for(int b = 0 ; b < 0; b++) 
     {
-        int can_enter = stg->screens[ps->screen_counter].blocks[b].enter;
-        int bid = stg->screens[ps->screen_counter].blocks[b].id;
-        int bx = stg->screens[ps->screen_counter].blocks[b].brect->x;
-        int by = stg->screens[ps->screen_counter].blocks[b].brect->y;
-        int bh = stg->screens[ps->screen_counter].blocks[b].brect->h;
-        int bw = stg->screens[ps->screen_counter].blocks[b].brect->w;
-        // hit a block?
-        if (ps->y_pos + app->ps_rect.h > by && ps->y_pos < by+bh) 
+        int solid = stg->screens[ps->screen_counter].blocks[b].solid;
+        if(solid)
         {
-            intersection++;
-            // at the left
-            if(ps->x_pos + app->ps_rect.w > bx && ps->x_pos < bx ) 
+            int can_enter = stg->screens[ps->screen_counter].blocks[b].enter;
+            int bid = stg->screens[ps->screen_counter].blocks[b].id;
+            int bx = stg->screens[ps->screen_counter].blocks[b].brect->x;
+            int by = stg->screens[ps->screen_counter].blocks[b].brect->y;
+            int bh = stg->screens[ps->screen_counter].blocks[b].brect->h;
+            int bw = stg->screens[ps->screen_counter].blocks[b].brect->w;
+            // hit a block?                                                                             
+
+            if (ps->y_pos + app->ps_rect.h > by && ps->y_pos < by+bh) 
             {
-                if(intersection == 1)
-                    ps->x_pos = bx - app->ps_rect.w;
-                 ps->x_velo = 0;
-                snprintf(msg, 255,"block %i: hit: left x_pos: %i y_pos: %i y_velo: %i x_velo: %i\nintersections: %i", bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo, intersection);
-            }
-            else if(ps->x_pos < bx + bw && ps->x_pos + app->ps_rect.w > bx + bw) 
-            {
-                if(intersection == 1)
-                    ps->x_pos = bx + bw;
-                ps->x_velo = 0;
-                snprintf(msg, 255,"block %i: hit: right x_pos: %i y_pos: %i y_velo: %i x_velo: %i\n",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo);
-            }
-        }
-        if((ps->x_pos + app->ps_rect.w > bx && ps->x_pos < bx+bw)) 
-        {
-            //at the bottom?
-            if(ps->y_pos < by + bh && ps->y_pos > by) 
-            {
-                if(!can_enter)
+                intersection++;
+                // at the left
+                if(ps->x_pos + app->ps_rect.w > bx && ps->x_pos < bx ) 
                 {
-                    if(intersection == 1)
-                        ps->y_pos = by + bh;
-                    ps->y_velo = 0;
-                } 
-                else 
-                {
-                    ps->y_velo = config->ss;
+                    if(!can_enter)
+                    {
+                        if(intersection == 1)
+                            ps->x_pos = bx - app->ps_rect.w;
+                        ps->x_velo = 0;
+                    }
+                    else
+                    {
+                        ps->x_velo = -config->ss;
+                    }
+                    snprintf(msg, 255,"block %i: hit: left x_pos: %i y_pos: %i y_velo: %i x_velo: %i\nintersections: %i", bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo, intersection);
                 }
-                snprintf(msg, 255,"block %i: hit: bottom x_pos: %i y_pos: %i y_velo: %i x_velo: %i\n",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo);
-            }
-            else if(ps->y_pos + app->ps_rect.h  > by && ps->y_pos < by ) {
-                if(!can_enter)
+                else if(ps->x_pos < bx + bw && ps->x_pos + app->ps_rect.w > bx + bw) 
                 {
-                    if(intersection == 1)
-                        ps->y_pos = by - app->ps_rect.h;
-                    ps->y_velo = 0;
-                } 
-                else 
-                {
-                    ps->y_pos = by;
-                    ps->y_velo = -config->ss;
+                    if(!can_enter)
+                    {
+                        if(intersection == 1)
+                            ps->x_pos = bx + bw;
+                        ps->x_velo = 0;
+                    }
+                    else 
+                    {
+                        ps->x_velo = config->ss;
+                    }
+                    snprintf(msg, 255,"block %i: hit: right x_pos: %i y_pos: %i y_velo: %i x_velo: %i\n",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo);
                 }
-                snprintf(msg, 255 ,"block %i: hit: top x_pos: %i y_pos: %i y_velo: %i x_velo: %i\n",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo);
+            }
+            if((ps->x_pos + app->ps_rect.w > bx && ps->x_pos < bx+bw)) 
+            {
+                //at the bottom?
+                if(ps->y_pos < by + bh && ps->y_pos > by) 
+                {
+                    if(!can_enter)
+                    {
+                        if(intersection == 1)
+                            ps->y_pos = by + bh;
+                        ps->y_velo = 0;
+                    } 
+                    else 
+                    {
+                        ps->y_velo = config->ss;
+                    }
+                    snprintf(msg, 255,"block %i: hit: bottom x_pos: %i y_pos: %i y_velo: %i x_velo: %i\n",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo);
+                }
+                else if(ps->y_pos + app->ps_rect.h  > by && ps->y_pos < by ) {
+                    if(!can_enter)
+                    {
+                        if(intersection == 1)
+                            ps->y_pos = by - app->ps_rect.h;
+                        ps->y_velo = 0;
+                    } 
+                    else 
+                    {
+                        ps->y_pos = by;
+                        ps->y_velo = -config->ss;
+                    }
+                    snprintf(msg, 255 ,"block %i: hit: top x_pos: %i y_pos: %i y_velo: %i x_velo: %i\n",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo);
+                }
             }
         }
     }
@@ -478,13 +510,13 @@ void sdl2_test_update(stage* stg, state* ps, sdl2_test* app, sdl2_test_configura
     bg_part.x = 0;
     bg_part.y = 0;
     app->bg_rect.h = config->scrn_h;
-    app->bg_rect.x = ps->bg_offset_x;
-    app->bg_rect.y = ps->bg_offset_y + (app->bg_rect.h * ps->screen_counter);
+    app->bg_rect.x = stg->screens[stg->screen_active].x;
+    app->bg_rect.y = stg->screens[stg->screen_active].y;
 
     // build in some GRAVITY here 
     ps->x_pos += ps->x_velo / 60;
     ps->y_pos += ps->y_velo / 60;
-    ps->y_velo += 10 * config->g;
+    //ps->y_velo += 10 * config->g;
 
     //collition detection with the window bounds and objects
     char* msg = sdl2_test_collision(stg, ps, app, config);
@@ -500,10 +532,13 @@ void sdl2_test_update(stage* stg, state* ps, sdl2_test* app, sdl2_test_configura
     if(ps->d_info.bg_show)
         SDL_RenderCopy(app->renderer,app->bg, &app->bg_rect, &bg_part);
     SDL_RenderCopy(app->renderer,app->psprite, &player_sprite, &app->ps_rect);
-    // render blocks
-    for(int x = 0; x < stg->screens[ps->screen_counter].block_count;x++) {
-        SDL_RenderCopy(app->renderer, app->bg, (stg->screens[ps->screen_counter].blocks[x].trect),
-                                     (stg->screens[ps->screen_counter].blocks[x].brect));
+    // render blocks 
+    for(int x = 0; x < 240 ;x++) {
+        if(stg->screens[stg->screen_active].blocks[x].solid)
+        {
+            SDL_RenderCopy(app->renderer, app->bg, (stg->screens[stg->screen_active].blocks[x].trect),
+                                     (stg->screens[stg->screen_active].blocks[x].brect));
+        }
     }
     if(ps->d_info.dbg_show)
         sdl2_test_text_render(app, config, msg); 

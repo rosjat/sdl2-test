@@ -18,6 +18,8 @@ help with most of the lua code: lua-users.org , and some videos on youtube of co
  - a, arrow left -> move left
  - b -> on holding down, makes background disapear (mainly for debugging)
  - r -> reload the stage script 
+ - i -> toggle on/off of  debug infos on the screen (not very flexible at the moment)
+ - t -> toggle on/off the rendering of solid tiles (also nice for debug and block edit via script)
 
 ## some kind of a roadmap ...
  
@@ -26,6 +28,15 @@ help with most of the lua code: lua-users.org , and some videos on youtube of co
   - revisting the "game" design after we make the existing code more robust 
 
 ---
+
+### Update 2021/04/29
+
+- I fixed the reload problem for the stage by adding some more function to the hardcode part.
+  also added a few c functions to simply change values on created rects
+- Its now possible to load tile informations from a file that defines the tile for every screen.
+- Added some flags to determine where we can "leave" a screen to enter the next or previous one.
+- only tiles that are marked as solid get filled with a color when t key was pressed 
+- collision testing is still buggy
 
 ### Update 2021/04/27
 

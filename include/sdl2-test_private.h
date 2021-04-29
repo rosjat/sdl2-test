@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <assert.h>
 
 #include <lua.h>
 #include <lualib.h>
@@ -21,9 +22,18 @@
  */
 #define sdl2_test_transparent_block_trect_init(void) init_rect(0, 0, 2, 2)
 
+typedef enum {
+    SD_UP = 1 << 0,
+    SD_DOWN = 1 << 1,
+    SD_LEFT = 1 << 2,
+    SD_RIGHT = 1 << 3,
+    SD_COUNT,
+} screen_direction_flag;
+
 typedef struct {
     int id;
     int enter;
+    int solid;
     SDL_Rect* trect;
     SDL_Rect* brect;
 } block;
@@ -34,8 +44,8 @@ typedef struct {
     int y;
     int width;
     int height;
-    int block_count;
-    block* blocks;
+    int exits;
+    block blocks[240];
 } screen;
 
 typedef struct {
@@ -144,11 +154,14 @@ static int sdl2_test_lua_stage_init(lua_State* L, int sc, int sa);
 
 static int sdl2_test_lua_screen_init(lua_State* L, void* v, int id, int x, int y, int w, int h, int bc);
 
-static int sdl2_test_lua_block_init(lua_State* L, void *v, int s, int id, int enter);
+static int sdl2_test_lua_block_init(lua_State* L, void *v, int s, int id, int , int solid);
 
 static int sdl2_test_lua_init_rect(lua_State* L, void* v, int s, int b, int t, int x, int y, int w , int h);
+static int sdl2_test_lua_mod_rect(lua_State* L, void* v, int s, int b, int t, int x, int y, int w , int h);
 
 static int sdl2_test_lua_function_string_register(lua_State *L);
+
+static int sdl2_test_lua_pause(lua_State* L, int ms);
 
 static const luaL_Reg sdl2_test_lua_configuration_meta_methods[] = {
     {0,0}
@@ -173,7 +186,9 @@ static const luaL_Reg sdl2_test_lua_methods[] = {
     {"InitScreen", sdl2_test_lua_screen_init},
     {"InitBlock", sdl2_test_lua_block_init}, 
     {"InitRect", sdl2_test_lua_init_rect}, 
+    {"SetRect", sdl2_test_lua_mod_rect}, 
     {"ImportFunctions", sdl2_test_lua_function_string_register},
+    {"PauseScript", sdl2_test_lua_pause},
     {0,0}
 };
 
@@ -237,7 +252,6 @@ static const lua_reg_pre sdl2_test_screen_getters[] = {
     {"y", sdl2_test_lua_get_int, offsetof(screen, y)},
     {"w", sdl2_test_lua_get_int, offsetof(screen, width)},
     {"h", sdl2_test_lua_get_int, offsetof(screen, height)},
-    {"block_count", sdl2_test_lua_get_int, offsetof(screen, block_count)},
     {"blocks", sdl2_test_lua_get_block, offsetof(screen, blocks)},
     {0,0}
 };
@@ -248,7 +262,6 @@ static const lua_reg_pre sdl2_test_screen_setters[] = {
     {"y", sdl2_test_lua_set_int, offsetof(screen, y)},
     {"w", sdl2_test_lua_set_int, offsetof(screen, width)},
     {"h", sdl2_test_lua_set_int, offsetof(screen, height)},
-    {"block_count", sdl2_test_lua_set_int, offsetof(screen, block_count)},
     {"blocks", sdl2_test_lua_set_block, offsetof(screen, blocks)},
     {0,0}
 };
