@@ -23,11 +23,23 @@ help with most of the lua code: lua-users.org , and some videos on youtube of co
 
 ## some kind of a roadmap ...
  
+  - find a proper project structure, some things are just to stange but that's simply 
+    me ... I guess
   - implementing basic features to debug (maybe some kind of console)
   - implementing more lua interaction features so we can make more changes by scripts
   - revisting the "game" design after we make the existing code more robust 
 
 ---
+
+### Update 2021/05/04
+
+ - fixed some nasty "bugs" regarding the Lua State
+   - it was placed in the wrong structure so every time i wanted to close it broke
+     because some of the things in LUA where already "gone" ...
+ - restructured the project files again, this won't be te last time anyway
+ - fixed the basic collision testing, this is still not good enough so I need to 
+   rework some things regarding "world object" representation
+ - removed some debug messages in collision testing
 
 ### Update 2021/04/29
 
