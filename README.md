@@ -10,6 +10,7 @@ good place to start with sdl2: https://wiki.libsdl.org/
 
 help with most of the lua code: lua-users.org , and some videos on youtube of course
 
+some videos about the struggle: https://youtube.com/playlist?list=PLoFYYypOGXqRtCW0Kq9wyxemMVEfD2sOo
 ## some keys you might wanna checkout
 
  - w, arrow up -> move up
