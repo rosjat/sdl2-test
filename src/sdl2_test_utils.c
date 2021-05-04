@@ -1,18 +1,26 @@
 #include "sdl2-test_private.h"
 
+player * sdl2_test_player_create(void)
+{
+    player* p = malloc(sizeof(player));
+    if(!p)
+        return 0;
+    memset(p, 0, sizeof(player));
+    return p;
+}
+
 sdl2_test_configuration* sdl2_test_configuration_create(void)
 {
     sdl2_test_configuration* config = malloc(sizeof *config);
     if(!config)
-        return 0;
-    memset(config, 0, sizeof *config);
+        return NULL;
+    memset(config, 0, sizeof *config );
     return config;
 }
 
 void sdl2_test_configuration_destroy(sdl2_test_configuration* config)
 {
-    lua_close(config->L);
-    free(config);
+    TTF_CloseFont(config->font);
 }
 
 void sdl2_test_configuration_print(sdl2_test_configuration* config)
@@ -21,12 +29,12 @@ void sdl2_test_configuration_print(sdl2_test_configuration* config)
         printf("WINDOW_WIDTH: %i\n", config->win_w);
 }
 
-int sdl2_test_state_get_running(state* ps)
+int sdl2_test_state_get_running(sdl2_test* app)
 {
-    return ps->running;
+    return app->running;
 }
 
-void sdl2_test_event_process(sdl2_test* app, state* ps, sdl2_test_configuration *config)
+void sdl2_test_event_process(sdl2_test* app)
 {
     SDL_Event event;
     while(SDL_PollEvent(&event)) 
@@ -35,40 +43,48 @@ void sdl2_test_event_process(sdl2_test* app, state* ps, sdl2_test_configuration 
             {
                 case SDL_QUIT:
                 {   
-                    ps->running = 0;
+                    app->running = 0;
                 } break;
                 case SDL_KEYDOWN:
                 {
                     switch(event.key.keysym.scancode) {
                         case SDL_SCANCODE_B:
                         {
-                            ps->d_info.bg_show = 0;
+                            app->d_info.bg_show = 0;
                         }break;
                         case SDL_SCANCODE_W:
                         case SDL_SCANCODE_UP:
                         {
-                            if(ps->y_velo == 0)
-                                ps->y_velo = -config->ss ;
-                            ps->up = 1;
+                            if(app->p->y_velo == 0)
+                                app->p->y_velo = -app->config->ss ;
+                            app->up = 1;
                         }break;
                         case SDL_SCANCODE_A:
                         case SDL_SCANCODE_LEFT:
                         {
-                            ps->x_velo = -config->ss;
-                            ps->left = 1;
+                            
+                            app->p->x_velo = -app->config->ss;
+                            app->left = 1;
                         }break;
                         case SDL_SCANCODE_S:
                         case SDL_SCANCODE_DOWN:
                         {   
-                            ps->y_velo = config->ss;
-                            ps->down = 1;
+                            app->p->y_velo = app->config->ss;
+                            app->down = 1;
                         }break;
                         case SDL_SCANCODE_D:
                         case SDL_SCANCODE_RIGHT:
                         {
-                            ps->x_velo = config->ss;
-                            ps->right = 1;
+                            app->p->x_velo = app->config->ss;
+                            app->right = 1;
                         }break;
+                        case SDL_SCANCODE_P:
+                        {
+                            app->p->prect->x = app->config->win_w / 2;
+                            app->p->prect->y = app->config->win_h / 2;
+                        }break;
+                        default:
+                            break;
                     }
                 } break;
                 case SDL_KEYUP:
@@ -78,38 +94,38 @@ void sdl2_test_event_process(sdl2_test* app, state* ps, sdl2_test_configuration 
                         case SDL_SCANCODE_W:
                         case SDL_SCANCODE_UP:
                         {                     
-                            ps->up = 0;
+                            app->up = 0;
                         } break;
                         case SDL_SCANCODE_R:
                         {
-                            config->stg_reload =1;
+                            app->config->stg_reload =1;
                         } break;
                         case SDL_SCANCODE_B:
                         {
-                            ps->d_info.bg_show = 1;
+                            app->d_info.bg_show = 1;
                         } break;
                         case SDL_SCANCODE_A:
                         case SDL_SCANCODE_LEFT:
                         {
-                            ps->x_velo = 0;
-                            ps->left = 0;
+                            app->p->x_velo = 0;
+                            app->left = 0;
                         } break;
                         case SDL_SCANCODE_S:
                         case SDL_SCANCODE_DOWN:
                         {
-                            ps->y_velo = 0;
-                            ps->down = 0;
+                            app->p->y_velo = 0;
+                            app->down = 0;
                         } break;
                         case SDL_SCANCODE_D:
                         case SDL_SCANCODE_RIGHT:
                         {
-                            ps->x_velo = 0;
-                            ps->right = 0;
+                            app->p->x_velo = 0;
+                            app->right = 0;
                         } break;
                         case SDL_SCANCODE_T:
                         {
-                            ps->d_info.blk_show = !ps->d_info.blk_show;
-                            if(ps->d_info.blk_show)
+                            app->d_info.blk_show = !app->d_info.blk_show;
+                            if(app->d_info.blk_show)
                             {
                                 sdl2_test_set_bg_colorkey(app, 255, 0, 255);
                             }
@@ -120,17 +136,19 @@ void sdl2_test_event_process(sdl2_test* app, state* ps, sdl2_test_configuration 
                         } break;
                         case SDL_SCANCODE_I:
                         {
-                            ps->d_info.dbg_show = !ps->d_info.dbg_show;
+                            app->d_info.dbg_show = !app->d_info.dbg_show;
                         } break;
+                        default:
+                            break;
                     }
                 } break;
                 case SDL_MOUSEBUTTONDOWN:
                 {
-                    ps->mbutton = 1;
+                    app->mbutton = 1;
                 } break; 
                 case SDL_MOUSEBUTTONUP:
                 {
-                    ps->mbutton = 0;
+                    app->mbutton = 0;
                 } break;
                 default:
                     break;
@@ -156,13 +174,11 @@ void sdl2_test_stage_destroy(stage* stg)
 
         for(int b = 0; b < 240 ; b++)
         {
-            free(&stg->screens[x].blocks[b].trect);
-            free(&stg->screens[x].blocks[b].brect);
+            free(stg->screens[x].blocks[b].trect);
+            free(stg->screens[x].blocks[b].brect);
         }
-        free(&stg->screens[x].blocks);
     }
-    free(&stg->screens);
-    free(stg);
+    free((stg->screens));
 }
 
 int sdl2_test_stage_count(stage* stg)
@@ -173,194 +189,49 @@ int sdl2_test_stage_count(stage* stg)
     return c;
 }
 
-state *sdl2_test_state_create(sdl2_test_configuration* config)
+sdl2_test *sdl2_test_create(void)
 {
-    state* ps = malloc(sizeof *ps);
-    if(!ps)
-        return 0;
-    memset(ps, 0, sizeof *ps);
-
-    ps->x_pos = config->win_w / 2;
-    ps->y_pos = config->win_h / 2;
-
-    ps->x_velo = 0;
-    ps->y_velo = 0;
-
-    // helper for keyboard input and navigation
-    ps->up = 0;
-    ps->down = 0;
-    ps->left = 0;
-    ps->right = 0;
-    ps->running = 1;
-    ps->mbutton = 0;
-    
-    ps->screen_counter = 0;
-    ps->stage_counter = 0;
-    ps->d_info = (debug_info){ 1, 0, 0 };
-    ps->bg_offset_x = 10; //(260*2);
-    ps->bg_offset_y =4787;//736;
-    return ps;
-
-}
-void sdl2_test_state_destroy(state* ps)
-{
-    free(ps);
-}
-
-char *sdl2_test_collision(stage* stg, state* ps, sdl2_test* app, sdl2_test_configuration* config) 
-{
-    char *msg = malloc(sizeof(char) * 255);
-    if(ps->x_pos < 0 ) 
-    {
-        if(stg->screens[stg->screen_active].exits & SD_LEFT && stg->screen_active > 0)
-        {
-            ps->x_pos = config->win_w - app->ps_rect.w;
-            ps->screen_counter--;
-        }
-        else
-            ps->x_pos = 0;
-    }
-    else if(ps->x_pos > config->win_w - app->ps_rect.w)
-    {
-        if(stg->screens[stg->screen_active].exits & SD_RIGHT && stg->screen_active < stg->screen_count)
-        {
-            ps->x_pos = 0;
-            ps->screen_counter++;
-        }
-        else
-            ps->x_pos = config->win_w - app->ps_rect.w;
-    }
-    if(ps->y_pos < 0) 
-    {
-
-        if(stg->screens[stg->screen_active].exits & SD_UP && stg->screen_active < stg->screen_count)
-        {
-            ps->screen_counter++;
-            ps->y_pos = 0 + config->win_h - app->ps_rect.h;
-        }
-        else 
-        {
-            ps->y_pos = 0;
-        }
-    }
-    else if(ps->y_pos > config->win_h - app->ps_rect.h) 
-    {
-        if(stg->screens[stg->screen_active].exits & SD_DOWN && stg->screen_active > 0)
-        {
-            ps->screen_counter--;
-            ps->y_pos = 0 + app->ps_rect.h;
-        }
-        else 
-        {
-            ps->y_pos = config->win_h - app->ps_rect.h;
-            ps->y_velo = 0;
-        }
-    }
-    snprintf(msg, 255,"exit: %i screen: %i", stg->screens[stg->screen_active].exits,stg->screen_active);    
-    stg->screen_active = ps->screen_counter;
-    int intersection = 0;
-    for(int b = 0 ; b < 0; b++) 
-    {
-        int solid = stg->screens[ps->screen_counter].blocks[b].solid;
-        if(solid)
-        {
-            int can_enter = stg->screens[ps->screen_counter].blocks[b].enter;
-            int bid = stg->screens[ps->screen_counter].blocks[b].id;
-            int bx = stg->screens[ps->screen_counter].blocks[b].brect->x;
-            int by = stg->screens[ps->screen_counter].blocks[b].brect->y;
-            int bh = stg->screens[ps->screen_counter].blocks[b].brect->h;
-            int bw = stg->screens[ps->screen_counter].blocks[b].brect->w;
-            // hit a block?                                                                             
-
-            if (ps->y_pos + app->ps_rect.h > by && ps->y_pos < by+bh) 
-            {
-                intersection++;
-                // at the left
-                if(ps->x_pos + app->ps_rect.w > bx && ps->x_pos < bx ) 
-                {
-                    if(!can_enter)
-                    {
-                        if(intersection == 1)
-                            ps->x_pos = bx - app->ps_rect.w;
-                        ps->x_velo = 0;
-                    }
-                    else
-                    {
-                        ps->x_velo = -config->ss;
-                    }
-                    snprintf(msg, 255,"block %i: hit: left x_pos: %i y_pos: %i y_velo: %i x_velo: %i\nintersections: %i", bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo, intersection);
-                }
-                else if(ps->x_pos < bx + bw && ps->x_pos + app->ps_rect.w > bx + bw) 
-                {
-                    if(!can_enter)
-                    {
-                        if(intersection == 1)
-                            ps->x_pos = bx + bw;
-                        ps->x_velo = 0;
-                    }
-                    else 
-                    {
-                        ps->x_velo = config->ss;
-                    }
-                    snprintf(msg, 255,"block %i: hit: right x_pos: %i y_pos: %i y_velo: %i x_velo: %i\n",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo);
-                }
-            }
-            if((ps->x_pos + app->ps_rect.w > bx && ps->x_pos < bx+bw)) 
-            {
-                //at the bottom?
-                if(ps->y_pos < by + bh && ps->y_pos > by) 
-                {
-                    if(!can_enter)
-                    {
-                        if(intersection == 1)
-                            ps->y_pos = by + bh;
-                        ps->y_velo = 0;
-                    } 
-                    else 
-                    {
-                        ps->y_velo = config->ss;
-                    }
-                    snprintf(msg, 255,"block %i: hit: bottom x_pos: %i y_pos: %i y_velo: %i x_velo: %i\n",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo);
-                }
-                else if(ps->y_pos + app->ps_rect.h  > by && ps->y_pos < by ) {
-                    if(!can_enter)
-                    {
-                        if(intersection == 1)
-                            ps->y_pos = by - app->ps_rect.h;
-                        ps->y_velo = 0;
-                    } 
-                    else 
-                    {
-                        ps->y_pos = by;
-                        ps->y_velo = -config->ss;
-                    }
-                    snprintf(msg, 255 ,"block %i: hit: top x_pos: %i y_pos: %i y_velo: %i x_velo: %i\n",bid, ps->x_pos, ps->y_pos, ps->y_velo, ps->x_velo);
-                }
-            }
-        }
-    }
-    return msg;
-}
-
-sdl2_test *sdl2_test_create(sdl2_test_configuration* config)
-{
+    sdl2_test_configuration* config;   
+    stage *stages;
+    player* p;
     sdl2_test * app;
     SDL_Texture* bg;
     SDL_Texture* player;
+        
+    struct lua_State* L = sdl2_test_lua_state_init();
+
+    config = sdl2_test_default_configuration_load(L);
+    if(!config)
+    {
+        printf("couldn't create config!");
+        return NULL;
+    }
+    stages = sdl2_test_default_stage_load(L);
+    if(!stages)
+    {
+        printf("something went wrong with stages!");
+        return NULL;
+    }
     if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER) != 0) {
         printf("Unable to initialize SDL: %s\n", SDL_GetError());
-        return 0;
+        return NULL;
     }
     TTF_Init();
+    SDL_DisplayMode dm;
+    if(SDL_GetDesktopDisplayMode(0,&dm) != 0)
+    {
+        printf("Unable to get screen size: %s\n", SDL_GetError());
+        SDL_Quit();
+        return NULL;
+    }
     SDL_Window* window = SDL_CreateWindow("SDL2 Test",
-                                          SDL_WINDOWPOS_CENTERED,
+                                          dm.w - config->win_w -10,
                                           SDL_WINDOWPOS_CENTERED,
                                           config->win_w, config->win_h, 0);
-
     if(!window) {
         printf("Unable to create Window: %s\n", SDL_GetError());
         SDL_Quit();
-        return 0;
+        return NULL;
     }
 
     Uint32 render_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
@@ -370,7 +241,7 @@ sdl2_test *sdl2_test_create(sdl2_test_configuration* config)
         printf("Unable to create Renderer: %s\n", SDL_GetError());
         SDL_DestroyWindow(window);
         SDL_Quit();
-        return 0;
+        return NULL;
     }
     /* Initialze End */
 
@@ -386,6 +257,7 @@ sdl2_test *sdl2_test_create(sdl2_test_configuration* config)
 
     /* adding bitmaps to textures */ 
     player = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
     surface = IMG_Load(config->bg_img);
     // TODO; figure out how to change the color key on runtime so tranperency value can be changed 
     Uint32 colorkey = SDL_MapRGB(surface->format, 255, 255, 255);
@@ -414,12 +286,21 @@ sdl2_test *sdl2_test_create(sdl2_test_configuration* config)
 
        Note: this is just helpful for myself no one else :)
     */
-    SDL_Rect dest;
+    
+    //TODO: init player!!!
+    p = sdl2_test_player_create();
+    p->prect = init_rect(0,0,0,0);
+    p->x_velo = 0;
+    p->y_velo = 0;
+    p->id = 0;
+    p->life = 3;
+    p->health = 100;
+    
     SDL_Rect bg_rect;
-    SDL_QueryTexture(player, NULL, NULL, &dest.w, &dest.h);
+    SDL_QueryTexture(player, NULL, NULL, &p->prect->w, &p->prect->h);
     SDL_QueryTexture(bg, NULL, NULL, &bg_rect.w, &bg_rect.h);
-    dest.w /= 3;
-    dest.h /= 4;
+    (*p->prect).w /= 3;
+    (*p->prect).h /= 4;
 
     
     app = malloc(sizeof *app);
@@ -435,31 +316,50 @@ sdl2_test *sdl2_test_create(sdl2_test_configuration* config)
     }
     memset(app, 0, sizeof *app);
 
+    (*p->prect).x = config->win_w / 2;
+    (*p->prect).y = config->win_h / 2;
+    // helper for keyboard input and navigation
+    app->up = 0;
+    app->down = 0;
+    app->left = 0;
+    app->right = 0;
+    app->running = 1;
+    app->mbutton = 0;
+    
+    app->screen_counter = 0;
+    app->stage_counter = 0;
+    app->d_info = (debug_info){ 1, 0, 0 };
+    app->bg_offset_x = 10;
+    app->bg_offset_y =4787;
     app->bg_rect = bg_rect;
-    app->ps_rect = dest;
     app->window = window;
     app->renderer = renderer;
     app->bg = bg;
     app->psprite = player;
+    app->config = config;
+    app->stages = stages;
+    app->p = p;
+    app->L = L;
     return app;
 }
 
-void sdl2_test_update(stage* stg, state* ps, sdl2_test* app, sdl2_test_configuration* config)
+void sdl2_test_update(sdl2_test* app)
 {
-    if(config->stg_reload)
+    if(app->config->stg_reload)
     {
-        config->stg_reload = 0;
+        app->config->stg_reload = 0;
         // tODO: figure out how to proper realod stage now ...
-        sdl2_test_stage_reload(stg, "scripts/sdl2_test_stages.config", config);
+        sdl2_test_stage_reload(&app->stages[0], "scripts/sdl2_test_stages.config", app);
+        //sdl2_test_lua_automation_start(config);
     }
     // doing some mouse actions, this might be the point to figure out how keyboard and
     // mouse play nice together ...
-    int mouse_x, mouse_y;
-    int buttons = SDL_GetMouseState(&mouse_x, &mouse_y);
-    int target_x = mouse_x - app->ps_rect.w / 2;
-    int target_y = mouse_y - app->ps_rect.h / 2;
-    float delta_x = target_x - ps->x_pos;
-    float delta_y = target_y - ps->y_pos * 0.4;
+    float mouse_x, mouse_y;
+    float buttons = SDL_GetMouseState((int *)&mouse_x, (int* )&mouse_y);
+    float target_x = mouse_x - app->p->prect->w / 2;
+    float target_y = mouse_y - app->p->prect->h / 2;
+    float delta_x = target_x - app->p->prect->x;
+    float delta_y = target_y - app->p->prect->y * 0.4;
     float distance = sqrt(delta_x * delta_x + delta_y * delta_y);
 
     SDL_Rect player_sprite;
@@ -470,7 +370,7 @@ void sdl2_test_update(stage* stg, state* ps, sdl2_test* app, sdl2_test_configura
     player_sprite.y = 0;
     // move in the right direction ? This relates to mouse input and is shakey  at best
     // for keyboard we need to rething a little 
-    if(ps->mbutton) {
+    if(app->mbutton) {
         if ( (delta_y < -5) && ( (-5 > delta_x) || (delta_x < 5) ) )
             player_sprite.y = 96;
         if ( (delta_y > 5) && ( (-5 > delta_x) || (delta_x < 5) ) )
@@ -480,68 +380,67 @@ void sdl2_test_update(stage* stg, state* ps, sdl2_test* app, sdl2_test_configura
         if ( (delta_x > 5) && ( (-5 > delta_y) || (delta_y < 5) ) )
             player_sprite.y = 64;
     } else {
-        if (ps->up)
+        if (app->up)
             player_sprite.y = 96;
-        if (ps->down)
+        if (app->down)
             player_sprite.y = 96;
-        if (ps->left)
+        if (app->left)
             player_sprite.y = 32 ;
-        if (ps->right)
+        if (app->right)
             player_sprite.y = 64;
 
     }
-    player_sprite.h = app->ps_rect.h;
-    player_sprite.w = app->ps_rect.w;
+    player_sprite.h = app->p->prect->h;
+    player_sprite.w = app->p->prect->w;
 
     // prevent jitter for now
     if(distance < 5) {
         player_sprite.x = 0;
-        ps->x_velo = ps->y_velo = 0;
-    } else if(ps->mbutton) {
-        ps->x_velo = delta_x * config->ss / distance;
-        ps->y_velo = delta_y * config->ss / distance;
+        app->p->x_velo = app->p->y_velo = 0;
+    } else if(app->mbutton) {
+        app->p->x_velo = delta_x * app->config->ss / distance;
+        app->p->y_velo = delta_y * app->config->ss / distance;
     }
 
     // setting up the background so we can change it when going up and down
-    app->bg_rect.w = config->scrn_w;
+    app->bg_rect.w = app->config->scrn_w;
     SDL_Rect bg_part;
-    bg_part.w = config->win_w;
-    bg_part.h = config->win_h;
+    bg_part.w = app->config->win_w;
+    bg_part.h = app->config->win_h;
     bg_part.x = 0;
     bg_part.y = 0;
-    app->bg_rect.h = config->scrn_h;
-    app->bg_rect.x = stg->screens[stg->screen_active].x;
-    app->bg_rect.y = stg->screens[stg->screen_active].y;
+    app->bg_rect.h = app->config->scrn_h;
+    //TODO: get the correct stage , if we should have more then 1
+    app->bg_rect.x = app->stages[0].screens[app->stages[0].screen_active].x;
+    app->bg_rect.y = app->stages[0].screens[app->stages[0].screen_active].y;
 
     // build in some GRAVITY here 
-    ps->x_pos += ps->x_velo / 60;
-    ps->y_pos += ps->y_velo / 60;
-    //ps->y_velo += 10 * config->g;
+    app->p->prect->x += app->p->x_velo / 60;
+    app->p->prect->y += app->p->y_velo / 60;
+    //app->p->y_velo += 10 * app->config->g;
 
-    //collition detection with the window bounds and objects
-    char* msg = sdl2_test_collision(stg, ps, app, config);
+    //collision detection with the window bounds and objects
+    stage* foo = (app->stages +0);
+    char* msg = sdl2_test_collision_test(foo, app);
     //make the little guy stop running when we dont move around
-    if(!ps->x_velo && !ps->y_velo)
+    if(!app->p->x_velo && !app->p->y_velo)
         player_sprite.x = 0;
-
-    app->ps_rect.x = (int) ps->x_pos;
-    app->ps_rect.y = (int) ps->y_pos;
     
     SDL_SetRenderDrawColor(app->renderer, 10,23,36,255);
     SDL_RenderClear(app->renderer);
-    if(ps->d_info.bg_show)
+    if(app->d_info.bg_show)
         SDL_RenderCopy(app->renderer,app->bg, &app->bg_rect, &bg_part);
-    SDL_RenderCopy(app->renderer,app->psprite, &player_sprite, &app->ps_rect);
+    SDL_RenderCopy(app->renderer,app->psprite, &player_sprite, app->p->prect);
     // render blocks 
     for(int x = 0; x < 240 ;x++) {
-        if(stg->screens[stg->screen_active].blocks[x].solid)
+        if(app->stages[0].screens[app->stages[0].screen_active].blocks[x].solid)
         {
-            SDL_RenderCopy(app->renderer, app->bg, (stg->screens[stg->screen_active].blocks[x].trect),
-                                     (stg->screens[stg->screen_active].blocks[x].brect));
+            SDL_RenderCopy(app->renderer, app->bg, (app->stages[0].screens[app->stages[0].screen_active].blocks[x].trect),
+                                     (app->stages[0].screens[app->stages[0].screen_active].blocks[x].brect));
         }
     }
-    if(ps->d_info.dbg_show)
-        sdl2_test_text_render(app, config, msg); 
+    if(app->d_info.dbg_show)
+        sdl2_test_text_render(app, msg); 
     SDL_RenderPresent(app->renderer);
     free(msg);
 }
@@ -550,13 +449,14 @@ void sdl2_test_destroy(sdl2_test* app)
 {   
     SDL_DestroyTexture(app->psprite);
     SDL_DestroyTexture(app->bg);
-    SDL_DestroyRenderer(app->renderer);
-    SDL_DestroyWindow(app->window);
     if(TTF_WasInit())
         TTF_Quit();
+    SDL_DestroyRenderer(app->renderer);
+    SDL_DestroyWindow(app->window);
     SDL_Quit();
+    lua_close(app->L);
     // do we need to do this or not?
-    //free(app);
+    free(app);
 }
 
 int sdl2_test_set_bg_colorkey(sdl2_test* app, int r, int g, int b)
@@ -580,13 +480,13 @@ int sdl2_test_set_bg_colorkey(sdl2_test* app, int r, int g, int b)
     return 1;
 }
 
-void sdl2_test_text_render(sdl2_test* app, sdl2_test_configuration* config, char* msg)
+void sdl2_test_text_render(sdl2_test* app, char* msg)
 {
     //TODO: make this more performant ...
     SDL_Rect Message_rect;
     Message_rect.x = 0; 
     Message_rect.y = 0;
-    Message_rect.w = config->win_w;
+    Message_rect.w = app->config->win_w;
     Message_rect.h = 30;
 
     SDL_Color White = {255, 255, 255};
@@ -597,7 +497,7 @@ void sdl2_test_text_render(sdl2_test* app, sdl2_test_configuration* config, char
     SDL_Texture* Message = SDL_CreateTextureFromSurface(app->renderer, surfaceMessage);
     SDL_RenderCopy(app->renderer, Message, NULL, &Message_rect);
     
-    surfaceMessage = TTF_RenderText_Solid(config->font, msg, White);
+    surfaceMessage = TTF_RenderText_Solid(app->config->font, msg, White);
     Message = SDL_CreateTextureFromSurface(app->renderer, surfaceMessage);
     SDL_RenderCopy(app->renderer, Message, NULL, &Message_rect);
     

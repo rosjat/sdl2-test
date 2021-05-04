@@ -54,3 +54,4 @@ sdl2-test
 .vscode/
 .git/
 *.core
+vgcore*

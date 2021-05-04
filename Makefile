@@ -23,7 +23,7 @@ $(EXEC): $(OBJS) Makefile
 	$(CC) -o $@ $(OBJS) $(CFLAGS) ${LUAFLAGS}
 
 ${OBJS}: ${SCRS} ${HDIR} Makefile
-	$(CC)  -o $@  ${@:${BDIR}/%.o=${SDIR}/%.c} -c $(CFLAGS) ${LUAFLAGS} ${HDIR:%=-I %} -v
+	$(CC) -o $@  ${@:${BDIR}/%.o=${SDIR}/%.c} -c $(CFLAGS) ${LUAFLAGS} ${HDIR:%=-I %} -v
 
 clean:
 	rm -f $(EXEC) $(OBJS)

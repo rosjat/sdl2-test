@@ -1,78 +1,109 @@
-#include "sdl2-test_private.h"
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+
+#include "sdl2_test_lua.h"
+
 
 int sdl2_test_lua_check_script(lua_State* L, int result)
 {
   if(result != LUA_OK)
   {
-    char* err = lua_tostring(L, -1);
+    const char* err = lua_tostring(L, -1);
     printf("lua error: %s\n", err);
     return 0;
   }
   return 1;
 }
 
-sdl2_test_configuration* sdl2_test_configuration_load(char* fname)
+static int sdl2_test_lua_gc_stage(lua_State* L)
 {
-    sdl2_test_configuration* config;
-    configuration_wrapper* wrapper;
+    if (!lua_isuserdata(L, 1)) return 0; 
+    stage* s = lua_touserdata(L,1);
+    sdl2_test_stage_destroy(s);
+    return 0;
+}
+
+static int sdl2_test_lua_gc_configuration(lua_State* L)
+{
+    if (!lua_isuserdata(L, 1)) return 0; 
+    configuration_wrapper* w = lua_touserdata(L,1);
+    sdl2_test_configuration_destroy(&w->config);
+    return 0;
+}
+
+lua_State * sdl2_test_lua_state_init(void)
+{
     lua_State* L = luaL_newstate(); 
     luaL_openlibs(L);
     sdl2_test_lua_register (L);
+    return L;
+}
+
+sdl2_test_configuration* sdl2_test_configuration_load(lua_State* L, char* fname)
+{
+    sdl2_test_configuration* config;
+    configuration_wrapper* wrapper;
     if (sdl2_test_lua_check_script(L,luaL_dofile(L, fname)))
     {
       lua_getglobal(L, "config");
-      if(lua_isuserdata(L, -1))
-      {
-          wrapper = (configuration_wrapper*)lua_touserdata(L, -1);
-          config = &wrapper->config;
-          config->L = L;
-          lua_settop(config->L, 0);
-      } 
-    }    
-    return config;
+      if(!lua_isuserdata(L, -1)) return NULL;
+      wrapper = (configuration_wrapper*)lua_touserdata(L, -1);
+      config = &wrapper->config;
+      lua_settop(L, 0);
+      return config;
+    }  
+    return NULL;  
 }
 
-stage *sdl2_test_stage_load(char* fname, sdl2_test_configuration* config) 
+stage *sdl2_test_stage_load(char* fname, lua_State* L) 
 {  
     stage* stages;
-    if (sdl2_test_lua_check_script(config->L, luaL_dofile(config->L, fname)))
+    if (sdl2_test_lua_check_script(L, luaL_dofile(L, fname)))
     {
-        lua_getglobal(config->L, "stages");
-        if (lua_istable(config->L, -1))
+        lua_getglobal(L, "stages");
+        if (lua_istable(L, -1))
         {
-          int sc = lua_gettop(config->L);
+          int sc = lua_gettop(L);
           for(int scr=1; scr<= sc; scr++)
           {
-            lua_rawgeti(config->L, -1, scr);
-            if (lua_isnil(config->L, -1)) {
-                lua_pop(config->L,1);
+            lua_rawgeti(L, -1, scr);
+            if (lua_isnil(L, -1)) {
+                lua_pop(L,1);
                 break;
             }
-            if(lua_isuserdata(config->L, -1))
-            {
-                stages = (stage *)lua_touserdata(config->L, -1);
-                lua_pop(config->L, 1);
-                lua_settop(config->L, 0);
-            }
-            lua_pop(config->L, 1); 
+            if(!lua_isuserdata(L, -1)) break;
+            stages = (stage *)lua_touserdata(L, -1);
+            lua_pop(L, 1);
+            lua_settop(L, 0);
+            lua_pop(L, 1); 
           } 
-          lua_pop(config->L, 1);
+          lua_pop(L, 1);
+          return stages;
         }
     }   
-    return stages;
+    return NULL;
 }
 
-void sdl2_test_stage_reload(stage* stages, char* fname, sdl2_test_configuration* config) 
+int sdl2_test_stage_reload(stage* stages, char* fname, sdl2_test* app) 
 { 
 
-    lua_getglobal(config->L, "ReloadStage");
-    if (lua_isfunction(config->L, -1))
-    {
-        lua_pushnumber(config->L, 1);
-        lua_pcall(config->L,1,0,0);
-    }
-    lua_pop(config->L, 1);
-    //stages = sdl2_test_stage_load(fname,config);
+    lua_getglobal(app->L, "ReloadStage");
+    if (!lua_isfunction(app->L, -1)) return 0; 
+    lua_pushnumber(app->L, 1);
+    lua_pcall(app->L,1,0,0);
+    lua_pop(app->L, 1);
+    return 1;
+}
+
+void sdl2_test_lua_automation_start(sdl2_test* app)
+{
+  lua_getglobal(app->L, "StartAutomation");
+  if (lua_isfunction(app->L, -1))
+  {
+    lua_pcall(app->L,0,0,0);
+  }
+  lua_pop(app->L, 1);
 }
 
 /*
@@ -91,7 +122,8 @@ void sdl2_test_stage_reload(stage* stages, char* fname, sdl2_test_configuration*
 static int sdl2_test_lua_configuration_init(lua_State* L)
 {   
     configuration_wrapper* wrapper  = (configuration_wrapper*)lua_newuserdata(L,sizeof(configuration_wrapper));
-    wrapper->config = *sdl2_test_configuration_create();
+    sdl2_test_configuration* config = sdl2_test_configuration_create();
+    wrapper->config = *config;
     luaL_getmetatable(L, "ConfigMeta");
     lua_setmetatable(L, -2);
     return 1;
@@ -331,7 +363,7 @@ static int sdl2_test_lua_get_string (lua_State *L, void *v)
 
 static int sdl2_test_lua_set_string (lua_State *L, void *v)
 {
-    *((char**)v) = luaL_checkstring(L, 3);
+    *((const char**)v) = luaL_checkstring(L, 3);
     return 0;
 }
 
@@ -480,7 +512,7 @@ end \
 function lines_from(file) \
   if not file_exists(file) then return {} end \
   lines = {} \
-  for line in io.lines(file) do \ 
+  for line in io.lines(file) do \
     lines[#lines + 1] = line \
   end \
   return lines \
