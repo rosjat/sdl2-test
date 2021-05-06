@@ -1,38 +1,5 @@
 #include "sdl2-test_private.h"
 
-void sdl2_test_collision_block_id_get(block* blks, int seg[56], int x, int y)
-{ 
-    int s = 0;
-    int e = 240;
-    if(y > 2)
-    {
-        e = (x > 2) ? 111 : 119;
-        s = (x > 2) ? s : 8;
-    }
-    else
-    {
-        e = (x > 2) ? 231 : e;
-        s = (x > 2) ? 120 : 127;
-
-    }
-    int c ,c2;
-    c = c2 = 0;
-    for(int i = s; i < e; i++ )
-    {
-        int mod = blks[s + i].id % 8;
-        if(mod < 8)
-        {
-            if(c < 8)
-            {
-                seg[c2] = blks[i].id;
-                (c2 < 56) ? c2++ : c2;
-            }
-        }
-        c++; 
-        c = (c > 15) ? 0 : c;
-    }
-}
-
 int sdl2_test_collision_player_block_rect(player* p, block* b)
 {
 
@@ -74,7 +41,7 @@ char *sdl2_test_collision_test(stage* stg, sdl2_test* app)
         if(stg->screens[stg->screen_active].exits & SD_UP && stg->screen_active < stg->screen_count)
         {
             app->screen_counter++;
-            app->p->prect->y = 0 + app->config->win_h;// - app->p->prect->h;
+            app->p->prect->y = 0 + app->config->win_h;
         }
         else 
         {
@@ -86,22 +53,23 @@ char *sdl2_test_collision_test(stage* stg, sdl2_test* app)
         if(stg->screens[stg->screen_active].exits & SD_DOWN && stg->screen_active >= 0)
         {
             app->screen_counter--;
-            app->p->prect->y = 0 ;//+ app->p->prect->h;
+            app->p->prect->y = 0 ;
         }
         else 
         {
-            app->p->prect->y = app->config->win_h;// - app->p->prect->h;
+            app->p->prect->y = app->config->win_h;
         }
     }
     stg->screen_active = app->screen_counter;
+    int blk_used, blk_size;
+    blk_size  = stg->screens[stg->screen_active].blk_size;
     //HACK: just here to limit the screens so we dont run in trouble when blocks are not there... 
     //      Only 8 screen so far ....
-    int foo;
     if(app->screen_counter < 8)
-        foo = 240;
+        blk_used = stg->screens[stg->screen_active].blk_used;
     else
-        foo = 0;
-    for(int b = 0 ; b < foo; b++) 
+        blk_used = 0;
+    for(int b = 0 ; b < blk_used; b++) 
     {
         int solid = stg->screens[app->screen_counter].blocks[b].solid;
         int can_enter = stg->screens[app->screen_counter].blocks[b].enter;
@@ -110,37 +78,33 @@ char *sdl2_test_collision_test(stage* stg, sdl2_test* app)
         int by = stg->screens[app->screen_counter].blocks[b].brect->y;
         int bh = stg->screens[app->screen_counter].blocks[b].brect->h;
         int bw = stg->screens[app->screen_counter].blocks[b].brect->w;
-
-
-        if( (solid == 1 && can_enter == 0) || (solid == 1 && can_enter == 1))
+        if(sdl2_test_collision_player_block_rect(app->p, &stg->screens[app->screen_counter].blocks[b]))
         {
-            if(sdl2_test_collision_player_block_rect(app->p, &stg->screens[app->screen_counter].blocks[b]))
+            if(can_enter == 0)
             {
-                if(can_enter == 0)
+                if(app->p->prect->x + app->p->prect->w > bx && app->p->prect->x < bx ) 
                 {
-                    if(app->p->prect->x + app->p->prect->w > bx && app->p->prect->x < bx ) 
-                    {
-                        app->p->prect->x = bx - app->p->prect->w;
-                        app->p->x_velo = 0;
-                    }
-                    if(app->p->prect->x < bx + bw && app->p->prect->x + app->p->prect->w > bx + bw) 
-                    {
-                        app->p->prect->x = bx + app->p->prect->w;
-                        app->p->x_velo = 0;
-                    }
-                    if(app->p->prect->y - 2 < by -2 + bh && app->p->prect->y -2 > by -2) 
-                    {
-                        app->p->prect->y =  by + app->p->prect->h;
-                        app->p->y_velo = 0;
-                    } 
-                    if(app->p->prect->y + app->p->prect->h + 2  > by  && app->p->prect->y + 2 < by )
-                    {
-                        app->p->prect->y = by - app->p->prect->h;
-                        app->p->y_velo = 0;
-                    } 
+                    app->p->prect->x = bx - app->p->prect->w;
+                    app->p->x_velo = 0;
                 }
+                if(app->p->prect->x < bx + bw && app->p->prect->x + app->p->prect->w > bx + bw) 
+                {
+                    app->p->prect->x = bx + app->p->prect->w;
+                    app->p->x_velo = 0;
+                }
+                if(app->p->prect->y - 2 < by -2 + bh && app->p->prect->y -2 > by -2) 
+                {
+                    app->p->prect->y =  by + app->p->prect->h;
+                    app->p->y_velo = 0;
+                } 
+                if(app->p->prect->y + app->p->prect->h + 2  > by  && app->p->prect->y + 2 < by )
+                {
+                    app->p->prect->y = by - app->p->prect->h;
+                    app->p->y_velo = 0;
+                } 
             }
         }
+
     }
     return msg;
 }

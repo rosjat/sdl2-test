@@ -172,11 +172,12 @@ void sdl2_test_stage_destroy(stage* stg)
     for(int x = 0; x < stg->screen_count; x++) 
     {
 
-        for(int b = 0; b < 240 ; b++)
+        for(int b = 0; b < stg->screens[x].blk_used; b++)
         {
             free(stg->screens[x].blocks[b].trect);
             free(stg->screens[x].blocks[b].brect);
         }
+        free(stg->screens[x].blocks);
     }
     free((stg->screens));
 }
@@ -432,7 +433,7 @@ void sdl2_test_update(sdl2_test* app)
         SDL_RenderCopy(app->renderer,app->bg, &app->bg_rect, &bg_part);
     SDL_RenderCopy(app->renderer,app->psprite, &player_sprite, app->p->prect);
     // render blocks 
-    for(int x = 0; x < 240 ;x++) {
+    for(int x = 0; x < app->stages[0].screens[app->stages[0].screen_active].blk_used ;x++) {
         if(app->stages[0].screens[app->stages[0].screen_active].blocks[x].solid)
         {
             SDL_RenderCopy(app->renderer, app->bg, (app->stages[0].screens[app->stages[0].screen_active].blocks[x].trect),

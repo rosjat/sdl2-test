@@ -57,7 +57,9 @@ typedef struct {
     int width;
     int height;
     int exits;
-    block blocks[240];
+    int blk_used;
+    int blk_size;
+    block* blocks;
 } screen;
 
 typedef struct {

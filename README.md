@@ -11,6 +11,9 @@ good place to start with sdl2: https://wiki.libsdl.org/
 help with most of the lua code: lua-users.org , and some videos on youtube of course
 
 some videos about the struggle: https://youtube.com/playlist?list=PLoFYYypOGXqRtCW0Kq9wyxemMVEfD2sOo
+
+---
+
 ## some keys you might wanna checkout
 
  - w, arrow up -> move up
@@ -18,7 +21,7 @@ some videos about the struggle: https://youtube.com/playlist?list=PLoFYYypOGXqRt
  - d, arrow right -> move right
  - a, arrow left -> move left
  - b -> on holding down, makes background disapear (mainly for debugging)
- - r -> reload the stage script 
+ - r -> reload the stage script (buggy still)
  - i -> toggle on/off of  debug infos on the screen (not very flexible at the moment)
  - t -> toggle on/off the rendering of solid tiles (also nice for debug and block edit via script)
 
@@ -31,6 +34,34 @@ some videos about the struggle: https://youtube.com/playlist?list=PLoFYYypOGXqRt
   - revisting the "game" design after we make the existing code more robust 
 
 ---
+
+## Acknowledgement
+
+Again, this is just here so i have a place to store it, there are no means of making that usefull to someone else!!!
+
+
+Since this a simple test for myself i didnt bother to much with running through stuff when i picked the image for the background. So if someone has a problem with that i will take it off github. I simply wanted to have a layout to try stuff out. 
+
+### background png: 
+- url: https://spritedatabase.net
+- copyright: mostllikely nintendo since its a megaman stage rip done by Ryan914 
+
+### sprite png: 
+- url: https://retro-sprite-creator.nihey.org/character 
+- copyright: the hard work was done by nihey takizawa and the sprites where made by Famitsu and EnterBrain 
+
+also nice to create a more usefull sprite is https://sanderfrenken.github.io/Universal-LPC-Spritesheet-Character-Generator/#
+
+---
+
+### Update 2021/05/06
+
+ - working my way back to collision testing on solid blocks only
+   - added integers for a block size and a used block count
+   - changed fixed array of block back to a block pointer and allocate/reallocate size in the
+     init function for screen and block. Also free the blocks in the __gc function for the lua
+     metatable.
+   - changed lua script to reflect the change by adding another "counter/index"
 
 ### Update 2021/05/04
 
@@ -146,24 +177,7 @@ some videos about the struggle: https://youtube.com/playlist?list=PLoFYYypOGXqRt
  - added a color key so i can have opacity 
  - added simple collition detection for the added objects, the way that those objects are added needs to be made easier(maybe config file)
 
----
 
-## Acknowledgement
-
-Again, this is just here so i have a place to store it, there are no means of making that usefull to someone else!!!
-
-
-Since this a simple test for myself i didnt bother to much with running through stuff when i picked the image for the background. So if someone has a problem with that i will take it off github. I simply wanted to have a layout to try stuff out. 
-
-## background png: 
-- url: https://spritedatabase.net
-- copyright: mostllikely nintendo since its a megaman stage rip done by Ryan914 
-
-## sprite png: 
-- url: https://retro-sprite-creator.nihey.org/character 
-- copyright: the hard work was done by nihey takizawa and the sprites where made by Famitsu and EnterBrain 
-
-also nice to create a more usefull sprite is https://sanderfrenken.github.io/Universal-LPC-Spritesheet-Character-Generator/#
 
 
 

@@ -153,17 +153,6 @@ static int sdl2_test_lua_stage_init(lua_State* L, int sc, int sa)
     {
         memset(stg->screens, 0, sizeof(screen) * stg->screen_count);
     }
-
-    /*
-    // the approach for screen[1] in struct stage
-    stage *stg; 
-    stg = (screen *)malloc(sizeof(*stg) + sizeof(screen) * (screen_count -1));
-    if(stg)
-    {
-        memset(stg, 0, sizeof(*stg) + sizeof(screen) * (screen_count -1));
-    }
-    */
-
     return 1;
 }
 
@@ -192,6 +181,11 @@ static int sdl2_test_lua_screen_init(lua_State* L, void* v, int id, int x, int y
         s->width = _w;
         s->height = _h;
         s->exits = _exits;
+        s->blk_used = 0;
+        s->blk_size = 120;
+        s->blocks = malloc(s->blk_size * sizeof(block));
+        if(!s->blocks)
+          exit(-1);
     }
     return 0;
 }
@@ -211,10 +205,21 @@ static int sdl2_test_lua_block_init(lua_State* L, void* v, int s, int id, int en
     {
         stage * stg  = (stage *)lua_touserdata(L, 1);
         screen *s = &stg->screens[_s];  
-        block *b = &s->blocks[_id];  
-        b->id = _id;
-        b->enter = _enter;
-        b->solid = _solid;
+        if(_solid)
+        {
+          block *b = &s->blocks[s->blk_used];  
+          b->id = _id;
+          b->enter = _enter;
+          b->solid = _solid;
+          s->blk_used++;
+          if(s->blk_size == s->blk_used)
+          {
+            s->blk_size *= 2;
+            s->blocks = realloc(s->blocks,s->blk_size * sizeof(block));
+            if(!s->blocks)
+              exit(-1);
+          }
+        }
     }
     return 0;
 }
