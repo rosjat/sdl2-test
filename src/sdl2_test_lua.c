@@ -5,7 +5,7 @@
 #include "sdl2_test_lua.h"
 
 
-int sdl2_test_lua_check_script(lua_State* L, int result)
+int32_t sdl2_test_lua_check_script(lua_State* L, int32_t result)
 {
   if(result != LUA_OK)
   {
@@ -16,7 +16,7 @@ int sdl2_test_lua_check_script(lua_State* L, int result)
   return 1;
 }
 
-static int sdl2_test_lua_gc_stage(lua_State* L)
+static int32_t sdl2_test_lua_gc_stage(lua_State* L)
 {
     if (!lua_isuserdata(L, 1)) return 0; 
     sdl2_test_stage* s = lua_touserdata(L,1);
@@ -24,7 +24,7 @@ static int sdl2_test_lua_gc_stage(lua_State* L)
     return 0;
 }
 
-static int sdl2_test_lua_gc_configuration(lua_State* L)
+static int32_t sdl2_test_lua_gc_configuration(lua_State* L)
 {
     if (!lua_isuserdata(L, 1)) return 0; 
     configuration_wrapper* w = lua_touserdata(L,1);
@@ -64,8 +64,8 @@ sdl2_test_stage *sdl2_test_stage_load(char* fname, lua_State* L)
         lua_getglobal(L, "stages");
         if (lua_istable(L, -1))
         {
-          int sc = lua_gettop(L);
-          for(int scr=1; scr<= sc; scr++)
+          int32_t sc = lua_gettop(L);
+          for(int32_t scr=1; scr<= sc; scr++)
           {
             lua_rawgeti(L, -1, scr);
             if (lua_isnil(L, -1)) {
@@ -85,7 +85,7 @@ sdl2_test_stage *sdl2_test_stage_load(char* fname, lua_State* L)
     return NULL;
 }
 
-int sdl2_test_stage_reload(sdl2_test_stage* stages, char* fname, sdl2_test* app) 
+int32_t sdl2_test_stage_reload(sdl2_test_stage* stages, char* fname, sdl2_test* app) 
 { 
 
     lua_getglobal(app->L, "ReloadStage");
@@ -119,7 +119,7 @@ void sdl2_test_lua_automation_start(sdl2_test* app)
 
 */
 
-static int sdl2_test_lua_configuration_init(lua_State* L)
+static int32_t sdl2_test_lua_configuration_init(lua_State* L)
 {   
     configuration_wrapper* wrapper  = (configuration_wrapper*)lua_newuserdata(L,sizeof(configuration_wrapper));
     sdl2_test_configuration* config = sdl2_test_configuration_create();
@@ -129,18 +129,18 @@ static int sdl2_test_lua_configuration_init(lua_State* L)
     return 1;
 }
 
-static int sdl2_test_lua_stage_init(lua_State* L, int sc, int sa)
+static int32_t sdl2_test_lua_stage_init(lua_State* L, int32_t sc, int32_t sa)
 {   
 
-    int screen_count, screen_active;
-    screen_active = (int)lua_tointeger(L, -1);
+    int32_t screen_count, screen_active;
+    screen_active = (int32_t)lua_tointeger(L, -1);
     lua_pop(L,1);
-    screen_count = (int)lua_tointeger(L, -1);
+    screen_count = (int32_t)lua_tointeger(L, -1);
     lua_pop(L,1);
     sdl2_test_stage* stg  = (sdl2_test_stage *)lua_newuserdata(L, sizeof(sdl2_test_stage));
     stg->screen_count = screen_count;
     stg-> screen_active = screen_active;
-    int t = lua_gettop(L);
+    int32_t t = lua_gettop(L);
     luaL_getmetatable(L, "StageMeta");
     lua_setmetatable(L, t);
     lua_newtable(L);
@@ -156,20 +156,20 @@ static int sdl2_test_lua_stage_init(lua_State* L, int sc, int sa)
     return 1;
 }
 
-static int sdl2_test_lua_screen_init(lua_State* L, void* v, int id, int x, int y, int w, int h, int exits)
+static int32_t sdl2_test_lua_screen_init(lua_State* L, void* v, int32_t id, int32_t x, int32_t y, int32_t w, int32_t h, int32_t exits)
 {   
-    int _id, _x, _y, _w, _h, _exits;
-    _exits = (int)lua_tointeger(L, -1);
+    int32_t _id, _x, _y, _w, _h, _exits;
+    _exits = (int32_t)lua_tointeger(L, -1);
     lua_pop(L,1);
-    _h = (int)lua_tointeger(L, -1);
+    _h = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    _w = (int)lua_tointeger(L, -1);
+    _w = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    _y = (int)lua_tointeger(L, -1);
+    _y = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    _x = (int)lua_tointeger(L, -1);
+    _x = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    _id = (int)lua_tointeger(L, -1);
+    _id = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
     if(lua_isuserdata(L, -1))
     {
@@ -190,16 +190,16 @@ static int sdl2_test_lua_screen_init(lua_State* L, void* v, int id, int x, int y
     return 0;
 }
 
-static int sdl2_test_lua_block_init(lua_State* L, void* v, int s, int id, int enter, int solid)
+static int32_t sdl2_test_lua_block_init(lua_State* L, void* v, int32_t s, int32_t id, int32_t enter, int32_t solid)
 {   
-    int _s, _id, _enter, _solid;
-    _solid = (int)lua_tointeger(L, -1);
+    int32_t _s, _id, _enter, _solid;
+    _solid = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    _enter = (int)lua_tointeger(L, -1);
+    _enter = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    _id = (int)lua_tointeger(L, -1);
+    _id = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    _s = (int)lua_tointeger(L, -1);
+    _s = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
     if(lua_isuserdata(L, -1))
     {
@@ -224,22 +224,22 @@ static int sdl2_test_lua_block_init(lua_State* L, void* v, int s, int id, int en
     return 0;
 }
 
-static int sdl2_test_lua_init_rect(lua_State* L, void* v, int s, int b, int t, int x, int y, int w , int h)
+static int32_t sdl2_test_lua_init_rect(lua_State* L, void* v, int32_t s, int32_t b, int32_t t, int32_t x, int32_t y, int32_t w , int32_t h)
 {
-    int rx, ry, rw, rh, rt , _s, _b;
-    rh = (int)lua_tointeger(L, -1);
+    int32_t rx, ry, rw, rh, rt , _s, _b;
+    rh = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    rw = (int)lua_tointeger(L, -1);
+    rw = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    ry = (int)lua_tointeger(L, -1);
+    ry = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    rx = (int)lua_tointeger(L, -1);
+    rx = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    rt = (int)lua_tointeger(L, -1);
+    rt = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    _b = (int)lua_tointeger(L, -1);
+    _b = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    _s = (int)lua_tointeger(L, -1);
+    _s = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
     if(lua_isuserdata(L, -1))
     {
@@ -261,22 +261,22 @@ static int sdl2_test_lua_init_rect(lua_State* L, void* v, int s, int b, int t, i
     return 0;
 }
 
-static int sdl2_test_lua_mod_rect(lua_State* L, void* v, int s, int b, int t, int x, int y, int w , int h)
+static int32_t sdl2_test_lua_mod_rect(lua_State* L, void* v, int32_t s, int32_t b, int32_t t, int32_t x, int32_t y, int32_t w , int32_t h)
 {
-    int rx, ry, rw, rh, rt , _s, _b;
-    rh = (int)lua_tointeger(L, -1);
+    int32_t rx, ry, rw, rh, rt , _s, _b;
+    rh = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    rw = (int)lua_tointeger(L, -1);
+    rw = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    ry = (int)lua_tointeger(L, -1);
+    ry = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    rx = (int)lua_tointeger(L, -1);
+    rx = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    rt = (int)lua_tointeger(L, -1);
+    rt = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    _b = (int)lua_tointeger(L, -1);
+    _b = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    _s = (int)lua_tointeger(L, -1);
+    _s = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
     if(lua_isuserdata(L, -1))
     {
@@ -303,20 +303,20 @@ static int sdl2_test_lua_mod_rect(lua_State* L, void* v, int s, int b, int t, in
     }
     return 0;
 }
-static int sdl2_test_lua_pause(lua_State* L, int ms)
+static int32_t sdl2_test_lua_pause(lua_State* L, int32_t ms)
 {
-    int _ms;
-    _ms = (int)lua_tointeger(L, -1);
+    int32_t _ms;
+    _ms = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
     usleep(_ms* 1000);
   return 0;
 }
 
-static int sdl2_test_lua_configuration_font_init(lua_State* L, void* v, char* font, int size)
+static int32_t sdl2_test_lua_configuration_font_init(lua_State* L, void* v, char* font, int32_t size)
 {   
-    int _s;
+    int32_t _s;
     char* _f;
-    _s = (int)lua_tointeger(L, -1);
+    _s = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
     _f = (char *)lua_tostring(L, -1);
     lua_pop(L,1);
@@ -336,79 +336,79 @@ static int sdl2_test_lua_configuration_font_init(lua_State* L, void* v, char* fo
 }
 /* setter and getter functions */
 
-static int sdl2_test_lua_get_int (lua_State *L, void *v)
+static int32_t sdl2_test_lua_get_int (lua_State *L, void *v)
 {
   lua_pushnumber(L, *(int*)v);
   return 1;
 }
 
-static int sdl2_test_lua_set_int (lua_State *L, void *v)
+static int32_t sdl2_test_lua_set_int (lua_State *L, void *v)
 {
   *(int*)v = luaL_checkint(L, 3);
   return 0;
 }
 
-static int sdl2_test_lua_get_number (lua_State *L, void *v)
+static int32_t sdl2_test_lua_get_number (lua_State *L, void *v)
 {
   lua_pushnumber(L, *(lua_Number*)v);
   return 1;
 }
 
-static int sdl2_test_lua_set_number (lua_State *L, void *v)
+static int32_t sdl2_test_lua_set_number (lua_State *L, void *v)
 {
   *(float*)v = luaL_checknumber(L, 3);
   return 0;
 }
 
-static int sdl2_test_lua_get_string (lua_State *L, void *v)
+static int32_t sdl2_test_lua_get_string (lua_State *L, void *v)
 {
   lua_pushstring(L, *((char**)v) );
   return 1;
 }
 
-static int sdl2_test_lua_set_string (lua_State *L, void *v)
+static int32_t sdl2_test_lua_set_string (lua_State *L, void *v)
 {
     *((const char**)v) = luaL_checkstring(L, 3);
     return 0;
 }
 
-static int sdl2_test_lua_get_stage (lua_State *L, void *v)
+static int32_t sdl2_test_lua_get_stage (lua_State *L, void *v)
 {
   lua_pushlightuserdata(L, *((sdl2_test_stage**)v) );
   return 1;
 }
 
-static int sdl2_test_lua_get_screen (lua_State *L, void *v)
+static int32_t sdl2_test_lua_get_screen (lua_State *L, void *v)
 {
   lua_pushlightuserdata(L, *((sdl2_test_screen**)v) );
   return 1;
 }
 
-static int sdl2_test_lua_set_screen (lua_State *L, void *v)
+static int32_t sdl2_test_lua_set_screen (lua_State *L, void *v)
 {
   *((sdl2_test_screen**)v) = lua_touserdata(L, 3);
   return 0;
 }
 
-static int sdl2_test_lua_get_block (lua_State *L, void *v)
+static int32_t sdl2_test_lua_get_block (lua_State *L, void *v)
 {
   lua_pushlightuserdata(L, *((block**)v) );
   return 1;
 }
 
-static int sdl2_test_lua_set_block (lua_State *L, void *v)
+static int32_t sdl2_test_lua_set_block (lua_State *L, void *v)
 {
   *((block**)v) = lua_touserdata(L, 3);
   return 0;
 }
 
-static int sdl2_test_lua_get_rect (lua_State *L, void *v)
+static int32_t sdl2_test_lua_get_rect (lua_State *L, void *v)
 {
   lua_pushlightuserdata(L, *((SDL_Rect**)v) );
   return 1;
 }
 
-static int sdl2_test_lua_set_rect (lua_State *L, void *v)
+static int32_t sdl2_test_lua_set_rect (lua_State *L, void *v)
 {
   *((SDL_Rect**)v) = lua_touserdata(L, 3);
   return 0;
@@ -424,7 +424,7 @@ static void sdl2_test_lua_add (lua_State *L, lua_reg l)
   }
 }
 
-static int sdl2_test_lua_call (lua_State *L)
+static int32_t sdl2_test_lua_call (lua_State *L)
 {
   lua_reg m = (lua_reg)lua_touserdata(L, -1);
   lua_pop(L, 1);
@@ -432,7 +432,7 @@ static int sdl2_test_lua_call (lua_State *L)
   return m->func(L, (void *)((char *)lua_touserdata(L, 1) + m->offset));
 }
 
-static int sdl2_test_lua_index_handler (lua_State *L)
+static int32_t sdl2_test_lua_index_handler (lua_State *L)
 {
   lua_pushvalue(L, 2);
   lua_rawget(L, lua_upvalueindex(1));
@@ -447,7 +447,7 @@ static int sdl2_test_lua_index_handler (lua_State *L)
   return sdl2_test_lua_call(L);
 }
 
-static int sdl2_test_lua_newindex_handler (lua_State *L)
+static int32_t sdl2_test_lua_newindex_handler (lua_State *L)
 {
   lua_pushvalue(L, 2);                     
   lua_rawget(L, lua_upvalueindex(1));      
@@ -461,7 +461,7 @@ void sdl2_test_lua_metatable_register(lua_State* L, char* name,
                                       lua_reg_pre getter[],
                                       lua_reg_pre setter[])
 {
-    int _metatable, _methods;
+    int32_t _metatable, _methods;
     luaL_newmetatable(L, name);
     luaL_openlib(L, 0, methods, 0); 
     _metatable = lua_gettop(L);
@@ -482,9 +482,9 @@ void sdl2_test_lua_metatable_register(lua_State* L, char* name,
     lua_pop(L, 1);
 }
 
-int sdl2_test_lua_register(lua_State *L)
+int32_t sdl2_test_lua_register(lua_State *L)
 {
-  int metatable, methods;
+  int32_t metatable, methods;
   luaL_openlib(L, "sdl2_test_lua", sdl2_test_lua_methods, 0);
   methods = lua_gettop(L);
 
@@ -507,7 +507,7 @@ int sdl2_test_lua_register(lua_State *L)
   return 1;
 }
 
-static int sdl2_test_lua_function_string_register(lua_State *L)
+static int32_t sdl2_test_lua_function_string_register(lua_State *L)
 {
   char* str = "function file_exists(file) \
   local f = io.open(file, \"rb\") \

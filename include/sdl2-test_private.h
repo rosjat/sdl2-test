@@ -6,6 +6,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -41,31 +42,31 @@ typedef enum {
 } sdl2_test_entity_type;
 
 typedef struct {
-    int r;
-    int g;
-    int b;
-    int a;
+    int32_t r;
+    int32_t g;
+    int32_t b;
+    int32_t a;
 } sdl2_test_color;
 
 typedef struct {
-    int id;
-    int enter;
-    int solid;
+    int32_t id;
+    int32_t enter;
+    int32_t solid;
     SDL_Rect* trect;
     SDL_Rect* brect;
 } block;
 
 typedef struct {
     sdl2_test_entity_type type;
-    int id;
-    int life;
-    int reload;
-    int w;
-    int h;
-    int tx;
-    int ty;
-    int grounded;
-    int climbing;
+    int32_t id;
+    int32_t life;
+    int32_t reload;
+    int32_t w;
+    int32_t h;
+    int32_t tx;
+    int32_t ty;
+    int32_t grounded;
+    int32_t climbing;
     float health;
     float x;
     float y;
@@ -74,44 +75,44 @@ typedef struct {
 } sdl2_test_entity;
 
 typedef struct {
-    int id;
-    int x;
-    int y;
-    int width;
-    int height;
-    int exits;
-    int blk_used;
-    int blk_size;
+    int32_t id;
+    int32_t x;
+    int32_t y;
+    int32_t width;
+    int32_t height;
+    int32_t exits;
+    int32_t blk_used;
+    int32_t blk_size;
     block* blocks;
 } sdl2_test_screen;
 
 typedef struct {
-    int screen_count;
-    int screen_active;
+    int32_t screen_count;
+    int32_t screen_active;
     sdl2_test_screen* screens; 
 } sdl2_test_stage;
 
 typedef struct {
-    int bg_show;
-    int blk_show;
-    int dbg_show;
+    int32_t bg_show;
+    int32_t blk_show;
+    int32_t dbg_show;
 } debug_info;
 
 
 struct lua_State ;
 
 typedef struct {
-    int win_h;
-    int win_w;
-    int ss;
-    int blk_w;
-    int blk_h;
-    int blk_t_h;
-    int blk_t_w;
-    int scrn_h;
-    int scrn_w;
-    int stg_count;
-    int stg_reload;
+    int32_t win_h;
+    int32_t win_w;
+    int32_t ss;
+    int32_t blk_w;
+    int32_t blk_h;
+    int32_t blk_t_h;
+    int32_t blk_t_w;
+    int32_t scrn_h;
+    int32_t scrn_w;
+    int32_t stg_count;
+    int32_t stg_reload;
     float g;
     char* bg_img;
     char* ps_img;
@@ -119,13 +120,13 @@ typedef struct {
 } sdl2_test_configuration;
 
 typedef struct {
-    int running;
-    int mbutton;
-    int screen_counter;
-    int stage_counter;
-    int bg_offset_x;
-    int bg_offset_y;
-    int keyboard[MAX_KEYBOARD_KEYS];
+    int32_t running;
+    int32_t mbutton;
+    int32_t screen_counter;
+    int32_t stage_counter;
+    int32_t bg_offset_x;
+    int32_t bg_offset_y;
+    int32_t keyboard[MAX_KEYBOARD_KEYS];
     float r;
     long t;
     debug_info d_info;
@@ -140,13 +141,13 @@ typedef struct {
     struct lua_State *L;
 } sdl2_test;
 
-SDL_Rect* init_rect(int x, int y, int w, int h);
+SDL_Rect* init_rect(int32_t x, int32_t y, int32_t w, int32_t h);
 void sdl2_test_text_render(sdl2_test* app, char* msg);
-int sdl2_test_set_bg_colorkey(sdl2_test* app, int r, int g, int b);
+int32_t sdl2_test_set_bg_colorkey(sdl2_test* app, int32_t r, int32_t g, int32_t b);
 
 char *sdl2_test_collision_test(sdl2_test_stage** _stg, sdl2_test** _app);
-int sdl2_test_collision_point_block(float px, float py, block* b);
-void sdl2_test_collision_block_id_get(block* blks, int seg[56], int x, int y);
+int32_t sdl2_test_collision_point_block(float px, float py, block* b);
+void sdl2_test_collision_block_id_get(block* blks, int32_t seg[56], int32_t x, int32_t y);
 void sdl2_test_collision_screen_boundaries_set(sdl2_test *app, sdl2_test_stage *stg);
 
 
@@ -157,9 +158,9 @@ void sdl2_test_configuration_print(sdl2_test_configuration* config);
 
 
 sdl2_test_stage *sdl2_test_stage_load(char* fname, struct lua_State* L);
-int sdl2_test_stage_reload(sdl2_test_stage* stages, char* fname, sdl2_test* app);
+int32_t sdl2_test_stage_reload(sdl2_test_stage* stages, char* fname, sdl2_test* app);
 void sdl2_test_stage_destroy(sdl2_test_stage* stg);
-int sdl2_test_stage_count(sdl2_test_stage* stg);
+int32_t sdl2_test_stage_count(sdl2_test_stage* stg);
 
 struct lua_State * sdl2_test_lua_state_init(void);
 
@@ -170,18 +171,18 @@ void sdl2_test_key_up(sdl2_test* app, SDL_KeyboardEvent *event);
 void sdl2_test_key_down(sdl2_test* app, SDL_KeyboardEvent *event);
 
 
-SDL_Texture *sdl2_test_load_texture(sdl2_test* app, char* fname, int r, int g, int b);
-void sdl2_test_blit_rect(sdl2_test* app, SDL_Texture* texture, SDL_Rect *src, int x, int y);
-void sdl2_test_blit(sdl2_test* app, SDL_Texture* texture, int x, int y);
+SDL_Texture *sdl2_test_load_texture(sdl2_test* app, char* fname, int32_t r, int32_t g, int32_t b);
+void sdl2_test_blit_rect(sdl2_test* app, SDL_Texture* texture, SDL_Rect *src, int32_t x, int32_t y);
+void sdl2_test_blit(sdl2_test* app, SDL_Texture* texture, int32_t x, int32_t y);
 void sdl2_test_background_draw(sdl2_test *app, sdl2_test_screen *s);
 void sdl2_test_player_draw(sdl2_test *app);
 void sdl2_test_blocks_draw(sdl2_test *app);
-void sdl2_test_block_draw(sdl2_test* app, block *blk, int r, int g, int b);
+void sdl2_test_block_draw(sdl2_test* app, block *blk, int32_t r, int32_t g, int32_t b);
 
 sdl2_test_entity *sdl2_test_player_create(sdl2_test_configuration *config);
 static void sdl2_test_entity_move(sdl2_test *app, sdl2_test_entity *e, block *b);
 static void sdl2_test_entity_to_screen_move(sdl2_test* app,sdl2_test_entity *e, block *b, float dx, float dy);
 void sdl2_test_frame_rate(sdl2_test *app);
-void sdl2_test_entity_coordinate_set(sdl2_test_entity *e, int row);
+void sdl2_test_entity_coordinate_set(sdl2_test_entity *e, int32_t row);
 
 #endif

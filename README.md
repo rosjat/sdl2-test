@@ -63,6 +63,8 @@ also nice to create a more usefull sprite is https://sanderfrenken.github.io/Uni
   - reworked drawing of blocks so we can now see if they are solid or block to be climbed in
 - still some hickups with the collisions on solid to none solid blocks when it comes to moving into another screen
 
+- first step to make the code more robust by adding stdint.h and use int32_t (thanks for pointing this out to [ronnie sahlberg](https://github.com/sahlberg), great teacher as always)
+
 ### Update 2021/05/06
 
  - working my way back to collision testing on solid blocks only

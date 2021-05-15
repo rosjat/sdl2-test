@@ -1,19 +1,19 @@
 #include "sdl2-test_private.h"
 
-int sdl2_test_collision_player_block_rect(sdl2_test_entity * p, block* b)
+int32_t sdl2_test_collision_player_block_rect(sdl2_test_entity * p, block* b)
 {
 
-    int r = (p->x < b->brect->x + b->brect->w && 
+    int32_t r = (p->x < b->brect->x + b->brect->w && 
             p->x + p->w > b->brect->x &&
             p->y < b->brect->y + b->brect->h &&
             p->y + p->h > b->brect->y);
     return r;
 }
 
-int sdl2_test_collision_player_block_rect2(int ex, int ey , int eh, int ew, int bx, int by, int bw, int bh)
+int32_t sdl2_test_collision_player_block_rect2(int32_t ex, int32_t ey , int32_t eh, int32_t ew, int32_t bx, int32_t by, int32_t bw, int32_t bh)
 {
 
-    int r = (ex < bx + bw && 
+    int32_t r = (ex < bx + bw && 
             ex + ew> bx &&
             ey < by + bh &&
             ey + eh > by);
@@ -75,7 +75,7 @@ void sdl2_test_collision_screen_boundaries_set(sdl2_test *app, sdl2_test_stage *
 
 char *sdl2_test_collision_test(sdl2_test_stage** _stg, sdl2_test** _app) 
 {
-    int blk_used, blk_size;
+    int32_t blk_used, blk_size;
     blk_used = blk_size = 0;
     
     char *msg = malloc(sizeof(char) * 256);
@@ -98,7 +98,7 @@ char *sdl2_test_collision_test(sdl2_test_stage** _stg, sdl2_test** _app)
         blk_used = stg->screens[stg->screen_active].blk_used;
     else
         blk_used = 0;
-    for(int b = 0 ; b < blk_used; b++) 
+    for(int32_t b = 0 ; b < blk_used; b++) 
     {
         sdl2_test_entity_to_screen_move(app, app->p, &stg->screens[app->screen_counter].blocks[b], app->p->dx, 0);
         sdl2_test_entity_to_screen_move(app, app->p, &stg->screens[app->screen_counter].blocks[b], 0, app->p->dy);
@@ -109,11 +109,11 @@ char *sdl2_test_collision_test(sdl2_test_stage** _stg, sdl2_test** _app)
 
 static void sdl2_test_entity_to_screen_move(sdl2_test* app, sdl2_test_entity *e, block *b,  float dx, float dy)
 {
-	int mx, my, adj, hit;
-    int  bx = b->brect->x;
-    int by = b->brect->y;
-    int bh = b->brect->h;
-    int bw = b->brect->w;
+	int32_t mx, my, adj, hit;
+    int32_t  bx = b->brect->x;
+    int32_t by = b->brect->y;
+    int32_t bh = b->brect->h;
+    int32_t bw = b->brect->w;
 	if (dx != 0)
 	{
 		mx = dx > 0 ? (e->x + e->w) : e->x;

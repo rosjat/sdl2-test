@@ -44,7 +44,7 @@ void sdl2_test_configuration_destroy(sdl2_test_configuration* config)
     TTF_CloseFont(config->font);
 }
 
-int sdl2_test_state_get_running(sdl2_test* app)
+int32_t sdl2_test_state_get_running(sdl2_test* app)
 {
     return app->running;
 }
@@ -90,7 +90,7 @@ void sdl2_test_key_down(sdl2_test* app, SDL_KeyboardEvent *event)
     }
 }
 
-SDL_Rect* init_rect(int x, int y, int w, int h)
+SDL_Rect* init_rect(int32_t x, int32_t y, int32_t w, int32_t h)
 {
     SDL_Rect* rect;
     rect = malloc(sizeof *rect);
@@ -104,10 +104,10 @@ SDL_Rect* init_rect(int x, int y, int w, int h)
 
 void sdl2_test_stage_destroy(sdl2_test_stage* stg)
 {
-    for(int x = 0; x < stg->screen_count; x++) 
+    for(int32_t x = 0; x < stg->screen_count; x++) 
     {
 
-        for(int b = 0; b < stg->screens[x].blk_used; b++)
+        for(int32_t b = 0; b < stg->screens[x].blk_used; b++)
         {
             free(stg->screens[x].blocks[b].trect);
             free(stg->screens[x].blocks[b].brect);
@@ -117,11 +117,11 @@ void sdl2_test_stage_destroy(sdl2_test_stage* stg)
     free((stg->screens));
 }
 
-int sdl2_test_stage_count(sdl2_test_stage* stg)
+int32_t sdl2_test_stage_count(sdl2_test_stage* stg)
 {
-    int s1 = sizeof(stg);
-    int s2 = sizeof(sdl2_test_stage*);
-    int c =  s1/s2; 
+    int32_t s1 = sizeof(stg);
+    int32_t s2 = sizeof(sdl2_test_stage*);
+    int32_t c =  s1/s2; 
     return c;
 }
 
@@ -306,7 +306,7 @@ void sdl2_test_destroy(sdl2_test* app)
     free(app);
 }
 
-int sdl2_test_set_bg_colorkey(sdl2_test* app, int r, int g, int b)
+int32_t sdl2_test_set_bg_colorkey(sdl2_test* app, int32_t r, int32_t g, int32_t b)
 {
     SDL_Texture* bg;
     SDL_Surface* surface = IMG_Load(app->config->bg_img);
@@ -351,7 +351,7 @@ void sdl2_test_text_render(sdl2_test* app, char* msg)
     SDL_FreeSurface(surfaceMessage);
     SDL_DestroyTexture(Message);
 }
-void sdl2_test_block_draw(sdl2_test* app, block *blk, int r, int g, int b)
+void sdl2_test_block_draw(sdl2_test* app, block *blk, int32_t r, int32_t g, int32_t b)
 {
 
     SDL_Surface* surface = SDL_CreateRGBSurface(0, blk->brect->w, blk->brect->h, 32, 0, 0, 0, 0);
@@ -376,7 +376,7 @@ void sdl2_test_value_swap(float* v1, float* v2)
     *v2 = _t;
 }
 
-SDL_Texture *sdl2_test_load_texture(sdl2_test* app, char* fname, int r, int g, int b)
+SDL_Texture *sdl2_test_load_texture(sdl2_test* app, char* fname, int32_t r, int32_t g, int32_t b)
 {
     SDL_Texture* texture;
     SDL_Surface* surface = IMG_Load(fname);
@@ -392,7 +392,7 @@ SDL_Texture *sdl2_test_load_texture(sdl2_test* app, char* fname, int r, int g, i
     return texture;
 }
 
-void sdl2_test_blit(sdl2_test* app, SDL_Texture* texture, int x, int y)
+void sdl2_test_blit(sdl2_test* app, SDL_Texture* texture, int32_t x, int32_t y)
 {
     if(texture != NULL)
     {
@@ -404,7 +404,7 @@ void sdl2_test_blit(sdl2_test* app, SDL_Texture* texture, int x, int y)
     }
 }
 
-void sdl2_test_blit_rect(sdl2_test* app, SDL_Texture* texture, SDL_Rect *src, int x, int y)
+void sdl2_test_blit_rect(sdl2_test* app, SDL_Texture* texture, SDL_Rect *src, int32_t x, int32_t y)
 {
     if(texture != NULL)
     {
@@ -445,10 +445,10 @@ void sdl2_test_background_draw(sdl2_test *app, sdl2_test_screen *s)
 
 void sdl2_test_blocks_draw(sdl2_test *app)
 {
-    int stg, scrn, blk;
+    int32_t stg, scrn, blk;
     stg = app->stage_counter;
     scrn = app->stages[stg].screen_active;
-    for(int x = 0; x < app->stages[stg].screens[scrn].blk_used ;x++) {
+    for(int32_t x = 0; x < app->stages[stg].screens[scrn].blk_used ;x++) {
         if(app->stages[stg].screens[scrn].blocks[x].solid )
         {
             if (app->keyboard[SDL_SCANCODE_T])
@@ -487,11 +487,11 @@ void sdl2_test_frame_rate(sdl2_test *app)
     app->t = SDL_GetTicks();
 }
 
-void sdl2_test_entity_coordinate_set(sdl2_test_entity *e, int row)
+void sdl2_test_entity_coordinate_set(sdl2_test_entity *e, int32_t row)
 {
-    int totalFrames = 3;
-        int delayPerFrame = 100;
-        int frame = (SDL_GetTicks() / delayPerFrame) % totalFrames;
+    int32_t totalFrames = 3;
+        int32_t delayPerFrame = 100;
+        int32_t frame = (SDL_GetTicks() / delayPerFrame) % totalFrames;
         e->tx = frame * 32;
         e->ty = row * 32;
 }
