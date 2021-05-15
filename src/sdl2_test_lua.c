@@ -19,7 +19,7 @@ int sdl2_test_lua_check_script(lua_State* L, int result)
 static int sdl2_test_lua_gc_stage(lua_State* L)
 {
     if (!lua_isuserdata(L, 1)) return 0; 
-    stage* s = lua_touserdata(L,1);
+    sdl2_test_stage* s = lua_touserdata(L,1);
     sdl2_test_stage_destroy(s);
     return 0;
 }
@@ -56,9 +56,9 @@ sdl2_test_configuration* sdl2_test_configuration_load(lua_State* L, char* fname)
     return NULL;  
 }
 
-stage *sdl2_test_stage_load(char* fname, lua_State* L) 
+sdl2_test_stage *sdl2_test_stage_load(char* fname, lua_State* L) 
 {  
-    stage* stages;
+    sdl2_test_stage* stages;
     if (sdl2_test_lua_check_script(L, luaL_dofile(L, fname)))
     {
         lua_getglobal(L, "stages");
@@ -73,7 +73,7 @@ stage *sdl2_test_stage_load(char* fname, lua_State* L)
                 break;
             }
             if(!lua_isuserdata(L, -1)) break;
-            stages = (stage *)lua_touserdata(L, -1);
+            stages = (sdl2_test_stage *)lua_touserdata(L, -1);
             lua_pop(L, 1);
             lua_settop(L, 0);
             lua_pop(L, 1); 
@@ -85,7 +85,7 @@ stage *sdl2_test_stage_load(char* fname, lua_State* L)
     return NULL;
 }
 
-int sdl2_test_stage_reload(stage* stages, char* fname, sdl2_test* app) 
+int sdl2_test_stage_reload(sdl2_test_stage* stages, char* fname, sdl2_test* app) 
 { 
 
     lua_getglobal(app->L, "ReloadStage");
@@ -137,7 +137,7 @@ static int sdl2_test_lua_stage_init(lua_State* L, int sc, int sa)
     lua_pop(L,1);
     screen_count = (int)lua_tointeger(L, -1);
     lua_pop(L,1);
-    stage* stg  = (stage *)lua_newuserdata(L, sizeof(stage));
+    sdl2_test_stage* stg  = (sdl2_test_stage *)lua_newuserdata(L, sizeof(sdl2_test_stage));
     stg->screen_count = screen_count;
     stg-> screen_active = screen_active;
     int t = lua_gettop(L);
@@ -148,10 +148,10 @@ static int sdl2_test_lua_stage_init(lua_State* L, int sc, int sa)
     t = lua_gettop(L);
     lua_setuservalue(L,t);
 
-    stg->screens = (screen *)malloc(sizeof(screen) * stg->screen_count);
+    stg->screens = (sdl2_test_screen *)malloc(sizeof(sdl2_test_screen) * stg->screen_count);
     if(stg->screens)
     {
-        memset(stg->screens, 0, sizeof(screen) * stg->screen_count);
+        memset(stg->screens, 0, sizeof(sdl2_test_screen) * stg->screen_count);
     }
     return 1;
 }
@@ -173,8 +173,8 @@ static int sdl2_test_lua_screen_init(lua_State* L, void* v, int id, int x, int y
     lua_pop(L,1);
     if(lua_isuserdata(L, -1))
     {
-        stage * stg  = (stage *)lua_touserdata(L, 1);
-        screen *s = &stg->screens[_id];
+        sdl2_test_stage * stg  = (sdl2_test_stage *)lua_touserdata(L, 1);
+        sdl2_test_screen *s = &stg->screens[_id];
         s->id = _id;
         s->x = _x;
         s->y = _y;
@@ -203,8 +203,8 @@ static int sdl2_test_lua_block_init(lua_State* L, void* v, int s, int id, int en
     lua_pop(L,1);
     if(lua_isuserdata(L, -1))
     {
-        stage * stg  = (stage *)lua_touserdata(L, 1);
-        screen *s = &stg->screens[_s];  
+        sdl2_test_stage * stg  = (sdl2_test_stage *)lua_touserdata(L, 1);
+        sdl2_test_screen *s = &stg->screens[_s];  
         if(_solid)
         {
           block *b = &s->blocks[s->blk_used];  
@@ -243,8 +243,8 @@ static int sdl2_test_lua_init_rect(lua_State* L, void* v, int s, int b, int t, i
     lua_pop(L,1);
     if(lua_isuserdata(L, -1))
     {
-      stage * stg = (stage *)lua_touserdata(L, 1);
-      screen *s = &stg->screens[_s];  
+      sdl2_test_stage * stg = (sdl2_test_stage *)lua_touserdata(L, 1);
+      sdl2_test_screen *s = &stg->screens[_s];  
       block *b = &s->blocks[_b]; 
       switch(rt)
       {
@@ -280,8 +280,8 @@ static int sdl2_test_lua_mod_rect(lua_State* L, void* v, int s, int b, int t, in
     lua_pop(L,1);
     if(lua_isuserdata(L, -1))
     {
-      stage * stg = (stage *)lua_touserdata(L, 1);
-      screen *s = &stg->screens[_s];  
+      sdl2_test_stage * stg = (sdl2_test_stage *)lua_touserdata(L, 1);
+      sdl2_test_screen *s = &stg->screens[_s];  
       block *b = &s->blocks[_b]; 
       switch(rt)
       {
@@ -374,19 +374,19 @@ static int sdl2_test_lua_set_string (lua_State *L, void *v)
 
 static int sdl2_test_lua_get_stage (lua_State *L, void *v)
 {
-  lua_pushlightuserdata(L, *((stage**)v) );
+  lua_pushlightuserdata(L, *((sdl2_test_stage**)v) );
   return 1;
 }
 
 static int sdl2_test_lua_get_screen (lua_State *L, void *v)
 {
-  lua_pushlightuserdata(L, *((screen**)v) );
+  lua_pushlightuserdata(L, *((sdl2_test_screen**)v) );
   return 1;
 }
 
 static int sdl2_test_lua_set_screen (lua_State *L, void *v)
 {
-  *((screen**)v) = lua_touserdata(L, 3);
+  *((sdl2_test_screen**)v) = lua_touserdata(L, 3);
   return 0;
 }
 

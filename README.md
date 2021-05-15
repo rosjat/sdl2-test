@@ -54,6 +54,15 @@ also nice to create a more usefull sprite is https://sanderfrenken.github.io/Uni
 
 ---
 
+### Update 2021/05/15
+
+- a lot of reworking on collision testing and drawing after some research online
+  - splipting drawing and of sthing up in a few helper functions
+  - spliting collition testing up in helper functions
+  - some changes in structs to determine if player is on the ground or climbing
+  - reworked drawing of blocks so we can now see if they are solid or block to be climbed in
+- still some hickups with the collisions on solid to none solid blocks when it comes to moving into another screen
+
 ### Update 2021/05/06
 
  - working my way back to collision testing on solid blocks only

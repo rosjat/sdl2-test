@@ -6,12 +6,13 @@ int main(){
     app = sdl2_test_create();
     if(!app)
     {
-        printf("something went wrong with app!");
-        return 1;
+        sdl2_test_log_message_print("something went wrong with app!");
+        exit(-1);
     }
     while(sdl2_test_state_get_running(app)) {
         sdl2_test_event_process(app);
         sdl2_test_update(app);
     }
     sdl2_test_destroy(app);
+    sdl2_test_log_message_print("exiting app ...");
 }
