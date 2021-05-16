@@ -129,9 +129,10 @@ static int32_t sdl2_test_lua_configuration_init(lua_State* L)
     return 1;
 }
 
-static int32_t sdl2_test_lua_stage_init(lua_State* L, int32_t sc, int32_t sa)
+static int32_t sdl2_test_lua_stage_init(lua_State* L)
 {   
-
+  if(lua_gettop(L) == 2)
+  {
     int32_t screen_count, screen_active;
     screen_active = (int32_t)lua_tointeger(L, -1);
     lua_pop(L,1);
@@ -154,10 +155,14 @@ static int32_t sdl2_test_lua_stage_init(lua_State* L, int32_t sc, int32_t sa)
         memset(stg->screens, 0, sizeof(sdl2_test_screen) * stg->screen_count);
     }
     return 1;
+  }
+  return -1;
 }
 
-static int32_t sdl2_test_lua_screen_init(lua_State* L, void* v, int32_t id, int32_t x, int32_t y, int32_t w, int32_t h, int32_t exits)
+static int32_t sdl2_test_lua_screen_init(lua_State* L)
 {   
+  if(lua_gettop(L) == 7)
+  {
     int32_t _id, _x, _y, _w, _h, _exits;
     _exits = (int32_t)lua_tointeger(L, -1);
     lua_pop(L,1);
@@ -188,10 +193,13 @@ static int32_t sdl2_test_lua_screen_init(lua_State* L, void* v, int32_t id, int3
           exit(-1);
     }
     return 0;
+  }
 }
 
-static int32_t sdl2_test_lua_block_init(lua_State* L, void* v, int32_t s, int32_t id, int32_t enter, int32_t solid)
+static int32_t sdl2_test_lua_block_init(lua_State* L)
 {   
+  if(lua_gettop(L) == 5)
+  {
     int32_t _s, _id, _enter, _solid;
     _solid = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
@@ -222,10 +230,13 @@ static int32_t sdl2_test_lua_block_init(lua_State* L, void* v, int32_t s, int32_
         }
     }
     return 0;
+  }
 }
 
-static int32_t sdl2_test_lua_init_rect(lua_State* L, void* v, int32_t s, int32_t b, int32_t t, int32_t x, int32_t y, int32_t w , int32_t h)
+static int32_t sdl2_test_lua_init_rect(lua_State* L)
 {
+  if(lua_gettop(L) == 8)
+  {
     int32_t rx, ry, rw, rh, rt , _s, _b;
     rh = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
@@ -259,10 +270,13 @@ static int32_t sdl2_test_lua_init_rect(lua_State* L, void* v, int32_t s, int32_t
       }
     }
     return 0;
+  }
 }
 
-static int32_t sdl2_test_lua_mod_rect(lua_State* L, void* v, int32_t s, int32_t b, int32_t t, int32_t x, int32_t y, int32_t w , int32_t h)
+static int32_t sdl2_test_lua_mod_rect(lua_State* L)
 {
+  if(lua_gettop(L) == 8)
+  {
     int32_t rx, ry, rw, rh, rt , _s, _b;
     rh = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
@@ -302,18 +316,24 @@ static int32_t sdl2_test_lua_mod_rect(lua_State* L, void* v, int32_t s, int32_t 
       }
     }
     return 0;
+  }
 }
-static int32_t sdl2_test_lua_pause(lua_State* L, int32_t ms)
+static int32_t sdl2_test_lua_pause(lua_State* L)
 {
+  if(lua_gettop(L) == 3)
+  {
     int32_t _ms;
     _ms = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
     usleep(_ms* 1000);
-  return 0;
+    return 0;
+  }
 }
 
-static int32_t sdl2_test_lua_configuration_font_init(lua_State* L, void* v, char* font, int32_t size)
+static int32_t sdl2_test_lua_configuration_font_init(lua_State* L)
 {   
+  if(lua_gettop(L) == 3)
+  {
     int32_t _s;
     char* _f;
     _s = (int32_t) lua_tointeger(L, -1);
@@ -333,6 +353,7 @@ static int32_t sdl2_test_lua_configuration_font_init(lua_State* L, void* v, char
       wrapper->config.font = f; 
     }
     return 0;
+  }
 }
 /* setter and getter functions */
 

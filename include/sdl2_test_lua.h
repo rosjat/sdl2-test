@@ -47,20 +47,20 @@ void sdl2_test_lua_metatable_register(lua_State* L, char* name,
 int32_t sdl2_test_lua_register (lua_State *L);
 
 static int32_t sdl2_test_lua_configuration_init(lua_State* L);
-static int32_t sdl2_test_lua_configuration_font_init(lua_State* L, void* v, char* font, int32_t size);
+static int32_t sdl2_test_lua_configuration_font_init(lua_State* L);
 
-static int32_t sdl2_test_lua_stage_init(lua_State* L, int32_t sc, int32_t sa);
+static int32_t sdl2_test_lua_stage_init(lua_State* L);
 
-static int32_t sdl2_test_lua_screen_init(lua_State* L, void* v, int32_t id, int32_t x, int32_t y, int32_t w, int32_t h, int32_t bc);
+static int32_t sdl2_test_lua_screen_init(lua_State* L);
 
-static int32_t sdl2_test_lua_block_init(lua_State* L, void *v, int32_t s, int32_t id, int32_t , int32_t solid);
+static int32_t sdl2_test_lua_block_init(lua_State* L);
 
-static int32_t sdl2_test_lua_init_rect(lua_State* L, void* v, int32_t s, int32_t b, int32_t t, int32_t x, int32_t y, int32_t w , int32_t h);
-static int32_t sdl2_test_lua_mod_rect(lua_State* L, void* v, int32_t s, int32_t b, int32_t t, int32_t x, int32_t y, int32_t w , int32_t h);
+static int32_t sdl2_test_lua_init_rect(lua_State* L);
+static int32_t sdl2_test_lua_mod_rect(lua_State* L);
 
 static int32_t sdl2_test_lua_function_string_register(lua_State *L);
 
-static int32_t sdl2_test_lua_pause(lua_State* L, int32_t ms);
+static int32_t sdl2_test_lua_pause(lua_State* L);
 
 void sdl2_test_lua_automation_start(sdl2_test* config);
 
