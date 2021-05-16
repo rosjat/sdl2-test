@@ -5,6 +5,8 @@
 #include "sdl2-test_private.h"
 #endif
 
+#include <unistd.h>
+
 typedef struct { sdl2_test_configuration config; } configuration_wrapper;
 typedef struct { sdl2_test_stage stg; } stage_wrapper;
 typedef struct { sdl2_test_screen s; } screen_wrapper;

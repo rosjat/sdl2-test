@@ -113,6 +113,8 @@ void sdl2_test_stage_destroy(sdl2_test_stage* stg)
             free(stg->screens[x].blocks[b].brect);
         }
         free(stg->screens[x].blocks);
+        free(stg->screens[x].objects);
+        free(stg->screens[x].enemies);
     }
     free((stg->screens));
 }
@@ -191,6 +193,7 @@ sdl2_test *sdl2_test_create(void)
 
     if(app->running)
     {
+        app->camera = (SDL_Point){config->win_w / 2, config->win_h / 2};
         app->window = window;
         app->renderer = renderer;
         app->bg = sdl2_test_load_texture(app, config->bg_img, 255, 255, 255);
@@ -336,15 +339,14 @@ void sdl2_test_text_render(sdl2_test* app, char* msg)
     Message_rect.w = app->config->win_w;
     Message_rect.h = 30;
 
-    SDL_Color White = {255, 255, 255};
-    SDL_Color black = {255, 255, 255};
-   
+    SDL_Color white = {255, 255, 255};
+
     SDL_Surface* surfaceMessage = SDL_CreateRGBSurface(0, 400, 30, 32, 0, 0, 0, 0);
     SDL_FillRect(surfaceMessage, NULL, SDL_MapRGB(surfaceMessage->format, 0, 0, 0));
     SDL_Texture* Message = SDL_CreateTextureFromSurface(app->renderer, surfaceMessage);
     SDL_RenderCopy(app->renderer, Message, NULL, &Message_rect);
     
-    surfaceMessage = TTF_RenderText_Solid(app->config->font, msg, White);
+    surfaceMessage = TTF_RenderText_Solid(app->config->font, msg, white);
     Message = SDL_CreateTextureFromSurface(app->renderer, surfaceMessage);
     SDL_RenderCopy(app->renderer, Message, NULL, &Message_rect);
 
@@ -378,7 +380,7 @@ void sdl2_test_value_swap(float* v1, float* v2)
 
 SDL_Texture *sdl2_test_load_texture(sdl2_test* app, char* fname, int32_t r, int32_t g, int32_t b)
 {
-    SDL_Texture* texture;
+    SDL_Texture* texture = NULL;
     SDL_Surface* surface = IMG_Load(fname);
 
     sdl2_test_log_message_print("loading %s ...", fname);
@@ -445,7 +447,7 @@ void sdl2_test_background_draw(sdl2_test *app, sdl2_test_screen *s)
 
 void sdl2_test_blocks_draw(sdl2_test *app)
 {
-    int32_t stg, scrn, blk;
+    int32_t stg, scrn;
     stg = app->stage_counter;
     scrn = app->stages[stg].screen_active;
     for(int32_t x = 0; x < app->stages[stg].screens[scrn].blk_used ;x++) {

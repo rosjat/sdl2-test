@@ -7,8 +7,6 @@
 #include <SDL2/SDL_ttf.h>
 
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <math.h>
 
 /* 
@@ -83,6 +81,8 @@ typedef struct {
     int32_t exits;
     int32_t blk_used;
     int32_t blk_size;
+    sdl2_test_entity *objects;
+    sdl2_test_entity *enemies;
     block* blocks;
 } sdl2_test_screen;
 
@@ -134,6 +134,7 @@ typedef struct {
     sdl2_test_entity *p;
     sdl2_test_stage *stages;
     sdl2_test_configuration *config;
+    SDL_Point camera;
     SDL_Texture *bg;
     SDL_Texture *psprite;
     SDL_Window *window;
@@ -180,7 +181,6 @@ void sdl2_test_blocks_draw(sdl2_test *app);
 void sdl2_test_block_draw(sdl2_test* app, block *blk, int32_t r, int32_t g, int32_t b);
 
 sdl2_test_entity *sdl2_test_player_create(sdl2_test_configuration *config);
-static void sdl2_test_entity_move(sdl2_test *app, sdl2_test_entity *e, block *b);
 static void sdl2_test_entity_to_screen_move(sdl2_test* app,sdl2_test_entity *e, block *b, float dx, float dy);
 void sdl2_test_frame_rate(sdl2_test *app);
 void sdl2_test_entity_coordinate_set(sdl2_test_entity *e, int32_t row);

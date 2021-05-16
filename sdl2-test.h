@@ -2,7 +2,9 @@
 #ifndef __sdl2_test_h__
 #define __sdl2_test_h__
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #ifndef __sdl2_test_private_h__
 typedef void stage;

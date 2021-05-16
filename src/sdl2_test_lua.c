@@ -188,12 +188,29 @@ static int32_t sdl2_test_lua_screen_init(lua_State* L)
         s->exits = _exits;
         s->blk_used = 0;
         s->blk_size = 120;
-        s->blocks = malloc(s->blk_size * sizeof(block));
+        //we asume we get max 10 enemies and then somewhat dynamically behaving 
+        s->objects = malloc(10 * (sizeof *s->objects));
+        if(!s->objects)
+        {
+          free(s->blocks);
+          exit(-1);
+        }
+        memset(s->objects, 0, (10 * sizeof *s->objects));
+        s->enemies = malloc(10 * (sizeof *s->enemies));
+        if(!s->enemies)
+        {
+          free(s->objects);
+          free(s->blocks);
+          exit(-1);
+        }
+        memset(s->enemies, 0, (10 * sizeof *s->enemies));
+        s->blocks = malloc(s->blk_size * (sizeof *s->blocks));
         if(!s->blocks)
           exit(-1);
+        memset(s->blocks, 0, s->blk_size * (sizeof *s->blocks));
     }
-    return 0;
   }
+  return 0;
 }
 
 static int32_t sdl2_test_lua_block_init(lua_State* L)
@@ -229,8 +246,8 @@ static int32_t sdl2_test_lua_block_init(lua_State* L)
           }
         }
     }
-    return 0;
   }
+  return 0;
 }
 
 static int32_t sdl2_test_lua_init_rect(lua_State* L)
@@ -269,8 +286,8 @@ static int32_t sdl2_test_lua_init_rect(lua_State* L)
         } break;
       }
     }
-    return 0;
   }
+  return 0;
 }
 
 static int32_t sdl2_test_lua_mod_rect(lua_State* L)
@@ -326,8 +343,8 @@ static int32_t sdl2_test_lua_pause(lua_State* L)
     _ms = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
     usleep(_ms* 1000);
-    return 0;
   }
+  return 0;
 }
 
 static int32_t sdl2_test_lua_configuration_font_init(lua_State* L)
@@ -352,8 +369,8 @@ static int32_t sdl2_test_lua_configuration_font_init(lua_State* L)
       }
       wrapper->config.font = f; 
     }
-    return 0;
   }
+  return 0;
 }
 /* setter and getter functions */
 

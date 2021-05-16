@@ -89,7 +89,11 @@ char *sdl2_test_collision_test(sdl2_test_stage** _stg, sdl2_test** _app)
     app->p->dy += app->config->g;
     app->p->dy = MAX(MIN(app->p->dy, 18), -999);
     app->p->grounded = 0;
-
+    /*
+        TODO: if we have a change here we need to scroll the map 
+              - figure out how to stop keyboard input 
+              - maybe do the automation from lua 
+    */
     stg->screen_active = app->screen_counter;
     blk_size  = stg->screens[stg->screen_active].blk_size;
     //HACK: just here to limit the screens so we dont run in trouble when blocks are not there... 
