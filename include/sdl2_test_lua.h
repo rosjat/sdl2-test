@@ -10,7 +10,7 @@
 typedef struct { sdl2_test_configuration config; } configuration_wrapper;
 typedef struct { sdl2_test_stage stg; } stage_wrapper;
 typedef struct { sdl2_test_screen s; } screen_wrapper;
-typedef struct { block blk; } block_wrapper;
+typedef struct { sdl2_test_block blk; } block_wrapper;
 
 typedef int32_t (*lua_func) (lua_State *L, void *v);
 
@@ -79,7 +79,7 @@ static const luaL_Reg sdl2_test_lua_stage_meta_methods[] = {
     {0,0}
 };
 
-static const  sdl2_test_lua_screen_meta_methods[] = {
+static const luaL_Reg sdl2_test_lua_screen_meta_methods[] = {
     {0,0}
 };
 

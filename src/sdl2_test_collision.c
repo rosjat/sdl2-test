@@ -1,23 +1,8 @@
 #include "sdl2-test_private.h"
 
-int32_t sdl2_test_collision_player_block_rect(sdl2_test_entity * p, block* b)
+int32_t sdl2_test_collision_entity_vs_entity(int32_t x1, int32_t y1, int32_t w1, int32_t h1, int32_t x2, int32_t y2, int32_t w2, int32_t h2)
 {
-
-    int32_t r = (p->x < b->brect->x + b->brect->w && 
-            p->x + p->w > b->brect->x &&
-            p->y < b->brect->y + b->brect->h &&
-            p->y + p->h > b->brect->y);
-    return r;
-}
-
-int32_t sdl2_test_collision_player_block_rect2(int32_t ex, int32_t ey , int32_t eh, int32_t ew, int32_t bx, int32_t by, int32_t bw, int32_t bh)
-{
-
-    int32_t r = (ex < bx + bw && 
-            ex + ew> bx &&
-            ey < by + bh &&
-            ey + eh > by);
-    return r;
+    return (MAX(x1, x2) < MIN(x1 + w1, x2 + w2)) && (MAX(y1, y2) < MIN(y1 + h1, y2 + h2));
 }
 
 void sdl2_test_collision_screen_boundaries_set(sdl2_test *app, sdl2_test_stage *stg)
@@ -111,7 +96,7 @@ char *sdl2_test_collision_test(sdl2_test_stage** _stg, sdl2_test** _app)
     return msg;
 }
 
-static void sdl2_test_entity_to_screen_move(sdl2_test* app, sdl2_test_entity *e, block *b,  float dx, float dy)
+void sdl2_test_entity_to_screen_move(sdl2_test* app, sdl2_test_entity *e, sdl2_test_block *b,  float dx, float dy)
 {
 	int32_t mx, my, adj, hit;
     int32_t  bx = b->brect->x;
@@ -124,12 +109,12 @@ static void sdl2_test_entity_to_screen_move(sdl2_test* app, sdl2_test_entity *e,
 		mx /= b->brect->w;
 		my = (e->y / b->brect->h);
         hit = 0;
-        if(sdl2_test_collision_player_block_rect2((mx * b->brect->w), (my * b->brect->h), e->w, e->h, bx, by, bw, bh))
+        if(sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), e->w, e->h, bx, by, bw, bh))
         {
             hit = 1; 
         }
         my = (e->y + e->h -1) / b->brect->h;
-        if(sdl2_test_collision_player_block_rect2((mx * b->brect->w), (my * b->brect->h), e->w, e->h, bx, by, bw, bh))
+        if(sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), e->w, e->h, bx, by, bw, bh))
         {
             hit = 1; 
         }
@@ -150,12 +135,12 @@ static void sdl2_test_entity_to_screen_move(sdl2_test* app, sdl2_test_entity *e,
 		my /= b->brect->h;
         hit = 0;
         mx = (e->x / b->brect->w);
-        if(sdl2_test_collision_player_block_rect2((mx * b->brect->w), (my * b->brect->h), bw,bh,bx,by,bw,bh))
+        if(sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), bw,bh,bx,by,bw,bh))
         {
             hit = 1; 
         }
         mx = (e->x + e->w -1) / b->brect->w;
-        if(sdl2_test_collision_player_block_rect2((mx * b->brect->w), (my * b->brect->h), bw,bh,bx,by,bw,bh))
+        if(sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), bw,bh,bx,by,bw,bh))
         {
             hit = 1; 
         }
@@ -170,4 +155,36 @@ static void sdl2_test_entity_to_screen_move(sdl2_test* app, sdl2_test_entity *e,
             e->grounded = dy > 0;
         }
 	}
+}
+
+sdl2_test_array *sdl2_test_array_create(sdl2_test_array_type t, uint32_t len)
+{
+    sdl2_test_array *a = NULL; 
+    a = malloc( sizeof *a);
+    if(!a)
+        return NULL;
+    memset(a, 0, sizeof *a);
+    a->type = t;
+    a->len = len;
+    a->current = 0;
+    switch(t)
+    {
+        case AT_ENTITY:
+        {
+            a->entities = malloc((sizeof a->entities) * len);
+            if(!a->entities)
+                return NULL;
+            memset(a->entities, 0, (sizeof a->entities) * len);
+        } break;
+        case AT_WEAPON:
+        {
+            a->weapons = malloc((sizeof a->weapons) * len);
+            if(!a->weapons)
+                return NULL;
+            memset(a->weapons, 0, (sizeof a->weapons) * len);
+        } break;
+        case AT_COUNT:
+            break;
+    }
+    return a;
 }

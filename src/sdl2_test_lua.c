@@ -4,7 +4,10 @@
 
 #include "sdl2_test_lua.h"
 
-
+void sdl2_test_lua_state_close(void *L)
+{
+    lua_close((lua_State *)L);
+}
 int32_t sdl2_test_lua_check_script(lua_State* L, int32_t result)
 {
   if(result != LUA_OK)
@@ -145,7 +148,7 @@ static int32_t sdl2_test_lua_stage_init(lua_State* L)
     luaL_getmetatable(L, "StageMeta");
     lua_setmetatable(L, t);
     lua_newtable(L);
-    sdl2_test_lua_add(L,sdl2_test_lua_stage_methods); 
+    sdl2_test_lua_add(L, sdl2_test_lua_stage_methods); 
     t = lua_gettop(L);
     lua_setuservalue(L,t);
 
@@ -232,7 +235,7 @@ static int32_t sdl2_test_lua_block_init(lua_State* L)
         sdl2_test_screen *s = &stg->screens[_s];  
         if(_solid)
         {
-          block *b = &s->blocks[s->blk_used];  
+          sdl2_test_block *b = &s->blocks[s->blk_used];  
           b->id = _id;
           b->enter = _enter;
           b->solid = _solid;
@@ -240,7 +243,7 @@ static int32_t sdl2_test_lua_block_init(lua_State* L)
           if(s->blk_size == s->blk_used)
           {
             s->blk_size *= 2;
-            s->blocks = realloc(s->blocks,s->blk_size * sizeof(block));
+            s->blocks = realloc(s->blocks,s->blk_size * (sizeof *s->blocks));
             if(!s->blocks)
               exit(-1);
           }
@@ -273,7 +276,7 @@ static int32_t sdl2_test_lua_init_rect(lua_State* L)
     {
       sdl2_test_stage * stg = (sdl2_test_stage *)lua_touserdata(L, 1);
       sdl2_test_screen *s = &stg->screens[_s];  
-      block *b = &s->blocks[_b]; 
+      sdl2_test_block *b = &s->blocks[_b]; 
       switch(rt)
       {
         case 0:
@@ -313,7 +316,7 @@ static int32_t sdl2_test_lua_mod_rect(lua_State* L)
     {
       sdl2_test_stage * stg = (sdl2_test_stage *)lua_touserdata(L, 1);
       sdl2_test_screen *s = &stg->screens[_s];  
-      block *b = &s->blocks[_b]; 
+      sdl2_test_block *b = &s->blocks[_b]; 
       switch(rt)
       {
         case 0:
@@ -332,8 +335,8 @@ static int32_t sdl2_test_lua_mod_rect(lua_State* L)
         } break;
       }
     }
-    return 0;
   }
+  return 0;
 }
 static int32_t sdl2_test_lua_pause(lua_State* L)
 {
@@ -430,13 +433,13 @@ static int32_t sdl2_test_lua_set_screen (lua_State *L, void *v)
 
 static int32_t sdl2_test_lua_get_block (lua_State *L, void *v)
 {
-  lua_pushlightuserdata(L, *((block**)v) );
+  lua_pushlightuserdata(L, *((sdl2_test_block**)v) );
   return 1;
 }
 
 static int32_t sdl2_test_lua_set_block (lua_State *L, void *v)
 {
-  *((block**)v) = lua_touserdata(L, 3);
+  *((sdl2_test_block**)v) = lua_touserdata(L, 3);
   return 0;
 }
 
@@ -500,6 +503,7 @@ void sdl2_test_lua_metatable_register(lua_State* L, char* name,
                                       lua_reg_pre setter[])
 {
     int32_t _metatable, _methods;
+    _metatable = _methods = 0;
     luaL_newmetatable(L, name);
     luaL_openlib(L, 0, methods, 0); 
     _metatable = lua_gettop(L);
@@ -522,7 +526,7 @@ void sdl2_test_lua_metatable_register(lua_State* L, char* name,
 
 int32_t sdl2_test_lua_register(lua_State *L)
 {
-  int32_t metatable, methods;
+  int32_t methods;
   luaL_openlib(L, "sdl2_test_lua", sdl2_test_lua_methods, 0);
   methods = lua_gettop(L);
 

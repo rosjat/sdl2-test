@@ -7,7 +7,7 @@ void sdl2_test_log_message_print(const char *msg, ...)
     va_start(args, msg);
     vsnprintf(dest, 1024 -1 , msg, args);
     va_end(args);   
-    SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, &dest);
+    SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, "%s", (char *)&dest);
 }
 
 sdl2_test_entity *sdl2_test_player_create(sdl2_test_configuration *config)
@@ -17,6 +17,7 @@ sdl2_test_entity *sdl2_test_player_create(sdl2_test_configuration *config)
         return 0;
     memset(p, 0, sizeof *p);
     p->type = ET_PLAYER;
+    p->dir = SD_DOWN;
     p->x = config->win_w / 2;
     p->y = config->win_h / 2;
     p->w = config->blk_t_w;
@@ -27,7 +28,27 @@ sdl2_test_entity *sdl2_test_player_create(sdl2_test_configuration *config)
     p->life = 3;
     p->health = 100;
     p->climbing = 0;
+    p->selected_weapon = 0;
+    p->reload = 0;
+    p->weapons = sdl2_test_weapon_create();
     return p;
+}
+
+sdl2_test_weapon *sdl2_test_weapon_create(void)
+{
+    sdl2_test_weapon *w = malloc(sizeof *w);
+    if(!w)
+        return 0;
+    memset(w, 0, sizeof *w);
+    w->type = WT_GUN;
+    w->max_bullets = 10;
+    w->bullet_next = 0;
+    w->reload = 0;
+    w->bullets = malloc(w->max_bullets * (sizeof *((sdl2_test_entity *)w->bullets)));
+    if(!w->bullets)
+        w->bullets = NULL;
+    memset(w->bullets, 0, w->max_bullets * (sizeof *((sdl2_test_entity *)w->bullets)));
+    return w;
 }
 
 sdl2_test_configuration* sdl2_test_configuration_create(void)
@@ -147,7 +168,7 @@ sdl2_test *sdl2_test_create(void)
     app->d_info = (debug_info){ 1, 0, 0 };
     app->bg_offset_x = 10;
     app->bg_offset_y =4787;
-    app->blk_visible_color = (sdl2_test_color){0, 255, 0, 1};
+    app->blk_visible_color = (sdl2_test_color){255, 255, 255, 1};
     struct lua_State* L = sdl2_test_lua_state_init();
 
     config = sdl2_test_default_configuration_load(L);
@@ -196,11 +217,13 @@ sdl2_test *sdl2_test_create(void)
         app->camera = (SDL_Point){config->win_w / 2, config->win_h / 2};
         app->window = window;
         app->renderer = renderer;
-        app->bg = sdl2_test_load_texture(app, config->bg_img, 255, 255, 255);
+        app->bg = sdl2_test_load_texture(app, config->bg_img, 0, 255, 0);
         app->psprite = sdl2_test_load_texture(app, config->ps_img, 255, 255, 255);
+        app->bullet = sdl2_test_load_texture(app, "img/bullet.png", 255, 255, 255);
         app->config = config;
         app->stages = stages;
         app->r = 0;
+        app->scrolling = 0;
         app->t = SDL_GetTicks();
         app->p = sdl2_test_player_create(config);
         app->L = L;
@@ -213,36 +236,45 @@ void sdl2_test_player_process(sdl2_test *app)
     if(app->p != NULL)
     {
         app->p->dx = 0;
-        if(app->p->reload > 0)
-            app->p->reload--;
+        if(app->p->weapons[app->p->selected_weapon].reload  > 0)
+            app->p->weapons[app->p->selected_weapon].reload--;
         if (app->keyboard[SDL_SCANCODE_UP] && (app->p->grounded || app->p->climbing))
         {
             if(app->p->climbing && app->p->grounded)
+            {
                 app->p->dy -= app->config->ss;
+                app->p->dir = SD_UP;
+            }              
             else
                 app->p->dy -= 3 * app->config->ss;
-            sdl2_test_entity_coordinate_set(app->p, 3);
+            sdl2_test_entity_coordinate_set(app->p);
             app->p->grounded = 0;
             app->p->climbing = 0;
         }
         if (app->keyboard[SDL_SCANCODE_DOWN] )
         {
             app->p->dy += app->config->ss;
-            sdl2_test_entity_coordinate_set(app->p, 0);
+            if(app->p->climbing)
+                app->p->dir = SD_UP;
+            else
+                app->p->dir = SD_DOWN;
+            sdl2_test_entity_coordinate_set(app->p);
         }
         if (app->keyboard[SDL_SCANCODE_LEFT])
         {
             app->p->dx -= app->config->ss;
-            sdl2_test_entity_coordinate_set(app->p, 1);
+            app->p->dir = SD_LEFT;
+            sdl2_test_entity_coordinate_set(app->p);
         }
         if (app->keyboard[SDL_SCANCODE_RIGHT])
         {
             app->p->dx += app->config->ss;
-            sdl2_test_entity_coordinate_set(app->p, 2);
+            app->p->dir = SD_RIGHT;
+            sdl2_test_entity_coordinate_set(app->p);
         }
-        if(app->keyboard[SDL_SCANCODE_SPACE] && app->p->reload == 0)
+        if(app->keyboard[SDL_SCANCODE_SPACE] && app->p->weapons[app->p->selected_weapon].reload == 0)
         {
-            //sdl2_test_bullet_fire(app, stg);
+            sdl2_test_bullet_fire(app, app->p);
         }
         if(app->keyboard[SDL_SCANCODE_B])
         {
@@ -273,7 +305,7 @@ void sdl2_test_update(sdl2_test* app)
     }
  
     sdl2_test_player_process(app);
-
+    sdl2_test_bullets_process(app,  &app->p->weapons[app->p->selected_weapon]);
     //collision detection with the window bounds and objects
     sdl2_test_stage* foo = (app->stages +0);
     char* msg = sdl2_test_collision_test(&foo, &app);
@@ -281,11 +313,21 @@ void sdl2_test_update(sdl2_test* app)
     SDL_SetRenderDrawColor(app->renderer, 10,23,36,255);
     SDL_RenderClear(app->renderer);
     
-    if(app->d_info.bg_show)
-        sdl2_test_background_draw(app, &foo->screens[foo->screen_active]);
-    
-    sdl2_test_blocks_draw(app);
-    sdl2_test_player_draw(app);
+    if(!app->scrolling)
+    {
+        if(app->d_info.bg_show)
+            sdl2_test_background_draw(app, &foo->screens[foo->screen_active]);
+        
+        sdl2_test_blocks_draw(app);
+        sdl2_test_player_draw(app);
+        sdl2_test_bullets_draw(app, &app->p->weapons[app->p->selected_weapon]);
+    }
+    else
+    {
+        //TODO: scroll background and player to the next screen
+        sdl2_test_screen_scroll_draw(app);
+        
+    }
   
     if(app->d_info.dbg_show)
         sdl2_test_text_render(app, msg); 
@@ -295,6 +337,11 @@ void sdl2_test_update(sdl2_test* app)
     sdl2_test_frame_rate(app);
 }
 
+void sdl2_test_screen_scroll_draw(sdl2_test *app)
+{
+
+    app->scrolling = 0;
+}
 void sdl2_test_destroy(sdl2_test* app)
 {   
     SDL_DestroyTexture(app->psprite);
@@ -304,7 +351,7 @@ void sdl2_test_destroy(sdl2_test* app)
     SDL_DestroyRenderer(app->renderer);
     SDL_DestroyWindow(app->window);
     SDL_Quit();
-    lua_close(app->L);
+    sdl2_test_lua_state_close(app->L);
     // do we need to do this or not?
     free(app);
 }
@@ -353,13 +400,13 @@ void sdl2_test_text_render(sdl2_test* app, char* msg)
     SDL_FreeSurface(surfaceMessage);
     SDL_DestroyTexture(Message);
 }
-void sdl2_test_block_draw(sdl2_test* app, block *blk, int32_t r, int32_t g, int32_t b)
+void sdl2_test_block_draw(sdl2_test* app, sdl2_test_block *blk, int32_t r, int32_t g, int32_t b)
 {
 
     SDL_Surface* surface = SDL_CreateRGBSurface(0, blk->brect->w, blk->brect->h, 32, 0, 0, 0, 0);
     if(surface)
     {
-        SDL_SetColorKey(surface, SDL_TRUE, SDL_MapRGB(surface->format, 255, 255, 255));
+        SDL_SetColorKey(surface, SDL_TRUE, SDL_MapRGB(surface->format, 0, 255, 0));
         SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, r, g, b));
         SDL_Texture* texture = SDL_CreateTextureFromSurface(app->renderer, surface);
         if(texture)
@@ -465,7 +512,7 @@ void sdl2_test_blocks_draw(sdl2_test *app)
             }
             else
             {
-                sdl2_test_block_draw(app, &app->stages[stg].screens[scrn].blocks[x], 255, 255, 255);
+                sdl2_test_block_draw(app, &app->stages[stg].screens[scrn].blocks[x], 0, 255, 0);
             }
         }
     }
@@ -489,11 +536,139 @@ void sdl2_test_frame_rate(sdl2_test *app)
     app->t = SDL_GetTicks();
 }
 
-void sdl2_test_entity_coordinate_set(sdl2_test_entity *e, int32_t row)
+void sdl2_test_entity_coordinate_set(sdl2_test_entity *e)
 {
-    int32_t totalFrames = 3;
-        int32_t delayPerFrame = 100;
-        int32_t frame = (SDL_GetTicks() / delayPerFrame) % totalFrames;
-        e->tx = frame * 32;
-        e->ty = row * 32;
+    uint32_t row = 0;
+    int32_t totalFrames = 3;    
+    int32_t delayPerFrame = 100;
+    int32_t frame = (SDL_GetTicks() / delayPerFrame) % totalFrames;
+
+    switch(e->dir)
+    {
+        case SD_UP:
+        {
+            row = 3;
+        } break;
+        case SD_DOWN:
+        {
+            row = 0;
+        } break;
+        case SD_LEFT:
+        {
+            row = 1;
+        } break;
+        case SD_RIGHT:
+        {
+            row = 2;
+        } break;
+        default:
+            break;
+    }
+    e->ty = row * 32;
+    e->tx = frame * 32;
+}
+
+void sdl2_test_bullets_draw(sdl2_test *app, sdl2_test_weapon *w)
+{
+    sdl2_test *_app = app;
+    sdl2_test_weapon *_w = &app->p->weapons[app->p->selected_weapon];
+    _w->bullet_next = (_w->bullet_next < _w->max_bullets) ? _w->bullet_next : _w->max_bullets;
+    for(uint32_t i = 0; i < _w->bullet_next; i++)
+    {
+        sdl2_test_blit(_app, _app->bullet, (((sdl2_test_entity*)_w->bullets) + i )->x, (((sdl2_test_entity*)_w->bullets) + i )->y);
+    } 
+}
+
+void sdl2_test_bullet_fire(sdl2_test *app, sdl2_test_entity *e)
+{
+    sdl2_test_weapon *w = &e->weapons[e->selected_weapon];
+    sdl2_test_entity *bullet = (((sdl2_test_entity *)w->bullets) + w->bullet_next);
+    switch(e->type)
+    {
+        case ET_PLAYER:
+        {
+            bullet->type = ET_PLAYER;
+        } break;
+        case ET_ENEMY:
+        {
+            bullet->type = ET_ENEMY;
+        } break;
+        default:
+            break;
+    }
+    bullet->dir = e->dir;
+    bullet->x = e->x;
+    bullet->y = e->y;
+    switch(bullet->dir)
+    {
+        case SD_LEFT:
+        {
+            bullet->dx = -PLAYER_BULLET_SPEED;
+            bullet->dy = 0;
+        } break;
+        case SD_RIGHT:
+        {
+            bullet->dx = PLAYER_BULLET_SPEED;
+            bullet->dy = 0;
+            bullet->x += e->w;
+        } break;
+        default:
+            break;
+    }
+    bullet->y += (e->h / 2 ) - (bullet->h / 2);
+    bullet->health = 1;
+    SDL_QueryTexture(app->bullet,NULL,NULL, &bullet->w, &bullet->h);
+    
+    w->reload = 8;
+    w->bullet_next++;
+}
+
+void sdl2_test_bullets_process(sdl2_test *app,  sdl2_test_weapon *w)
+{
+    sdl2_test_weapon *_w = w;
+    sdl2_test *_app = app;
+    sdl2_test_entity *_bullets = (sdl2_test_entity*)_w->bullets;
+    uint32_t stg_c, sc;
+    stg_c = _app->stage_counter;
+    sc = _app->stages[stg_c].screen_active;
+    _w->bullet_next = (_w->bullet_next < _w->max_bullets) ? _w->bullet_next : _w->max_bullets;
+    for(uint32_t i = 0; i < _w->bullet_next; i++)
+    {
+        _bullets[i].x += _bullets[i].dx;
+        _bullets[i].y += _bullets[i].dy;
+        if(sdl2_test_bullet_hit(app, &_bullets[i], &app->stages[stg_c].screens[sc]) ||
+            _bullets[i].x < -_bullets[i].w ||
+            _bullets[i].y < -_bullets[i].h ||
+            _bullets[i].x > _app->config->win_w ||
+            _bullets[i].y > _app->config->win_h)
+        {
+            _bullets[i] = _bullets[--_w->bullet_next];
+        }
+    }
+
+}
+
+int32_t sdl2_test_bullet_hit(sdl2_test *app, sdl2_test_entity *b, sdl2_test_screen *s)
+{
+    s->enemy_next = (s->enemy_next < s->max_enemies) ? s->enemy_next : s->max_enemies;
+    for(int i = 0; i < s->enemy_next; i++)
+    {
+        sdl2_test_entity *e = &s->enemies[i];
+        if( b->type != e->type && sdl2_test_collision_entity_vs_entity(b->x, b->y, b->w, b->h, e->x, e->y, e->w, e->h))
+        {
+            s->enemies[i].health = 0;
+            b->health = 0;
+            return 1;
+        }
+        if(app->p != NULL)
+        {
+            if( b->type != app->p->type && sdl2_test_collision_entity_vs_entity(b->x, b->y, b->w, b->h, app->p->x, app->p->y, app->p->w, app->p->h))
+            {
+                b->health = 0;
+                app->p->health = 0;
+                return 1;
+            }
+        }
+    }
+    return 0;
 }

@@ -6,11 +6,11 @@ its basically a playground for myself to get used to some things in C and have a
 
 **BE AWARE: I try to leave the code in a state where it builds and runs, but this doesnt mean it does what i intended to do!**
 
-good place to start with sdl2: https://wiki.libsdl.org/
+good place to start with sdl2: [sdl wiki](https://wiki.libsdl.org/)
 
 help with most of the lua code: lua-users.org , and some videos on youtube of course
 
-some videos about the struggle: https://youtube.com/playlist?list=PLoFYYypOGXqRtCW0Kq9wyxemMVEfD2sOo
+some videos about the struggle [on youtube](https://youtube.com/playlist?list=PLoFYYypOGXqRtCW0Kq9wyxemMVEfD2sOo)
 
 ---
 
@@ -52,7 +52,16 @@ Since this a simple test for myself i didnt bother to much with running through 
 
 also nice to create a more usefull sprite is https://sanderfrenken.github.io/Universal-LPC-Spritesheet-Character-Generator/#
 
+### some sources to get ideas:
+
+- [parallel realities](https://www.parallelrealities.co.uk/tutorials/), got some hints for collision testing and movement of entities
+
 ---
+
+### Update 2021/05/18
+ 
+ - adding shooting to the player
+ - cleaning up a little (need to reorganize project too I guess)
 
 ### Update 2021/05/15
 

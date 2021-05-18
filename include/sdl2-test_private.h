@@ -24,6 +24,7 @@
 #define MAX_KEYBOARD_KEYS (350)
 #define FRAME_DELAY (30)
 #define FPS (60)
+#define PLAYER_BULLET_SPEED (8)
 
 typedef enum {
     SD_UP = 1 << 0,
@@ -34,10 +35,52 @@ typedef enum {
 } sdl2_test_screen_direction_flag;
 
 typedef enum {
-    ET_PLAYER = 1,
-    ET_BLOCK = 2,
-    ET_ENEMY = 3,
+    ET_PLAYER,
+    ET_BLOCK,
+    ET_ENEMY,
+    ET_COUNT,
 } sdl2_test_entity_type;
+
+typedef enum {
+    WT_GUN,
+    WT_COUNT,
+} sdl2_test_weapon_type;
+
+typedef enum {
+    AT_ENTITY,
+    AT_WEAPON,
+    AT_COUNT,
+} sdl2_test_array_type;
+
+typedef struct {
+    sdl2_test_weapon_type type;
+    uint32_t max_bullets;
+    uint32_t bullet_next;
+    uint32_t reload;
+    struct sdl2_test_entity *bullets;
+} sdl2_test_weapon;
+
+typedef struct {
+    sdl2_test_entity_type type;
+    sdl2_test_screen_direction_flag dir;
+    int32_t id;
+    int32_t life;
+    int32_t reload;
+    int32_t w;
+    int32_t h;
+    int32_t tx;
+    int32_t ty;
+    int32_t grounded;
+    int32_t climbing;
+    uint32_t selected_weapon;
+    float health;
+    float x;
+    float y;
+    float dx;
+    float dy;
+    sdl2_test_weapon *weapons;
+} sdl2_test_entity;
+
 
 typedef struct {
     int32_t r;
@@ -52,25 +95,17 @@ typedef struct {
     int32_t solid;
     SDL_Rect* trect;
     SDL_Rect* brect;
-} block;
+} sdl2_test_block;
 
 typedef struct {
-    sdl2_test_entity_type type;
-    int32_t id;
-    int32_t life;
-    int32_t reload;
-    int32_t w;
-    int32_t h;
-    int32_t tx;
-    int32_t ty;
-    int32_t grounded;
-    int32_t climbing;
-    float health;
-    float x;
-    float y;
-    float dx;
-    float dy;
-} sdl2_test_entity;
+    sdl2_test_array_type type;
+    uint32_t len;
+    uint32_t current;
+    union {
+        sdl2_test_weapon *weapons;
+        sdl2_test_entity *entities;
+    };
+} sdl2_test_array;
 
 typedef struct {
     int32_t id;
@@ -81,9 +116,12 @@ typedef struct {
     int32_t exits;
     int32_t blk_used;
     int32_t blk_size;
+    uint32_t enemy_next;
+    uint32_t max_enemies;
+    uint32_t object_next;
     sdl2_test_entity *objects;
     sdl2_test_entity *enemies;
-    block* blocks;
+    sdl2_test_block* blocks;
 } sdl2_test_screen;
 
 typedef struct {
@@ -126,6 +164,7 @@ typedef struct {
     int32_t stage_counter;
     int32_t bg_offset_x;
     int32_t bg_offset_y;
+    uint32_t scrolling;
     int32_t keyboard[MAX_KEYBOARD_KEYS];
     float r;
     long t;
@@ -137,6 +176,7 @@ typedef struct {
     SDL_Point camera;
     SDL_Texture *bg;
     SDL_Texture *psprite;
+    SDL_Texture *bullet;
     SDL_Window *window;
     SDL_Renderer *renderer;
     struct lua_State *L;
@@ -147,10 +187,10 @@ void sdl2_test_text_render(sdl2_test* app, char* msg);
 int32_t sdl2_test_set_bg_colorkey(sdl2_test* app, int32_t r, int32_t g, int32_t b);
 
 char *sdl2_test_collision_test(sdl2_test_stage** _stg, sdl2_test** _app);
-int32_t sdl2_test_collision_point_block(float px, float py, block* b);
-void sdl2_test_collision_block_id_get(block* blks, int32_t seg[56], int32_t x, int32_t y);
+int32_t sdl2_test_collision_point_block(float px, float py, sdl2_test_block* b);
+void sdl2_test_collision_block_id_get(sdl2_test_block* blks, int32_t seg[56], int32_t x, int32_t y);
 void sdl2_test_collision_screen_boundaries_set(sdl2_test *app, sdl2_test_stage *stg);
-
+int32_t sdl2_test_collision_entity_vs_entity(int32_t x1, int32_t y1, int32_t w1, int32_t h1, int32_t x2, int32_t y2, int32_t w2, int32_t h2);
 
 sdl2_test_configuration* sdl2_test_configuration_create(void);
 sdl2_test_configuration *sdl2_test_configuration_load(struct lua_State* L, char* fname);
@@ -178,11 +218,19 @@ void sdl2_test_blit(sdl2_test* app, SDL_Texture* texture, int32_t x, int32_t y);
 void sdl2_test_background_draw(sdl2_test *app, sdl2_test_screen *s);
 void sdl2_test_player_draw(sdl2_test *app);
 void sdl2_test_blocks_draw(sdl2_test *app);
-void sdl2_test_block_draw(sdl2_test* app, block *blk, int32_t r, int32_t g, int32_t b);
+void sdl2_test_block_draw(sdl2_test* app, sdl2_test_block *blk, int32_t r, int32_t g, int32_t b);
 
 sdl2_test_entity *sdl2_test_player_create(sdl2_test_configuration *config);
-static void sdl2_test_entity_to_screen_move(sdl2_test* app,sdl2_test_entity *e, block *b, float dx, float dy);
+sdl2_test_weapon *sdl2_test_weapon_create(void);
+void sdl2_test_entity_to_screen_move(sdl2_test* app,sdl2_test_entity *e,  sdl2_test_block *b, float dx, float dy);
 void sdl2_test_frame_rate(sdl2_test *app);
-void sdl2_test_entity_coordinate_set(sdl2_test_entity *e, int32_t row);
+void sdl2_test_entity_coordinate_set(sdl2_test_entity *e);
+void sdl2_test_bullet_fire(sdl2_test *app, sdl2_test_entity *e);
+void sdl2_test_bullets_draw(sdl2_test *app, sdl2_test_weapon *w);
+void sdl2_test_screen_scroll_draw(sdl2_test *app);
+void sdl2_test_bullets_process(sdl2_test *app,  sdl2_test_weapon *w);
+int32_t sdl2_test_bullet_hit(sdl2_test *app, sdl2_test_entity *b, sdl2_test_screen *s);
+sdl2_test_array *sdl2_test_array_create(sdl2_test_array_type t, uint32_t len);
 
+void sdl2_test_lua_state_close(void *L);
 #endif
