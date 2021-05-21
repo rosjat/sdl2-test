@@ -171,13 +171,13 @@ sdl2_test *sdl2_test_create(void)
     app->blk_visible_color = (sdl2_test_color){255, 255, 255, 1};
     struct lua_State* L = sdl2_test_lua_state_init();
 
-    config = sdl2_test_default_configuration_load(L);
+    config = SDL2_TEST_DEFAULT_CONFIGURATION_LOAD(L);
     if(!config)
     {
         sdl2_test_log_message_print("couldn't create config!");
         app->running = 0;
     }
-    stages = sdl2_test_default_stage_load(L);
+    stages = SDL2_TEST_DEFAULT_STAGE_LOAD(L);
     if(!stages)
     {
         sdl2_test_log_message_print("couldn't create stages!");

@@ -14,13 +14,13 @@
    the naming is odd and long but i guess descriptive enough to know what 
    is intended to do.
  */
-#define sdl2_test_transparent_block_trect_init(void) init_rect(0, 0, 2, 2)
-#define sdl2_test_default_configuration_load(L) sdl2_test_configuration_load(L, "scripts/sdl2_test.config");
-#define sdl2_test_default_stage_load(L) sdl2_test_stage_load("scripts/sdl2_test_stages.config", L);
+#define SDL2_TEST_DEFAULT_CONFIGURATION_LOAD(L) sdl2_test_configuration_load(L, "scripts/sdl2_test.config");
+#define SDL2_TEST_DEFAULT_STAGE_LOAD(L) sdl2_test_stage_load("scripts/sdl2_test_stages.config", L);
 
 #define MIN(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a < _b ? _a : _b; })
 #define MAX(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a > _b ? _a : _b; })
 
+/* constants and types */
 #define MAX_KEYBOARD_KEYS (350)
 #define FRAME_DELAY (30)
 #define FPS (60)
@@ -182,36 +182,30 @@ typedef struct {
     struct lua_State *L;
 } sdl2_test;
 
+/* init */
 SDL_Rect* init_rect(int32_t x, int32_t y, int32_t w, int32_t h);
-void sdl2_test_text_render(sdl2_test* app, char* msg);
-int32_t sdl2_test_set_bg_colorkey(sdl2_test* app, int32_t r, int32_t g, int32_t b);
+sdl2_test_configuration* sdl2_test_configuration_create(void);
+sdl2_test_configuration *sdl2_test_configuration_load(struct lua_State* L, char* fname);
+sdl2_test_entity *sdl2_test_player_create(sdl2_test_configuration *config);
+sdl2_test_weapon *sdl2_test_weapon_create(void);
+sdl2_test_array *sdl2_test_array_create(sdl2_test_array_type t, uint32_t len);
+sdl2_test_stage *sdl2_test_stage_load(char* fname, struct lua_State* L);
+struct lua_State * sdl2_test_lua_state_init(void);
 
+
+
+/* collision */
 char *sdl2_test_collision_test(sdl2_test_stage** _stg, sdl2_test** _app);
 int32_t sdl2_test_collision_point_block(float px, float py, sdl2_test_block* b);
 void sdl2_test_collision_block_id_get(sdl2_test_block* blks, int32_t seg[56], int32_t x, int32_t y);
 void sdl2_test_collision_screen_boundaries_set(sdl2_test *app, sdl2_test_stage *stg);
 int32_t sdl2_test_collision_entity_vs_entity(int32_t x1, int32_t y1, int32_t w1, int32_t h1, int32_t x2, int32_t y2, int32_t w2, int32_t h2);
 
-sdl2_test_configuration* sdl2_test_configuration_create(void);
-sdl2_test_configuration *sdl2_test_configuration_load(struct lua_State* L, char* fname);
-void sdl2_test_configuration_destroy(sdl2_test_configuration* config);
-void sdl2_test_configuration_print(sdl2_test_configuration* config);
-
-
-sdl2_test_stage *sdl2_test_stage_load(char* fname, struct lua_State* L);
-int32_t sdl2_test_stage_reload(sdl2_test_stage* stages, char* fname, sdl2_test* app);
-void sdl2_test_stage_destroy(sdl2_test_stage* stg);
-int32_t sdl2_test_stage_count(sdl2_test_stage* stg);
-
-struct lua_State * sdl2_test_lua_state_init(void);
-
-void sdl2_test_value_swap(float* v1, float* v2);
-
-
+/* input */
 void sdl2_test_key_up(sdl2_test* app, SDL_KeyboardEvent *event);
 void sdl2_test_key_down(sdl2_test* app, SDL_KeyboardEvent *event);
 
-
+/* drawing */
 SDL_Texture *sdl2_test_load_texture(sdl2_test* app, char* fname, int32_t r, int32_t g, int32_t b);
 void sdl2_test_blit_rect(sdl2_test* app, SDL_Texture* texture, SDL_Rect *src, int32_t x, int32_t y);
 void sdl2_test_blit(sdl2_test* app, SDL_Texture* texture, int32_t x, int32_t y);
@@ -219,18 +213,26 @@ void sdl2_test_background_draw(sdl2_test *app, sdl2_test_screen *s);
 void sdl2_test_player_draw(sdl2_test *app);
 void sdl2_test_blocks_draw(sdl2_test *app);
 void sdl2_test_block_draw(sdl2_test* app, sdl2_test_block *blk, int32_t r, int32_t g, int32_t b);
+void sdl2_test_bullets_draw(sdl2_test *app, sdl2_test_weapon *w);
+void sdl2_test_text_render(sdl2_test* app, char* msg);
+void sdl2_test_screen_scroll_draw(sdl2_test *app);
 
-sdl2_test_entity *sdl2_test_player_create(sdl2_test_configuration *config);
-sdl2_test_weapon *sdl2_test_weapon_create(void);
+/* logic */
 void sdl2_test_entity_to_screen_move(sdl2_test* app,sdl2_test_entity *e,  sdl2_test_block *b, float dx, float dy);
 void sdl2_test_frame_rate(sdl2_test *app);
 void sdl2_test_entity_coordinate_set(sdl2_test_entity *e);
 void sdl2_test_bullet_fire(sdl2_test *app, sdl2_test_entity *e);
-void sdl2_test_bullets_draw(sdl2_test *app, sdl2_test_weapon *w);
-void sdl2_test_screen_scroll_draw(sdl2_test *app);
 void sdl2_test_bullets_process(sdl2_test *app,  sdl2_test_weapon *w);
 int32_t sdl2_test_bullet_hit(sdl2_test *app, sdl2_test_entity *b, sdl2_test_screen *s);
-sdl2_test_array *sdl2_test_array_create(sdl2_test_array_type t, uint32_t len);
 
+/* utils */
+void sdl2_test_value_swap(float* v1, float* v2);
+int32_t sdl2_test_set_bg_colorkey(sdl2_test* app, int32_t r, int32_t g, int32_t b);
+int32_t sdl2_test_stage_count(sdl2_test_stage* stg);
+int32_t sdl2_test_stage_reload(sdl2_test_stage* stages, char* fname, sdl2_test* app);
+
+/* teardown */
+void sdl2_test_stage_destroy(sdl2_test_stage* stg);
+void sdl2_test_configuration_destroy(sdl2_test_configuration* config);
 void sdl2_test_lua_state_close(void *L);
 #endif
