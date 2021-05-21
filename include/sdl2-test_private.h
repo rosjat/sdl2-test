@@ -31,25 +31,25 @@ typedef enum {
     SD_DOWN = 1 << 1,
     SD_LEFT = 1 << 2,
     SD_RIGHT = 1 << 3,
-    SD_COUNT,
+    SD_COUNT
 } sdl2_test_screen_direction_flag;
 
 typedef enum {
     ET_PLAYER,
     ET_BLOCK,
     ET_ENEMY,
-    ET_COUNT,
+    ET_COUNT
 } sdl2_test_entity_type;
 
 typedef enum {
     WT_GUN,
-    WT_COUNT,
+    WT_COUNT
 } sdl2_test_weapon_type;
 
 typedef enum {
     AT_ENTITY,
     AT_WEAPON,
-    AT_COUNT,
+    AT_COUNT
 } sdl2_test_array_type;
 
 typedef struct {
