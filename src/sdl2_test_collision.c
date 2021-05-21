@@ -2,7 +2,7 @@
 
 int32_t sdl2_test_collision_entity_vs_entity(int32_t x1, int32_t y1, int32_t w1, int32_t h1, int32_t x2, int32_t y2, int32_t w2, int32_t h2)
 {
-    return (MAX(x1, x2) < MIN(x1 + w1, x2 + w2)) && (MAX(y1, y2) < MIN(y1 + h1, y2 + h2));
+    return (SDL2_TEST_MAX(x1, x2) < SDL2_TEST_MIN(x1 + w1, x2 + w2)) && (SDL2_TEST_MAX(y1, y2) < SDL2_TEST_MIN(y1 + h1, y2 + h2));
 }
 
 void sdl2_test_collision_screen_boundaries_set(sdl2_test *app, sdl2_test_stage *stg)
@@ -72,7 +72,7 @@ char *sdl2_test_collision_test(sdl2_test_stage** _stg, sdl2_test** _app)
     
     sdl2_test_collision_screen_boundaries_set(app, stg);
     app->p->dy += app->config->g;
-    app->p->dy = MAX(MIN(app->p->dy, 18), -999);
+    app->p->dy = SDL2_TEST_MAX(SDL2_TEST_MIN(app->p->dy, 18), -999);
     app->p->grounded = 0;
     /*
         TODO: if we have a change here we need to scroll the map 
