@@ -20,6 +20,10 @@
 #define SDL2_TEST_MIN(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a < _b ? _a : _b; })
 #define SDL2_TEST_MAX(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a > _b ? _a : _b; })
 
+#define SDL2_TEST_DRAW_BLOCK_TRANSPARENT(app, b) sdl2_test_block_draw((app), (b),\
+                                                                      sdl2_test_color_pallet[C_GREEN].r, \
+                                                                      sdl2_test_color_pallet[C_GREEN].g, \
+                                                                      sdl2_test_color_pallet[C_GREEN].b);
 /* constants and types */
 #define MAX_KEYBOARD_KEYS (350)
 #define FRAME_DELAY (30)
@@ -52,6 +56,15 @@ typedef enum {
     AT_COUNT
 } sdl2_test_array_type;
 
+typedef enum {
+    C_WHITE,
+    C_BLACK,
+    C_RED,
+    C_GREEN,
+    C_BLUE,
+    C_COUNT
+} sdl2_test_colors;
+
 typedef struct {
     sdl2_test_weapon_type type;
     uint32_t max_bullets;
@@ -81,7 +94,6 @@ typedef struct {
     sdl2_test_weapon *weapons;
 } sdl2_test_entity;
 
-
 typedef struct {
     int32_t r;
     int32_t g;
@@ -89,10 +101,19 @@ typedef struct {
     int32_t a;
 } sdl2_test_color;
 
+static const sdl2_test_color sdl2_test_color_pallet[] = {
+    { 255, 255, 255, 255 },
+    { 0, 0, 0, 255 },
+    { 255, 0, 0, 255 },
+    { 0, 255, 0, 255 },
+    { 0, 0, 255, 255 }
+};
+
 typedef struct {
     int32_t id;
     int32_t enter;
     int32_t solid;
+    sdl2_test_color color;
     SDL_Rect* trect;
     SDL_Rect* brect;
 } sdl2_test_block;

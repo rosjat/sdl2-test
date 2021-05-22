@@ -168,7 +168,7 @@ sdl2_test *sdl2_test_create(void)
     app->d_info = (debug_info){ 1, 0, 0 };
     app->bg_offset_x = 10;
     app->bg_offset_y =4787;
-    app->blk_visible_color = (sdl2_test_color){255, 255, 255, 1};
+    app->blk_visible_color = sdl2_test_color_pallet[C_WHITE];
     struct lua_State* L = sdl2_test_lua_state_init();
 
     config = SDL2_TEST_DEFAULT_CONFIGURATION_LOAD(L);
@@ -337,11 +337,6 @@ void sdl2_test_update(sdl2_test* app)
     sdl2_test_frame_rate(app);
 }
 
-void sdl2_test_screen_scroll_draw(sdl2_test *app)
-{
-
-    app->scrolling = 0;
-}
 void sdl2_test_destroy(sdl2_test* app)
 {   
     SDL_DestroyTexture(app->psprite);
@@ -400,23 +395,6 @@ void sdl2_test_text_render(sdl2_test* app, char* msg)
     SDL_FreeSurface(surfaceMessage);
     SDL_DestroyTexture(Message);
 }
-void sdl2_test_block_draw(sdl2_test* app, sdl2_test_block *blk, int32_t r, int32_t g, int32_t b)
-{
-
-    SDL_Surface* surface = SDL_CreateRGBSurface(0, blk->brect->w, blk->brect->h, 32, 0, 0, 0, 0);
-    if(surface)
-    {
-        SDL_SetColorKey(surface, SDL_TRUE, SDL_MapRGB(surface->format, 0, 255, 0));
-        SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, r, g, b));
-        SDL_Texture* texture = SDL_CreateTextureFromSurface(app->renderer, surface);
-        if(texture)
-        {
-            SDL_RenderCopy(app->renderer, texture, NULL, blk->brect);
-            SDL_DestroyTexture(texture);
-        }
-        SDL_FreeSurface(surface);
-    }
-}
 
 void sdl2_test_value_swap(float* v1, float* v2)
 {
@@ -463,58 +441,6 @@ void sdl2_test_blit_rect(sdl2_test* app, SDL_Texture* texture, SDL_Rect *src, in
         dest.w = src->w;
         dest.h = src->h;
         SDL_RenderCopy(app->renderer, texture, src, &dest);
-    }
-}
-
-void sdl2_test_player_draw(sdl2_test *app)
-{
-    if(app->p != NULL)
-    {
-        SDL_Rect src;
-        src.x = app->p->tx;
-        src.y = app->p->ty;
-        src.w = app->config->blk_t_w;
-        src.h = app->config->blk_t_h;
-        sdl2_test_blit_rect(app, app->psprite, &src, app->p->x, app->p->y);
-    }
-}
-void sdl2_test_background_draw(sdl2_test *app, sdl2_test_screen *s)
-{
-        SDL_Rect src, dest;
-        src.x = s->x;
-        src.y = s->y;
-        src.w = app->config->scrn_w;
-        src.h = app->config->scrn_h;;
-        dest.x = 0;
-        dest.y = 0;
-        dest.w = app->config->win_w;
-        dest.h = app->config->win_h;
-        SDL_RenderCopy(app->renderer, app->bg, &src, &dest);
-}
-
-void sdl2_test_blocks_draw(sdl2_test *app)
-{
-    int32_t stg, scrn;
-    stg = app->stage_counter;
-    scrn = app->stages[stg].screen_active;
-    for(int32_t x = 0; x < app->stages[stg].screens[scrn].blk_used ;x++) {
-        if(app->stages[stg].screens[scrn].blocks[x].solid )
-        {
-            if (app->keyboard[SDL_SCANCODE_T])
-            {
-                if(!app->stages[stg].screens[scrn].blocks[x].enter)
-                    sdl2_test_block_draw(app, &app->stages[stg].screens[scrn].blocks[x], 
-                                            app->blk_visible_color.r, 
-                                            app->blk_visible_color.g, 
-                                            app->blk_visible_color.b);
-                else
-                    sdl2_test_block_draw(app, &app->stages[stg].screens[scrn].blocks[x], 255, 0, 0);
-            }
-            else
-            {
-                sdl2_test_block_draw(app, &app->stages[stg].screens[scrn].blocks[x], 0, 255, 0);
-            }
-        }
     }
 }
 
@@ -566,17 +492,6 @@ void sdl2_test_entity_coordinate_set(sdl2_test_entity *e)
     }
     e->ty = row * 32;
     e->tx = frame * 32;
-}
-
-void sdl2_test_bullets_draw(sdl2_test *app, sdl2_test_weapon *w)
-{
-    sdl2_test *_app = app;
-    sdl2_test_weapon *_w = &app->p->weapons[app->p->selected_weapon];
-    _w->bullet_next = (_w->bullet_next < _w->max_bullets) ? _w->bullet_next : _w->max_bullets;
-    for(uint32_t i = 0; i < _w->bullet_next; i++)
-    {
-        sdl2_test_blit(_app, _app->bullet, (((sdl2_test_entity*)_w->bullets) + i )->x, (((sdl2_test_entity*)_w->bullets) + i )->y);
-    } 
 }
 
 void sdl2_test_bullet_fire(sdl2_test *app, sdl2_test_entity *e)
@@ -648,27 +563,34 @@ void sdl2_test_bullets_process(sdl2_test *app,  sdl2_test_weapon *w)
 
 }
 
-int32_t sdl2_test_bullet_hit(sdl2_test *app, sdl2_test_entity *b, sdl2_test_screen *s)
+sdl2_test_array *sdl2_test_array_create(sdl2_test_array_type t, uint32_t len)
 {
-    s->enemy_next = (s->enemy_next < s->max_enemies) ? s->enemy_next : s->max_enemies;
-    for(int i = 0; i < s->enemy_next; i++)
+    sdl2_test_array *a = NULL; 
+    a = malloc( sizeof *a);
+    if(!a)
+        return NULL;
+    memset(a, 0, sizeof *a);
+    a->type = t;
+    a->len = len;
+    a->current = 0;
+    switch(t)
     {
-        sdl2_test_entity *e = &s->enemies[i];
-        if( b->type != e->type && sdl2_test_collision_entity_vs_entity(b->x, b->y, b->w, b->h, e->x, e->y, e->w, e->h))
+        case AT_ENTITY:
         {
-            s->enemies[i].health = 0;
-            b->health = 0;
-            return 1;
-        }
-        if(app->p != NULL)
+            a->entities = malloc((sizeof a->entities) * len);
+            if(!a->entities)
+                return NULL;
+            memset(a->entities, 0, (sizeof a->entities) * len);
+        } break;
+        case AT_WEAPON:
         {
-            if( b->type != app->p->type && sdl2_test_collision_entity_vs_entity(b->x, b->y, b->w, b->h, app->p->x, app->p->y, app->p->w, app->p->h))
-            {
-                b->health = 0;
-                app->p->health = 0;
-                return 1;
-            }
-        }
+            a->weapons = malloc((sizeof a->weapons) * len);
+            if(!a->weapons)
+                return NULL;
+            memset(a->weapons, 0, (sizeof a->weapons) * len);
+        } break;
+        case AT_COUNT:
+            break;
     }
-    return 0;
+    return a;
 }

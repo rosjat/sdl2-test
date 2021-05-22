@@ -239,6 +239,24 @@ static int32_t sdl2_test_lua_block_init(lua_State* L)
           b->id = _id;
           b->enter = _enter;
           b->solid = _solid;
+          switch(_solid)
+          {
+            case 0:
+            {
+              b->color = sdl2_test_color_pallet[C_GREEN];
+            } break;
+            case 1:
+            {
+              if(_enter)
+                b->color = sdl2_test_color_pallet[C_RED];
+              else
+                b->color = sdl2_test_color_pallet[C_WHITE];
+            } break;
+            case 2:
+            {
+              b->color = sdl2_test_color_pallet[C_BLUE];
+            } break;
+          }
           s->blk_used++;
           if(s->blk_size == s->blk_used)
           {
