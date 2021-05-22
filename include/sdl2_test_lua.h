@@ -42,32 +42,33 @@ static int32_t sdl2_test_lua_index_handler (lua_State *L);
 static int32_t sdl2_test_lua_newindex_handler (lua_State *L);
 static int32_t sdl2_test_lua_call (lua_State *L);
 
-void sdl2_test_lua_metatable_register(lua_State* L, char* name, 
+void sdl2_test_lua_metatable_register(lua_State* L, char *name, 
                                       luaL_Reg methods[],
                                       lua_reg_pre getter[],
                                       lua_reg_pre setter[]);
 int32_t sdl2_test_lua_register (lua_State *L);
 
-static int32_t sdl2_test_lua_configuration_init(lua_State* L);
-static int32_t sdl2_test_lua_configuration_font_init(lua_State* L);
+static int32_t sdl2_test_lua_configuration_init(lua_State *L);
+static int32_t sdl2_test_lua_configuration_font_init(lua_State *L);
 
-static int32_t sdl2_test_lua_stage_init(lua_State* L);
+static int32_t sdl2_test_lua_stage_init(lua_State *L);
 
-static int32_t sdl2_test_lua_screen_init(lua_State* L);
+static int32_t sdl2_test_lua_screen_init(lua_State *L);
 
-static int32_t sdl2_test_lua_block_init(lua_State* L);
+static int32_t sdl2_test_lua_block_init(lua_State *L);
 
-static int32_t sdl2_test_lua_init_rect(lua_State* L);
-static int32_t sdl2_test_lua_mod_rect(lua_State* L);
+static int32_t sdl2_test_lua_init_rect(lua_State *L);
+static int32_t sdl2_test_lua_mod_rect(lua_State *L);
 
 static int32_t sdl2_test_lua_function_string_register(lua_State *L);
 
-static int32_t sdl2_test_lua_pause(lua_State* L);
+static int32_t sdl2_test_lua_pause(lua_State *L);
 
-void sdl2_test_lua_automation_start(sdl2_test* config);
+void sdl2_test_lua_automation_start(sdl2_test *config);
 
-static int32_t sdl2_test_lua_gc_stage(lua_State* L);
-static int32_t sdl2_test_lua_gc_configuration(lua_State* L);
+static int32_t sdl2_test_lua_entity_automation(lua_State *L);
+static int32_t sdl2_test_lua_gc_stage(lua_State *L);
+static int32_t sdl2_test_lua_gc_configuration(lua_State *L);
 
 static const luaL_Reg sdl2_test_lua_configuration_meta_methods[] = {
     {"__gc", sdl2_test_lua_gc_configuration},

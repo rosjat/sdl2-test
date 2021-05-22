@@ -103,18 +103,19 @@ void sdl2_test_entity_to_screen_move(sdl2_test* app, sdl2_test_entity *e, sdl2_t
     int32_t by = b->brect->y;
     int32_t bh = b->brect->h;
     int32_t bw = b->brect->w;
+    
 	if (dx != 0)
 	{
 		mx = dx > 0 ? (e->x + e->w) : e->x;
 		mx /= b->brect->w;
 		my = (e->y / b->brect->h);
         hit = 0;
-        if(sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), e->w, e->h, bx, by, bw, bh))
+        if(sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), e->w, e->h, bx, by, bw, bh) && b->solid == 1)
         {
             hit = 1; 
         }
         my = (e->y + e->h -1) / b->brect->h;
-        if(sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), e->w, e->h, bx, by, bw, bh))
+        if(sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), e->w, e->h, bx, by, bw, bh) && b->solid == 1)
         {
             hit = 1; 
         }
@@ -135,12 +136,12 @@ void sdl2_test_entity_to_screen_move(sdl2_test* app, sdl2_test_entity *e, sdl2_t
 		my /= b->brect->h;
         hit = 0;
         mx = (e->x / b->brect->w);
-        if(sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), bw,bh,bx,by,bw,bh))
+        if(sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), bw,bh,bx,by,bw,bh) && b->solid == 1)
         {
             hit = 1; 
         }
         mx = (e->x + e->w -1) / b->brect->w;
-        if(sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), bw,bh,bx,by,bw,bh))
+        if(sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), bw,bh,bx,by,bw,bh) && b->solid == 1)
         {
             hit = 1; 
         }
@@ -157,34 +158,28 @@ void sdl2_test_entity_to_screen_move(sdl2_test* app, sdl2_test_entity *e, sdl2_t
 	}
 }
 
-sdl2_test_array *sdl2_test_array_create(sdl2_test_array_type t, uint32_t len)
+int32_t sdl2_test_bullet_hit(sdl2_test *app, sdl2_test_entity *b, sdl2_test_screen *s)
 {
-    sdl2_test_array *a = NULL; 
-    a = malloc( sizeof *a);
-    if(!a)
-        return NULL;
-    memset(a, 0, sizeof *a);
-    a->type = t;
-    a->len = len;
-    a->current = 0;
-    switch(t)
+    s->enemy_next = (s->enemy_next < s->max_enemies) ? s->enemy_next : s->max_enemies;
+    for(int i = 0; i < s->enemy_next; i++)
     {
-        case AT_ENTITY:
+        sdl2_test_entity *e = &s->enemies[i];
+        if( b->type != e->type && sdl2_test_collision_entity_vs_entity(b->x, b->y, b->w, b->h, e->x, e->y, e->w, e->h))
         {
-            a->entities = malloc((sizeof a->entities) * len);
-            if(!a->entities)
-                return NULL;
-            memset(a->entities, 0, (sizeof a->entities) * len);
-        } break;
-        case AT_WEAPON:
+            s->enemies[i].health = 0;
+            b->health = 0;
+            return 1;
+        }
+        if(app->p != NULL)
         {
-            a->weapons = malloc((sizeof a->weapons) * len);
-            if(!a->weapons)
-                return NULL;
-            memset(a->weapons, 0, (sizeof a->weapons) * len);
-        } break;
-        case AT_COUNT:
-            break;
+            if( b->type != app->p->type && sdl2_test_collision_entity_vs_entity(b->x, b->y, b->w, b->h, app->p->x, app->p->y, app->p->w, app->p->h))
+            {
+                b->health = 0;
+                app->p->health = 0;
+                return 1;
+            }
+        }
     }
-    return a;
+    return 0;
 }
+
