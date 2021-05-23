@@ -181,7 +181,8 @@ sdl2_test_create(void)
     app->d_info = (debug_info){ 1, 0, 0 };
     app->bg_offset_x = 10;
     app->bg_offset_y =4787;
-    app->blk_visible_color = sdl2_test_color_pallet[C_WHITE];
+    app->bg_color = sdl2_test_color_pallet[C_BACKGROUND];
+    app->key_color = sdl2_test_color_pallet[C_GREEN];
     struct lua_State* L = sdl2_test_lua_state_init();
 
     config = SDL2_TEST_DEFAULT_CONFIGURATION_LOAD(L);
@@ -223,6 +224,7 @@ sdl2_test_create(void)
         sdl2_test_log_message_print("Unable to create Renderer: %s", SDL_GetError());
         app->running = 0;
     }
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     /* Initialze End */
 
     if (app->running)
@@ -230,9 +232,15 @@ sdl2_test_create(void)
         app->camera = (SDL_Point){config->win_w / 2, config->win_h / 2};
         app->window = window;
         app->renderer = renderer;
-        app->bg = sdl2_test_load_texture(app, config->bg_img, 0, 255, 0);
-        app->psprite = sdl2_test_load_texture(app, config->ps_img, 255, 255, 255);
-        app->bullet = sdl2_test_load_texture(app, "img/bullet.png", 255, 255, 255);
+        app->bg = sdl2_test_load_texture(app, config->bg_img, 
+                                         app->key_color.r, app->key_color.g, 
+                                         app->key_color.b, app->key_color.a);
+        app->psprite = sdl2_test_load_texture(app, config->ps_img,
+                                              app->key_color.r, app->key_color.g, 
+                                              app->key_color.b, app->key_color.a);
+        app->bullet = sdl2_test_load_texture(app, "img/bullet.png",
+                                             app->key_color.r, app->key_color.g, 
+                                             app->key_color.b, app->key_color.a);
         app->config = config;
         app->stages = stages;
         app->r = 0;
@@ -387,7 +395,7 @@ sdl2_test_destroy(sdl2_test* app)
 }
 
 int32_t
-sdl2_test_set_bg_colorkey(sdl2_test* app, int32_t r, int32_t g, int32_t b)
+sdl2_test_set_bg_colorkey(sdl2_test* app, int32_t r, int32_t g, int32_t b, int32_t a)
 {
     SDL_Texture* bg;
     SDL_Surface* surface = IMG_Load(app->config->bg_img);
@@ -442,14 +450,14 @@ sdl2_test_value_swap(float* v1, float* v2)
 }
 
 SDL_Texture *
-sdl2_test_load_texture(sdl2_test* app, char* fname, int32_t r, int32_t g, int32_t b)
+sdl2_test_load_texture(sdl2_test* app, char* fname, int32_t r, int32_t g, int32_t b, int32_t a)
 {
     SDL_Texture* texture = NULL;
     SDL_Surface* surface = IMG_Load(fname);
 
     sdl2_test_log_message_print("loading %s ...", fname);
     if (surface) {
-        Uint32 colorkey = SDL_MapRGB(surface->format, r, g, b);
+        Uint32 colorkey = SDL_MapRGBA(surface->format, r, g, b, a);
         SDL_SetColorKey(surface, SDL_TRUE, colorkey);
         texture = SDL_CreateTextureFromSurface(app->renderer, surface);
         SDL_FreeSurface(surface);
@@ -542,6 +550,7 @@ sdl2_test_bullet_fire(sdl2_test *app, sdl2_test_entity *e)
 {
     sdl2_test_weapon *w = &e->weapons[e->selected_weapon];
     sdl2_test_entity *bullet = (((sdl2_test_entity *)w->bullets) + w->bullet_next);
+    
     switch (e->type)
     {
         case ET_PLAYER:
@@ -555,9 +564,11 @@ sdl2_test_bullet_fire(sdl2_test *app, sdl2_test_entity *e)
         default:
             break;
     }
+
     bullet->dir = e->dir;
     bullet->x = e->x;
     bullet->y = e->y;
+
     switch (bullet->dir)
     {
         case SD_LEFT:
@@ -574,6 +585,7 @@ sdl2_test_bullet_fire(sdl2_test *app, sdl2_test_entity *e)
         default:
             break;
     }
+    
     bullet->y += (e->h / 2 ) - (bullet->h / 2);
     bullet->health = 1;
     SDL_QueryTexture(app->bullet,NULL,NULL, &bullet->w, &bullet->h);

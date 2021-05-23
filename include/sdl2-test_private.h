@@ -20,10 +20,6 @@
 #define SDL2_TEST_MIN(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a < _b ? _a : _b; })
 #define SDL2_TEST_MAX(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a > _b ? _a : _b; })
 
-#define SDL2_TEST_DRAW_BLOCK_TRANSPARENT(app, b) sdl2_test_draw_block((app), (b),\
-                                                                      sdl2_test_color_pallet[C_GREEN].r, \
-                                                                      sdl2_test_color_pallet[C_GREEN].g, \
-                                                                      sdl2_test_color_pallet[C_GREEN].b);
 /* constants and types */
 #define MAX_KEYBOARD_KEYS (350)
 #define FRAME_DELAY (30)
@@ -62,6 +58,7 @@ typedef enum {
     C_RED,
     C_GREEN,
     C_BLUE,
+    C_BACKGROUND,
     C_COUNT
 } sdl2_test_colors;
 
@@ -106,7 +103,8 @@ static const sdl2_test_color sdl2_test_color_pallet[] = {
     { 0, 0, 0, 255 },
     { 255, 0, 0, 255 },
     { 0, 255, 0, 255 },
-    { 0, 0, 255, 255 }
+    { 0, 0, 255, 255 },
+    { 9, 24, 36, 255 }
 };
 
 typedef struct {
@@ -190,7 +188,8 @@ typedef struct {
     float r;
     long t;
     debug_info d_info;
-    sdl2_test_color blk_visible_color;
+    sdl2_test_color bg_color;
+    sdl2_test_color key_color;
     sdl2_test_entity *p;
     sdl2_test_stage *stages;
     sdl2_test_configuration *config;
@@ -227,13 +226,13 @@ void sdl2_test_key_up(sdl2_test* app, SDL_KeyboardEvent *event);
 void sdl2_test_key_down(sdl2_test* app, SDL_KeyboardEvent *event);
 
 /* drawing */
-SDL_Texture *sdl2_test_load_texture(sdl2_test* app, char* fname, int32_t r, int32_t g, int32_t b);
+SDL_Texture *sdl2_test_load_texture(sdl2_test* app, char* fname, int32_t r, int32_t g, int32_t b, int32_t a);
 void sdl2_test_blit_rect(sdl2_test* app, SDL_Texture* texture, SDL_Rect *src, int32_t x, int32_t y);
 void sdl2_test_blit(sdl2_test* app, SDL_Texture* texture, int32_t x, int32_t y);
 void sdl2_test_draw_background(sdl2_test *app, sdl2_test_screen *s);
 void sdl2_test_draw_player(sdl2_test *app);
 void sdl2_test_draw_blocks(sdl2_test *app);
-void sdl2_test_draw_block(sdl2_test* app, sdl2_test_block *blk, int32_t r, int32_t g, int32_t b);
+void sdl2_test_draw_block(sdl2_test* app, sdl2_test_block *blk, int32_t r, int32_t g, int32_t b, int32_t a);
 void sdl2_test_draw_bullets(sdl2_test *app, sdl2_test_weapon *w);
 void sdl2_test_draw_text(sdl2_test* app, char* msg);
 void sdl2_test_draw_screen_scroll(sdl2_test *app);
@@ -248,7 +247,7 @@ void sdl2_test_frame_rate(sdl2_test *app);
 
 /* utils */
 void sdl2_test_value_swap(float* v1, float* v2);
-int32_t sdl2_test_set_bg_colorkey(sdl2_test* app, int32_t r, int32_t g, int32_t b);
+int32_t sdl2_test_set_bg_colorkey(sdl2_test* app, int32_t r, int32_t g, int32_t b, int32_t a);
 int32_t sdl2_test_stage_count(sdl2_test_stage* stg);
 int32_t sdl2_test_stage_reload(sdl2_test_stage* stages, char* fname, sdl2_test* app);
 
