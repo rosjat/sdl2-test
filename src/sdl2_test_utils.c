@@ -251,7 +251,10 @@ sdl2_test_player_process(sdl2_test *app)
     {
         app->p->dx = 0;
         if (app->p->weapons[app->p->selected_weapon].reload  > 0)
+        {
             app->p->weapons[app->p->selected_weapon].reload--;
+        }
+
         if (app->keyboard[SDL_SCANCODE_UP] && (app->p->grounded || app->p->climbing))
         {
             if (app->p->climbing && app->p->grounded)
@@ -260,36 +263,50 @@ sdl2_test_player_process(sdl2_test *app)
                 app->p->dir = SD_UP;
             }              
             else
+            {
                 app->p->dy -= 3 * app->config->ss;
+            }
             sdl2_test_entity_coordinate_set(app->p);
             app->p->grounded = 0;
             app->p->climbing = 0;
         }
+
         if (app->keyboard[SDL_SCANCODE_DOWN] )
         {
             app->p->dy += app->config->ss;
             if (app->p->climbing)
+            {
                 app->p->dir = SD_UP;
+            }
             else
+            {
                 app->p->dir = SD_DOWN;
+            }
             sdl2_test_entity_coordinate_set(app->p);
         }
+
         if (app->keyboard[SDL_SCANCODE_LEFT])
         {
             app->p->dx -= app->config->ss;
             app->p->dir = SD_LEFT;
             sdl2_test_entity_coordinate_set(app->p);
         }
+
         if (app->keyboard[SDL_SCANCODE_RIGHT])
         {
             app->p->dx += app->config->ss;
             app->p->dir = SD_RIGHT;
             sdl2_test_entity_coordinate_set(app->p);
         }
+
         if (app->keyboard[SDL_SCANCODE_SPACE] && app->p->weapons[app->p->selected_weapon].reload == 0)
         {
-            sdl2_test_bullet_fire(app, app->p);
+            if(app->p->dir == SD_LEFT || app->p->dir == SD_RIGHT)
+            {
+                sdl2_test_bullet_fire(app, app->p);
+            }
         }
+
         if (app->keyboard[SDL_SCANCODE_B])
         {
             app->d_info.bg_show =  0;
@@ -298,12 +315,14 @@ sdl2_test_player_process(sdl2_test *app)
         {
             app->d_info.bg_show =  1;
         }
+
         if (app->keyboard[SDL_SCANCODE_P])
         {
             app->p->x = app->config->win_w / 2;
             app->p->y = app->config->win_h / 2;
             app->p->grounded = 0;
         }
+
         app->p->x += app->p->dx;
         app->p->y += app->p->dy;
     }
