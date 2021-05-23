@@ -14,7 +14,6 @@ typedef struct { sdl2_test_block blk; } block_wrapper;
 
 typedef int32_t (*lua_func) (lua_State *L, void *v);
 
-
 typedef const struct{
     const char *name;
     lua_func func;
@@ -46,7 +45,7 @@ void sdl2_test_lua_metatable_register(lua_State* L, char *name,
                                       luaL_Reg methods[],
                                       lua_reg_pre getter[],
                                       lua_reg_pre setter[]);
-int32_t sdl2_test_lua_register (lua_State *L);
+static int32_t sdl2_test_lua_register (lua_State *L);
 
 static int32_t sdl2_test_lua_configuration_init(lua_State *L);
 static int32_t sdl2_test_lua_configuration_font_init(lua_State *L);

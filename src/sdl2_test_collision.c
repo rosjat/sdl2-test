@@ -1,17 +1,19 @@
 #include "sdl2-test_private.h"
 
-int32_t sdl2_test_collision_entity_vs_entity(int32_t x1, int32_t y1, int32_t w1, int32_t h1, int32_t x2, int32_t y2, int32_t w2, int32_t h2)
+int32_t
+sdl2_test_collision_entity_vs_entity(int32_t x1, int32_t y1, int32_t w1, int32_t h1, int32_t x2, int32_t y2, int32_t w2, int32_t h2)
 {
     return (SDL2_TEST_MAX(x1, x2) < SDL2_TEST_MIN(x1 + w1, x2 + w2)) && (SDL2_TEST_MAX(y1, y2) < SDL2_TEST_MIN(y1 + h1, y2 + h2));
 }
 
-void sdl2_test_collision_screen_boundaries_set(sdl2_test *app, sdl2_test_stage *stg)
+void
+sdl2_test_collision_screen_boundaries_set(sdl2_test *app, sdl2_test_stage *stg)
 {
-    if(app->p != NULL)
+    if (app->p != NULL)
     {
-        if(app->p->x < 0 ) 
+        if (app->p->x < 0 ) 
         {
-            if(stg->screens[stg->screen_active].exits & SD_LEFT && stg->screen_active > 0)
+            if (stg->screens[stg->screen_active].exits & SD_LEFT && stg->screen_active > 0)
             {
                 app->p->x = app->config->win_w - app->p->w;
                 app->screen_counter--;
@@ -19,9 +21,9 @@ void sdl2_test_collision_screen_boundaries_set(sdl2_test *app, sdl2_test_stage *
             else
                 app->p->x = 0;
         }
-        if(app->p->x > app->config->win_w)
+        if (app->p->x > app->config->win_w)
         {
-            if(stg->screens[stg->screen_active].exits & SD_RIGHT && stg->screen_active < stg->screen_count)
+            if (stg->screens[stg->screen_active].exits & SD_RIGHT && stg->screen_active < stg->screen_count)
             {
                 app->p->x = 0;
                 app->screen_counter++;
@@ -30,10 +32,10 @@ void sdl2_test_collision_screen_boundaries_set(sdl2_test *app, sdl2_test_stage *
                 app->p->x = app->config->win_w;
         }
         
-        if(app->p->y < 0) 
+        if (app->p->y < 0) 
         {
 
-            if(stg->screens[stg->screen_active].exits & SD_UP && stg->screen_active < stg->screen_count)
+            if (stg->screens[stg->screen_active].exits & SD_UP && stg->screen_active < stg->screen_count)
             {
                 app->screen_counter++;
                 app->p->y = 0 + app->config->win_h;
@@ -43,9 +45,9 @@ void sdl2_test_collision_screen_boundaries_set(sdl2_test *app, sdl2_test_stage *
                 app->p->y = 0;
             }
         }
-        if(app->p->y > app->config->win_h) 
+        if (app->p->y > app->config->win_h) 
         {
-            if(stg->screens[stg->screen_active].exits & SD_DOWN && stg->screen_active >= 0)
+            if (stg->screens[stg->screen_active].exits & SD_DOWN && stg->screen_active >= 0)
             {
                 app->screen_counter--;
                 app->p->y = 0 ;
@@ -58,13 +60,14 @@ void sdl2_test_collision_screen_boundaries_set(sdl2_test *app, sdl2_test_stage *
     }
 }
 
-char *sdl2_test_collision_test(sdl2_test_stage** _stg, sdl2_test** _app) 
+char *
+sdl2_test_collision_test(sdl2_test_stage** _stg, sdl2_test** _app) 
 {
     int32_t blk_used, blk_size;
     blk_used = blk_size = 0;
     
     char *msg = malloc(sizeof(char) * 256);
-    if(msg)
+    if (msg)
         memset(msg,0,sizeof(char) * 256);
     
     sdl2_test_stage* stg = *_stg;
@@ -83,11 +86,11 @@ char *sdl2_test_collision_test(sdl2_test_stage** _stg, sdl2_test** _app)
     blk_size  = stg->screens[stg->screen_active].blk_size;
     //HACK: just here to limit the screens so we dont run in trouble when blocks are not there... 
     //      Only 8 screen so far ....
-    if(app->screen_counter < 8)
+    if (app->screen_counter < 8)
         blk_used = stg->screens[stg->screen_active].blk_used;
     else
         blk_used = 0;
-    for(int32_t b = 0 ; b < blk_used; b++) 
+    for (int32_t b = 0 ; b < blk_used; b++) 
     {
         sdl2_test_entity_to_screen_move(app, app->p, &stg->screens[app->screen_counter].blocks[b], app->p->dx, 0);
         sdl2_test_entity_to_screen_move(app, app->p, &stg->screens[app->screen_counter].blocks[b], 0, app->p->dy);
@@ -96,7 +99,8 @@ char *sdl2_test_collision_test(sdl2_test_stage** _stg, sdl2_test** _app)
     return msg;
 }
 
-void sdl2_test_entity_to_screen_move(sdl2_test* app, sdl2_test_entity *e, sdl2_test_block *b,  float dx, float dy)
+void
+sdl2_test_entity_to_screen_move(sdl2_test* app, sdl2_test_entity *e, sdl2_test_block *b,  float dx, float dy)
 {
 	int32_t mx, my, adj, hit;
     int32_t  bx = b->brect->x;
@@ -110,19 +114,19 @@ void sdl2_test_entity_to_screen_move(sdl2_test* app, sdl2_test_entity *e, sdl2_t
 		mx /= b->brect->w;
 		my = (e->y / b->brect->h);
         hit = 0;
-        if(sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), e->w, e->h, bx, by, bw, bh) && b->solid == 1)
+        if (sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), e->w, e->h, bx, by, bw, bh) && b->solid == 1)
         {
             hit = 1; 
         }
         my = (e->y + e->h -1) / b->brect->h;
-        if(sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), e->w, e->h, bx, by, bw, bh) && b->solid == 1)
+        if (sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), e->w, e->h, bx, by, bw, bh) && b->solid == 1)
         {
             hit = 1; 
         }
-        if(hit)
+        if (hit)
         {
 		    adj = dx > 0 ? -e->w : b->brect->w;
-            if(!b->enter)
+            if (!b->enter)
                 e->x = (mx * b->brect->w) + adj;
             else
                 e->x = (mx * b->brect->w); 
@@ -136,19 +140,19 @@ void sdl2_test_entity_to_screen_move(sdl2_test* app, sdl2_test_entity *e, sdl2_t
 		my /= b->brect->h;
         hit = 0;
         mx = (e->x / b->brect->w);
-        if(sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), bw,bh,bx,by,bw,bh) && b->solid == 1)
+        if (sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), bw,bh,bx,by,bw,bh) && b->solid == 1)
         {
             hit = 1; 
         }
         mx = (e->x + e->w -1) / b->brect->w;
-        if(sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), bw,bh,bx,by,bw,bh) && b->solid == 1)
+        if (sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), bw,bh,bx,by,bw,bh) && b->solid == 1)
         {
             hit = 1; 
         }
-        if(hit)
+        if (hit)
         {
             adj = dy > 0 ? -e->h : b->brect->h;
-            if(!b->enter)
+            if (!b->enter)
                 e->y = (my * b->brect->h) + adj;
             else
                 e->climbing = 1;
@@ -158,21 +162,22 @@ void sdl2_test_entity_to_screen_move(sdl2_test* app, sdl2_test_entity *e, sdl2_t
 	}
 }
 
-int32_t sdl2_test_bullet_hit(sdl2_test *app, sdl2_test_entity *b, sdl2_test_screen *s)
+int32_t
+sdl2_test_bullet_hit(sdl2_test *app, sdl2_test_entity *b, sdl2_test_screen *s)
 {
     s->enemy_next = (s->enemy_next < s->max_enemies) ? s->enemy_next : s->max_enemies;
-    for(int i = 0; i < s->enemy_next; i++)
+    for (int i = 0; i < s->enemy_next; i++)
     {
         sdl2_test_entity *e = &s->enemies[i];
-        if( b->type != e->type && sdl2_test_collision_entity_vs_entity(b->x, b->y, b->w, b->h, e->x, e->y, e->w, e->h))
+        if ( b->type != e->type && sdl2_test_collision_entity_vs_entity(b->x, b->y, b->w, b->h, e->x, e->y, e->w, e->h))
         {
             s->enemies[i].health = 0;
             b->health = 0;
             return 1;
         }
-        if(app->p != NULL)
+        if (app->p != NULL)
         {
-            if( b->type != app->p->type && sdl2_test_collision_entity_vs_entity(b->x, b->y, b->w, b->h, app->p->x, app->p->y, app->p->w, app->p->h))
+            if ( b->type != app->p->type && sdl2_test_collision_entity_vs_entity(b->x, b->y, b->w, b->h, app->p->x, app->p->y, app->p->w, app->p->h))
             {
                 b->health = 0;
                 app->p->health = 0;

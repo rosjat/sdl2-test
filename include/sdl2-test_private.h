@@ -20,7 +20,7 @@
 #define SDL2_TEST_MIN(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a < _b ? _a : _b; })
 #define SDL2_TEST_MAX(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a > _b ? _a : _b; })
 
-#define SDL2_TEST_DRAW_BLOCK_TRANSPARENT(app, b) sdl2_test_block_draw((app), (b),\
+#define SDL2_TEST_DRAW_BLOCK_TRANSPARENT(app, b) sdl2_test_draw_block((app), (b),\
                                                                       sdl2_test_color_pallet[C_GREEN].r, \
                                                                       sdl2_test_color_pallet[C_GREEN].g, \
                                                                       sdl2_test_color_pallet[C_GREEN].b);
@@ -230,21 +230,21 @@ void sdl2_test_key_down(sdl2_test* app, SDL_KeyboardEvent *event);
 SDL_Texture *sdl2_test_load_texture(sdl2_test* app, char* fname, int32_t r, int32_t g, int32_t b);
 void sdl2_test_blit_rect(sdl2_test* app, SDL_Texture* texture, SDL_Rect *src, int32_t x, int32_t y);
 void sdl2_test_blit(sdl2_test* app, SDL_Texture* texture, int32_t x, int32_t y);
-void sdl2_test_background_draw(sdl2_test *app, sdl2_test_screen *s);
-void sdl2_test_player_draw(sdl2_test *app);
-void sdl2_test_blocks_draw(sdl2_test *app);
-void sdl2_test_block_draw(sdl2_test* app, sdl2_test_block *blk, int32_t r, int32_t g, int32_t b);
-void sdl2_test_bullets_draw(sdl2_test *app, sdl2_test_weapon *w);
-void sdl2_test_text_render(sdl2_test* app, char* msg);
-void sdl2_test_screen_scroll_draw(sdl2_test *app);
+void sdl2_test_draw_background(sdl2_test *app, sdl2_test_screen *s);
+void sdl2_test_draw_player(sdl2_test *app);
+void sdl2_test_draw_blocks(sdl2_test *app);
+void sdl2_test_draw_block(sdl2_test* app, sdl2_test_block *blk, int32_t r, int32_t g, int32_t b);
+void sdl2_test_draw_bullets(sdl2_test *app, sdl2_test_weapon *w);
+void sdl2_test_draw_text(sdl2_test* app, char* msg);
+void sdl2_test_draw_screen_scroll(sdl2_test *app);
 
 /* logic */
 void sdl2_test_entity_to_screen_move(sdl2_test* app,sdl2_test_entity *e,  sdl2_test_block *b, float dx, float dy);
-void sdl2_test_frame_rate(sdl2_test *app);
 void sdl2_test_entity_coordinate_set(sdl2_test_entity *e);
-void sdl2_test_bullet_fire(sdl2_test *app, sdl2_test_entity *e);
 void sdl2_test_bullets_process(sdl2_test *app,  sdl2_test_weapon *w);
 int32_t sdl2_test_bullet_hit(sdl2_test *app, sdl2_test_entity *b, sdl2_test_screen *s);
+void sdl2_test_bullet_fire(sdl2_test *app, sdl2_test_entity *e);
+void sdl2_test_frame_rate(sdl2_test *app);
 
 /* utils */
 void sdl2_test_value_swap(float* v1, float* v2);

@@ -4,7 +4,7 @@ int main(){
     srand(time(0));   
     sdl2_test* app;
     app = sdl2_test_create();
-    if(!app)
+    if (!app)
     {
         sdl2_test_log_message_print("something went wrong with app!");
         exit(-1);

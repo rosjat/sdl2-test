@@ -1,6 +1,7 @@
 #include "sdl2-test_private.h"
 
-void sdl2_test_log_message_print(const char *msg, ...)
+void
+sdl2_test_log_message_print(const char *msg, ...)
 {
     char dest[1024];
     va_list args;
@@ -10,10 +11,11 @@ void sdl2_test_log_message_print(const char *msg, ...)
     SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, "%s", (char *)&dest);
 }
 
-sdl2_test_entity *sdl2_test_player_create(sdl2_test_configuration *config)
+sdl2_test_entity *
+sdl2_test_player_create(sdl2_test_configuration *config)
 {
     sdl2_test_entity *p = malloc(sizeof *p);
-    if(!p)
+    if (!p)
         return 0;
     memset(p, 0, sizeof *p);
     p->type = ET_PLAYER;
@@ -34,10 +36,11 @@ sdl2_test_entity *sdl2_test_player_create(sdl2_test_configuration *config)
     return p;
 }
 
-sdl2_test_weapon *sdl2_test_weapon_create(void)
+sdl2_test_weapon *
+sdl2_test_weapon_create(void)
 {
     sdl2_test_weapon *w = malloc(sizeof *w);
-    if(!w)
+    if (!w)
         return 0;
     memset(w, 0, sizeof *w);
     w->type = WT_GUN;
@@ -45,37 +48,41 @@ sdl2_test_weapon *sdl2_test_weapon_create(void)
     w->bullet_next = 0;
     w->reload = 0;
     w->bullets = malloc(w->max_bullets * (sizeof *((sdl2_test_entity *)w->bullets)));
-    if(!w->bullets)
+    if (!w->bullets)
         w->bullets = NULL;
     memset(w->bullets, 0, w->max_bullets * (sizeof *((sdl2_test_entity *)w->bullets)));
     return w;
 }
 
-sdl2_test_configuration* sdl2_test_configuration_create(void)
+sdl2_test_configuration *
+sdl2_test_configuration_create(void)
 {
     sdl2_test_configuration* config = malloc(sizeof *config);
-    if(!config)
+    if (!config)
         return NULL;
     memset(config, 0, sizeof *config );
     return config;
 }
 
-void sdl2_test_configuration_destroy(sdl2_test_configuration* config)
+void
+sdl2_test_configuration_destroy(sdl2_test_configuration* config)
 {
     TTF_CloseFont(config->font);
 }
 
-int32_t sdl2_test_state_get_running(sdl2_test* app)
+int32_t 
+sdl2_test_state_get_running(sdl2_test* app)
 {
     return app->running;
 }
 
-void sdl2_test_event_process(sdl2_test* app)
+void
+sdl2_test_event_process(sdl2_test* app)
 {
     SDL_Event event;
     while(SDL_PollEvent(&event)) 
     {
-        switch(event.type) 
+        switch (event.type) 
         {
             case SDL_QUIT:
             {   
@@ -95,23 +102,26 @@ void sdl2_test_event_process(sdl2_test* app)
     }
 }
 
-void sdl2_test_key_up(sdl2_test* app, SDL_KeyboardEvent *event)
+void
+sdl2_test_key_up(sdl2_test* app, SDL_KeyboardEvent *event)
 {
-    if(event->repeat == 0 && event->keysym.scancode < MAX_KEYBOARD_KEYS)
+    if (event->repeat == 0 && event->keysym.scancode < MAX_KEYBOARD_KEYS)
     {
             app->keyboard[event->keysym.scancode] = 0;
     }
 }
 
-void sdl2_test_key_down(sdl2_test* app, SDL_KeyboardEvent *event)
+void
+sdl2_test_key_down(sdl2_test* app, SDL_KeyboardEvent *event)
 {
-    if(event->repeat == 0 && event->keysym.scancode < MAX_KEYBOARD_KEYS)
+    if (event->repeat == 0 && event->keysym.scancode < MAX_KEYBOARD_KEYS)
     {
             app->keyboard[event->keysym.scancode] = 1;
     }
 }
 
-SDL_Rect* init_rect(int32_t x, int32_t y, int32_t w, int32_t h)
+SDL_Rect *
+init_rect(int32_t x, int32_t y, int32_t w, int32_t h)
 {
     SDL_Rect* rect;
     rect = malloc(sizeof *rect);
@@ -123,12 +133,13 @@ SDL_Rect* init_rect(int32_t x, int32_t y, int32_t w, int32_t h)
     return rect;
 }
 
-void sdl2_test_stage_destroy(sdl2_test_stage* stg)
+void
+sdl2_test_stage_destroy(sdl2_test_stage* stg)
 {
-    for(int32_t x = 0; x < stg->screen_count; x++) 
+    for (int32_t x = 0; x < stg->screen_count; x++) 
     {
 
-        for(int32_t b = 0; b < stg->screens[x].blk_used; b++)
+        for (int32_t b = 0; b < stg->screens[x].blk_used; b++)
         {
             free(stg->screens[x].blocks[b].trect);
             free(stg->screens[x].blocks[b].brect);
@@ -140,7 +151,8 @@ void sdl2_test_stage_destroy(sdl2_test_stage* stg)
     free((stg->screens));
 }
 
-int32_t sdl2_test_stage_count(sdl2_test_stage* stg)
+int32_t
+sdl2_test_stage_count(sdl2_test_stage* stg)
 {
     int32_t s1 = sizeof(stg);
     int32_t s2 = sizeof(sdl2_test_stage*);
@@ -148,13 +160,14 @@ int32_t sdl2_test_stage_count(sdl2_test_stage* stg)
     return c;
 }
 
-sdl2_test *sdl2_test_create(void)
+sdl2_test *
+sdl2_test_create(void)
 {
     sdl2_test_configuration* config;   
     sdl2_test_stage *stages;
     sdl2_test * app;
     app = malloc(sizeof *app);
-    if(!app)
+    if (!app)
     {
         sdl2_test_log_message_print("Unable to create sdl2_test!");
         exit(-1);
@@ -172,13 +185,13 @@ sdl2_test *sdl2_test_create(void)
     struct lua_State* L = sdl2_test_lua_state_init();
 
     config = SDL2_TEST_DEFAULT_CONFIGURATION_LOAD(L);
-    if(!config)
+    if (!config)
     {
         sdl2_test_log_message_print("couldn't create config!");
         app->running = 0;
     }
     stages = SDL2_TEST_DEFAULT_STAGE_LOAD(L);
-    if(!stages)
+    if (!stages)
     {
         sdl2_test_log_message_print("couldn't create stages!");
         app->running = 0;
@@ -189,7 +202,7 @@ sdl2_test *sdl2_test_create(void)
     }
     TTF_Init();
     SDL_DisplayMode dm;
-    if(SDL_GetDesktopDisplayMode(0,&dm) != 0)
+    if (SDL_GetDesktopDisplayMode(0,&dm) != 0)
     {
         sdl2_test_log_message_print("Unable to get screen size: %s", SDL_GetError());
         app->running = 0;
@@ -198,7 +211,7 @@ sdl2_test *sdl2_test_create(void)
                                           dm.w - config->win_w -10,
                                           SDL_WINDOWPOS_CENTERED,
                                           config->win_w, config->win_h, 0);
-    if(!window) {
+    if (!window) {
         sdl2_test_log_message_print("Unable to create Window: %s", SDL_GetError());
         app->running = 0;
     }
@@ -206,13 +219,13 @@ sdl2_test *sdl2_test_create(void)
     Uint32 render_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, render_flags);
 
-    if(!renderer) {
+    if (!renderer) {
         sdl2_test_log_message_print("Unable to create Renderer: %s", SDL_GetError());
         app->running = 0;
     }
     /* Initialze End */
 
-    if(app->running)
+    if (app->running)
     {
         app->camera = (SDL_Point){config->win_w / 2, config->win_h / 2};
         app->window = window;
@@ -231,16 +244,17 @@ sdl2_test *sdl2_test_create(void)
     return app;
 }
 
-void sdl2_test_player_process(sdl2_test *app)
+void
+sdl2_test_player_process(sdl2_test *app)
 {
-    if(app->p != NULL)
+    if (app->p != NULL)
     {
         app->p->dx = 0;
-        if(app->p->weapons[app->p->selected_weapon].reload  > 0)
+        if (app->p->weapons[app->p->selected_weapon].reload  > 0)
             app->p->weapons[app->p->selected_weapon].reload--;
         if (app->keyboard[SDL_SCANCODE_UP] && (app->p->grounded || app->p->climbing))
         {
-            if(app->p->climbing && app->p->grounded)
+            if (app->p->climbing && app->p->grounded)
             {
                 app->p->dy -= app->config->ss;
                 app->p->dir = SD_UP;
@@ -254,7 +268,7 @@ void sdl2_test_player_process(sdl2_test *app)
         if (app->keyboard[SDL_SCANCODE_DOWN] )
         {
             app->p->dy += app->config->ss;
-            if(app->p->climbing)
+            if (app->p->climbing)
                 app->p->dir = SD_UP;
             else
                 app->p->dir = SD_DOWN;
@@ -272,11 +286,11 @@ void sdl2_test_player_process(sdl2_test *app)
             app->p->dir = SD_RIGHT;
             sdl2_test_entity_coordinate_set(app->p);
         }
-        if(app->keyboard[SDL_SCANCODE_SPACE] && app->p->weapons[app->p->selected_weapon].reload == 0)
+        if (app->keyboard[SDL_SCANCODE_SPACE] && app->p->weapons[app->p->selected_weapon].reload == 0)
         {
             sdl2_test_bullet_fire(app, app->p);
         }
-        if(app->keyboard[SDL_SCANCODE_B])
+        if (app->keyboard[SDL_SCANCODE_B])
         {
             app->d_info.bg_show =  0;
         }
@@ -284,7 +298,7 @@ void sdl2_test_player_process(sdl2_test *app)
         {
             app->d_info.bg_show =  1;
         }
-        if(app->keyboard[SDL_SCANCODE_P])
+        if (app->keyboard[SDL_SCANCODE_P])
         {
             app->p->x = app->config->win_w / 2;
             app->p->y = app->config->win_h / 2;
@@ -295,9 +309,10 @@ void sdl2_test_player_process(sdl2_test *app)
     }
 }
 
-void sdl2_test_update(sdl2_test* app)
+void
+sdl2_test_update(sdl2_test* app)
 {
-    if(app->config->stg_reload)
+    if (app->config->stg_reload)
     {
         app->config->stg_reload = 0;
         // tODO: figure out how to proper realod stage now ...
@@ -313,35 +328,36 @@ void sdl2_test_update(sdl2_test* app)
     SDL_SetRenderDrawColor(app->renderer, 10,23,36,255);
     SDL_RenderClear(app->renderer);
     
-    if(!app->scrolling)
+    if (!app->scrolling)
     {
-        if(app->d_info.bg_show)
-            sdl2_test_background_draw(app, &foo->screens[foo->screen_active]);
+        if (app->d_info.bg_show)
+            sdl2_test_draw_background(app, &foo->screens[foo->screen_active]);
         
-        sdl2_test_blocks_draw(app);
-        sdl2_test_player_draw(app);
-        sdl2_test_bullets_draw(app, &app->p->weapons[app->p->selected_weapon]);
+        sdl2_test_draw_blocks(app);
+        sdl2_test_draw_player(app);
+        sdl2_test_draw_bullets(app, &app->p->weapons[app->p->selected_weapon]);
     }
     else
     {
         //TODO: scroll background and player to the next screen
-        sdl2_test_screen_scroll_draw(app);
+        sdl2_test_draw_screen_scroll(app);
         
     }
   
-    if(app->d_info.dbg_show)
-        sdl2_test_text_render(app, msg); 
+    if (app->d_info.dbg_show)
+        sdl2_test_draw_text(app, msg); 
    
     SDL_RenderPresent(app->renderer);
     free(msg);
     sdl2_test_frame_rate(app);
 }
 
-void sdl2_test_destroy(sdl2_test* app)
+void
+sdl2_test_destroy(sdl2_test* app)
 {   
     SDL_DestroyTexture(app->psprite);
     SDL_DestroyTexture(app->bg);
-    if(TTF_WasInit())
+    if (TTF_WasInit())
         TTF_Quit();
     SDL_DestroyRenderer(app->renderer);
     SDL_DestroyWindow(app->window);
@@ -351,11 +367,12 @@ void sdl2_test_destroy(sdl2_test* app)
     free(app);
 }
 
-int32_t sdl2_test_set_bg_colorkey(sdl2_test* app, int32_t r, int32_t g, int32_t b)
+int32_t
+sdl2_test_set_bg_colorkey(sdl2_test* app, int32_t r, int32_t g, int32_t b)
 {
     SDL_Texture* bg;
     SDL_Surface* surface = IMG_Load(app->config->bg_img);
-    if(!surface) {
+    if (!surface) {
         sdl2_test_log_message_print("Unable to create Surface: %s", SDL_GetError());
         return 0;
     }
@@ -363,7 +380,7 @@ int32_t sdl2_test_set_bg_colorkey(sdl2_test* app, int32_t r, int32_t g, int32_t 
     SDL_SetColorKey(surface, SDL_TRUE, colorkey);
     bg = SDL_CreateTextureFromSurface(app->renderer, surface);
     SDL_FreeSurface(surface);
-    if(!bg) {
+    if (!bg) {
         sdl2_test_log_message_print("Unable to create Texture: %s", SDL_GetError());
         return 0;
     }
@@ -372,7 +389,8 @@ int32_t sdl2_test_set_bg_colorkey(sdl2_test* app, int32_t r, int32_t g, int32_t 
     return 1;
 }
 
-void sdl2_test_text_render(sdl2_test* app, char* msg)
+void
+sdl2_test_draw_text(sdl2_test* app, char* msg)
 {
     //TODO: make this more performant ...
     SDL_Rect Message_rect;
@@ -396,20 +414,22 @@ void sdl2_test_text_render(sdl2_test* app, char* msg)
     SDL_DestroyTexture(Message);
 }
 
-void sdl2_test_value_swap(float* v1, float* v2)
+void
+sdl2_test_value_swap(float* v1, float* v2)
 {
     float _t = *v1;
     *v1 = *v2;
     *v2 = _t;
 }
 
-SDL_Texture *sdl2_test_load_texture(sdl2_test* app, char* fname, int32_t r, int32_t g, int32_t b)
+SDL_Texture *
+sdl2_test_load_texture(sdl2_test* app, char* fname, int32_t r, int32_t g, int32_t b)
 {
     SDL_Texture* texture = NULL;
     SDL_Surface* surface = IMG_Load(fname);
 
     sdl2_test_log_message_print("loading %s ...", fname);
-    if(surface) {
+    if (surface) {
         Uint32 colorkey = SDL_MapRGB(surface->format, r, g, b);
         SDL_SetColorKey(surface, SDL_TRUE, colorkey);
         texture = SDL_CreateTextureFromSurface(app->renderer, surface);
@@ -419,9 +439,10 @@ SDL_Texture *sdl2_test_load_texture(sdl2_test* app, char* fname, int32_t r, int3
     return texture;
 }
 
-void sdl2_test_blit(sdl2_test* app, SDL_Texture* texture, int32_t x, int32_t y)
+void
+sdl2_test_blit(sdl2_test* app, SDL_Texture* texture, int32_t x, int32_t y)
 {
-    if(texture != NULL)
+    if (texture != NULL)
     {
         SDL_Rect dest;
         dest.x = x;
@@ -431,9 +452,10 @@ void sdl2_test_blit(sdl2_test* app, SDL_Texture* texture, int32_t x, int32_t y)
     }
 }
 
-void sdl2_test_blit_rect(sdl2_test* app, SDL_Texture* texture, SDL_Rect *src, int32_t x, int32_t y)
+void
+sdl2_test_blit_rect(sdl2_test* app, SDL_Texture* texture, SDL_Rect *src, int32_t x, int32_t y)
 {
-    if(texture != NULL)
+    if (texture != NULL)
     {
         SDL_Rect dest;
         dest.x = x;
@@ -444,7 +466,8 @@ void sdl2_test_blit_rect(sdl2_test* app, SDL_Texture* texture, SDL_Rect *src, in
     }
 }
 
-void sdl2_test_frame_rate(sdl2_test *app)
+void
+sdl2_test_frame_rate(sdl2_test *app)
 {
     long delay, frm_time;
 
@@ -452,7 +475,7 @@ void sdl2_test_frame_rate(sdl2_test *app)
     app->r -= (int)app->r;
     frm_time = SDL_GetTicks() - app->t;
     delay -=frm_time;
-    if(delay < 1)
+    if (delay < 1)
     {
         delay = 1;
     }
@@ -462,14 +485,15 @@ void sdl2_test_frame_rate(sdl2_test *app)
     app->t = SDL_GetTicks();
 }
 
-void sdl2_test_entity_coordinate_set(sdl2_test_entity *e)
+void
+sdl2_test_entity_coordinate_set(sdl2_test_entity *e)
 {
     uint32_t row = 0;
     int32_t totalFrames = 3;    
     int32_t delayPerFrame = 100;
     int32_t frame = (SDL_GetTicks() / delayPerFrame) % totalFrames;
 
-    switch(e->dir)
+    switch (e->dir)
     {
         case SD_UP:
         {
@@ -494,11 +518,12 @@ void sdl2_test_entity_coordinate_set(sdl2_test_entity *e)
     e->tx = frame * 32;
 }
 
-void sdl2_test_bullet_fire(sdl2_test *app, sdl2_test_entity *e)
+void
+sdl2_test_bullet_fire(sdl2_test *app, sdl2_test_entity *e)
 {
     sdl2_test_weapon *w = &e->weapons[e->selected_weapon];
     sdl2_test_entity *bullet = (((sdl2_test_entity *)w->bullets) + w->bullet_next);
-    switch(e->type)
+    switch (e->type)
     {
         case ET_PLAYER:
         {
@@ -514,7 +539,7 @@ void sdl2_test_bullet_fire(sdl2_test *app, sdl2_test_entity *e)
     bullet->dir = e->dir;
     bullet->x = e->x;
     bullet->y = e->y;
-    switch(bullet->dir)
+    switch (bullet->dir)
     {
         case SD_LEFT:
         {
@@ -538,7 +563,8 @@ void sdl2_test_bullet_fire(sdl2_test *app, sdl2_test_entity *e)
     w->bullet_next++;
 }
 
-void sdl2_test_bullets_process(sdl2_test *app,  sdl2_test_weapon *w)
+void
+sdl2_test_bullets_process(sdl2_test *app,  sdl2_test_weapon *w)
 {
     sdl2_test_weapon *_w = w;
     sdl2_test *_app = app;
@@ -547,11 +573,11 @@ void sdl2_test_bullets_process(sdl2_test *app,  sdl2_test_weapon *w)
     stg_c = _app->stage_counter;
     sc = _app->stages[stg_c].screen_active;
     _w->bullet_next = (_w->bullet_next < _w->max_bullets) ? _w->bullet_next : _w->max_bullets;
-    for(uint32_t i = 0; i < _w->bullet_next; i++)
+    for (uint32_t i = 0; i < _w->bullet_next; i++)
     {
         _bullets[i].x += _bullets[i].dx;
         _bullets[i].y += _bullets[i].dy;
-        if(sdl2_test_bullet_hit(app, &_bullets[i], &app->stages[stg_c].screens[sc]) ||
+        if (sdl2_test_bullet_hit(app, &_bullets[i], &app->stages[stg_c].screens[sc]) ||
             _bullets[i].x < -_bullets[i].w ||
             _bullets[i].y < -_bullets[i].h ||
             _bullets[i].x > _app->config->win_w ||
@@ -563,29 +589,30 @@ void sdl2_test_bullets_process(sdl2_test *app,  sdl2_test_weapon *w)
 
 }
 
-sdl2_test_array *sdl2_test_array_create(sdl2_test_array_type t, uint32_t len)
+sdl2_test_array *
+sdl2_test_array_create(sdl2_test_array_type t, uint32_t len)
 {
     sdl2_test_array *a = NULL; 
     a = malloc( sizeof *a);
-    if(!a)
+    if (!a)
         return NULL;
     memset(a, 0, sizeof *a);
     a->type = t;
     a->len = len;
     a->current = 0;
-    switch(t)
+    switch (t)
     {
         case AT_ENTITY:
         {
             a->entities = malloc((sizeof a->entities) * len);
-            if(!a->entities)
+            if (!a->entities)
                 return NULL;
             memset(a->entities, 0, (sizeof a->entities) * len);
         } break;
         case AT_WEAPON:
         {
             a->weapons = malloc((sizeof a->weapons) * len);
-            if(!a->weapons)
+            if (!a->weapons)
                 return NULL;
             memset(a->weapons, 0, (sizeof a->weapons) * len);
         } break;
