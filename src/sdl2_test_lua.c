@@ -149,8 +149,7 @@ sdl2_test_lua_process(struct sdl2_test* app, struct sdl2_test_block *b)
     struct sdl2_test_action *m = &a->manipulators[i];
     if(m->update(m, b))
     {
-      a->current--;
-      sdl2_test_lua_process_start(app, b);
+      a->manipulators[i] = a->manipulators[--a->current];
     }
   }
 }
