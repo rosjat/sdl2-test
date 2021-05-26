@@ -58,6 +58,15 @@ also nice to create a more usefull sprite is https://sanderfrenken.github.io/Uni
 
 ---
 
+### Update 2021/05/25
+
+- refactoring again
+  - moved aways from typedefing everything, seems a more explicit way of showing what is what
+  - added a first try of an generic array for structs like entities or blocks (not complete!)
+  - adding some code for automating things with lua
+    - still need some work but a simple coroutine from lua is working 
+  - removed unused code, there was quite a lot in lua code, but i am sure there is more to come 
+
 ### Update 2021/05/18
  
  - adding shooting to the player
