@@ -37,6 +37,11 @@ enum sdl2_test_screen_direction_flag {
     SD_COUNT
 };
 
+enum sdl2_test_block_property_flag {
+    BP_SOLID = 1 << 0,
+    BP_TEMP_SOLID = 1 << 1,
+    BP_COUNT
+};
 enum sdl2_test_entity_type {
     ET_PLAYER,
     ET_BLOCK,
@@ -100,7 +105,7 @@ static const struct sdl2_test_color sdl2_test_color_pallet[] = {
     { 0, 0, 0, 255 },
     { 255, 0, 0, 255 },
     { 0, 255, 0, 255 },
-    { 0, 0, 255, 1 },
+    { 0, 0, 255, 0 },
     { 10, 24, 36, 255 }
 };
 
@@ -108,18 +113,27 @@ struct sdl2_test_block {
     int32_t id;
     int32_t enter;
     int32_t solid;
-    uint32_t animated;
+    int32_t mid;
     struct sdl2_test_color color;
     SDL_Rect* trect;
     SDL_Rect* brect;
 };
 
-struct sdl2_test_manipulator {
-    uint32_t finished;
-    uint32_t start;
-    uint32_t end;
-    int32_t (* update) (struct sdl2_test *, struct sdl2_test_block *);
+union sdl2_test_action_func_arg
+{
+    struct sdl2_test_entity e;
+    struct sdl2_test_block b;
 };
+
+struct sdl2_test_action {
+    uint32_t init;
+    uint32_t finished;
+    int32_t start;
+    int32_t end;
+    int32_t value;
+    int32_t (* update) (struct sdl2_test_action *, union sdl2_test_action_func_arg *);
+};
+
 
 struct sdl2_test_screen {
     int32_t id;
@@ -239,7 +253,8 @@ void sdl2_test_lua_process(struct sdl2_test *app, struct sdl2_test_block *b);
 int32_t sdl2_test_bullet_hit(struct sdl2_test *app, struct sdl2_test_entity *b, struct sdl2_test_screen *s);
 void sdl2_test_bullet_fire(struct sdl2_test *app, struct sdl2_test_entity *e);
 void sdl2_test_frame_rate(struct sdl2_test *app);
-
+int32_t sdl2_test_action_block_alpha_set(struct sdl2_test_action *m, union sdl2_test_action_func_arg *arg);
+int32_t sdl2_test_action_sleep(struct sdl2_test_action *m, union sdl2_test_action_func_arg *arg);
 /* utils */
 void sdl2_test_value_swap(float* v1, float* v2);
 int32_t sdl2_test_set_bg_colorkey(struct sdl2_test* app, int32_t r, int32_t g, int32_t b, int32_t a);

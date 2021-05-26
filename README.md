@@ -66,7 +66,9 @@ also nice to create a more usefull sprite is https://sanderfrenken.github.io/Uni
   - adding some code for automating things with lua
     - still need some work but a simple coroutine from lua is working 
   - removed unused code, there was quite a lot in lua code, but i am sure there is more to come 
-
+- adding a first try of lua automation to the code
+  - if a tile in the lua config script gets a 2 instead of 1 or 2 it will now fade in and out and become
+    solid when its visible more then 50% 
 ### Update 2021/05/18
  
  - adding shooting to the player

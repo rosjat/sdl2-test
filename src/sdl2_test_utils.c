@@ -618,3 +618,53 @@ sdl2_test_bullets_process(struct sdl2_test *app, struct sdl2_test_weapon *w)
     }
 
 }
+
+int32_t
+sdl2_test_action_block_alpha_set(struct sdl2_test_action *m, union sdl2_test_action_func_arg *arg)
+{
+    int32_t t = m->value > 0 ? 0 : 1;
+    struct sdl2_test_block *b = (struct sdl2_test_block *)arg;
+    switch(t)
+    {
+        case 0:
+        {
+            if(b->color.a <= m->end)
+            {
+                b->color.a += m->value;
+                if(b->color.a > 128)
+                    b->solid = BP_SOLID | BP_TEMP_SOLID;
+            }
+            if(b->color.a >= m->end)
+            {
+                m->finished = 1;
+            }
+        } break;
+        case 1:
+        {
+            if(b->color.a >= m->end)
+            {
+                b->color.a += m->value;
+                if(b->color.a < 128)
+                    b->solid =  BP_TEMP_SOLID;
+            }
+            if(b->color.a <= m->end)
+            {
+                m->finished = 1;
+            }
+
+        } break;
+    }
+    return m->finished;
+}
+/*
+ * very basic "sleep" function counting down a value in every update cycle 
+ * this should be revisited with something more sophisticate i guess ... 
+ */
+int32_t
+sdl2_test_action_sleep(struct sdl2_test_action *m, union sdl2_test_action_func_arg *arg)
+{
+    m->value--;
+    if(m->value == 0)
+        m->finished = 1;
+    return m->finished;
+}

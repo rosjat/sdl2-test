@@ -95,11 +95,10 @@ sdl2_test_collision_test(struct sdl2_test_stage** _stg, struct sdl2_test** _app)
     for (int32_t b = 0 ; b < blk_used; b++) 
     {
         struct sdl2_test_block *blk = &stg->screens[app->screen_counter].blocks->blocks[b];
-        if(blk->solid == 2)
+        //TODO: split process up in 2 function, 1 start the processing and 2 do the processing 
+        if(blk->solid & BP_TEMP_SOLID)
         {
-            //TODO: split process up in 2 function, 1 start the processing and 2 do the processing 
-           
-                //sdl2_test_lua_process(app, blk);
+            sdl2_test_lua_process(app, blk);
         }
         sdl2_test_entity_to_screen_move(app, app->p, blk, app->p->dx, 0);
         sdl2_test_entity_to_screen_move(app, app->p, blk, 0, app->p->dy);
@@ -123,12 +122,12 @@ sdl2_test_entity_to_screen_move(struct sdl2_test* app, struct sdl2_test_entity *
 		mx /= b->brect->w;
 		my = (e->y / b->brect->h);
         hit = 0;
-        if (sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), e->w, e->h, bx, by, bw, bh) && b->solid == 1)
+        if (sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), e->w, e->h, bx, by, bw, bh) && b->solid & BP_SOLID)
         {
             hit = 1; 
         }
         my = (e->y + e->h -1) / b->brect->h;
-        if (sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), e->w, e->h, bx, by, bw, bh) && b->solid == 1)
+        if (sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), e->w, e->h, bx, by, bw, bh) && b->solid & BP_SOLID)
         {
             hit = 1; 
         }
@@ -149,12 +148,12 @@ sdl2_test_entity_to_screen_move(struct sdl2_test* app, struct sdl2_test_entity *
 		my /= b->brect->h;
         hit = 0;
         mx = (e->x / b->brect->w);
-        if (sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), bw,bh,bx,by,bw,bh) && b->solid == 1)
+        if (sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), bw,bh,bx,by,bw,bh) && b->solid & BP_SOLID)
         {
             hit = 1; 
         }
         mx = (e->x + e->w -1) / b->brect->w;
-        if (sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), bw,bh,bx,by,bw,bh) && b->solid == 1)
+        if (sdl2_test_collision_entity_vs_entity((mx * b->brect->w), (my * b->brect->h), bw,bh,bx,by,bw,bh) && b->solid & BP_SOLID)
         {
             hit = 1; 
         }
@@ -177,7 +176,7 @@ sdl2_test_bullet_hit(struct sdl2_test *app, struct sdl2_test_entity *b, struct s
     s->enemy_next = (s->enemy_next < s->max_enemies) ? s->enemy_next : s->max_enemies;
     for (int i = 0; i < s->enemy_next; i++)
     {
-        struct sdl2_test_entity *e = &s->enemies[i];
+        struct sdl2_test_entity *e = &s->enemies->entities[i];
         if ( b->type != e->type && sdl2_test_collision_entity_vs_entity(b->x, b->y, b->w, b->h, e->x, e->y, e->w, e->h))
         {
             s->enemies->entities[i].health = 0;

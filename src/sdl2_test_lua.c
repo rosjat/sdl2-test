@@ -125,19 +125,32 @@ sdl2_test_lua_automation_start(struct sdl2_test* app)
 }
 
 void
+sdl2_test_lua_process_start(struct sdl2_test *app, struct sdl2_test_block *b)
+{
+  lua_getglobal(app->L,"IssueNextTask");
+  if(lua_isfunction(app->L, -1))
+  {
+    lua_pushlightuserdata(app->L, app);
+    lua_pushlightuserdata(app->L, b);
+    if (sdl2_test_lua_check_script(app->L, lua_pcall(app->L, 2, 1, 0), __LINE__))
+    {
+
+    }
+  }
+}
+void
 sdl2_test_lua_process(struct sdl2_test* app, struct sdl2_test_block *b)
 {
-  if(!b->animated)
+  struct sdl2_test_array *a = app->stages[app->stage_counter].screens[app->stages[app->stage_counter].screen_active].manipulators;
+  if(a->current == 0)
+    sdl2_test_lua_process_start(app, b);
+  for(uint32_t i = 0; i < a->current; i++)
   {
-    lua_getglobal(app->L,"IssueNextTask");
-    if(lua_isfunction(app->L, -1))
+    struct sdl2_test_action *m = &a->manipulators[i];
+    if(m->update(m, b))
     {
-      lua_pushlightuserdata(app->L, app);
-      lua_pushlightuserdata(app->L, b);
-      if (sdl2_test_lua_check_script(app->L, lua_pcall(app->L, 2, 1, 0), __LINE__))
-      {
-        b->animated = 1;
-      }
+      a->current--;
+      sdl2_test_lua_process_start(app, b);
     }
   }
 }
@@ -255,7 +268,7 @@ sdl2_test_lua_block_init(lua_State* L)
           b->id = _id;
           b->enter = _enter;
           b->solid = _solid;
-          b->animated = 0;
+          b->mid = -1;
           switch (_solid)
           {
             case 0:
@@ -271,7 +284,6 @@ sdl2_test_lua_block_init(lua_State* L)
             } break;
             case 2:
             {
-              //TODO: add something to manipulators 
               b->color = sdl2_test_color_pallet[C_BLUE];
             } break;
           }
@@ -382,11 +394,11 @@ sdl2_test_lua_alpha_set(lua_State* L)
 {
   if (lua_gettop(L) == 5)
   {
-    int32_t dir = (int32_t) lua_tointeger(L, -1);
-    lua_pop(L,1);
     int32_t a = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    int32_t aimed_alpha = (int32_t) lua_tointeger(L, -1);
+    int32_t e = (int32_t) lua_tointeger(L, -1);
+    lua_pop(L,1);
+    int32_t s = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
     struct sdl2_test *app;
     struct sdl2_test_block *b;
@@ -403,27 +415,15 @@ sdl2_test_lua_alpha_set(lua_State* L)
     }
     if(app && b)
     {
-      switch(dir)
-      {
-        case 0:
-        {
-          if(b->color.a > 0 && b->color.a < 255)
-          {
-            b->color.a -= a;
-          }
-          if(b->color.a < aimed_alpha)
-            b->animated =0;
-        } break;
-        case 1:
-        {
-          if(b->color.a > 0 && b->color.a < 255)
-          {
-            b->color.a += a;
-          }
-          if(b->color.a > aimed_alpha)
-            b->animated =0;
-        } break;
-      }
+      struct sdl2_test_array *array = app->stages[app->stage_counter].screens[app->stages[app->stage_counter].screen_active].manipulators;
+      struct sdl2_test_action *m = &array->manipulators[array->current];
+      m->finished = 0;
+      m->start = s;
+      m->end = e;
+      m->value = a;
+      m->init = 1;
+      m->update = sdl2_test_action_block_alpha_set;
+      array->current++;
     }
   }
   return 0;
@@ -478,6 +478,36 @@ sdl2_test_lua_configuration_font_init(lua_State* L)
   return 0;
 }
 
+static int32_t
+sdl2_test_lua_sleep(lua_State *L)
+{
+  if (lua_gettop(L) == 2)
+  {
+    struct sdl2_test *app;
+    
+    int32_t t = (int32_t) lua_tointeger(L, -1);
+    lua_pop(L,1);
+    
+    if (lua_isuserdata(L, -1))
+    {
+        app = (struct sdl2_test *)lua_touserdata(L, -1);
+        lua_pop(L, 1);
+    }
+    if(app)
+    {
+      struct sdl2_test_array *array = app->stages[app->stage_counter].screens[app->stages[app->stage_counter].screen_active].manipulators;
+      struct sdl2_test_action *m = &array->manipulators[array->current];
+      m->finished = 0;
+      m->start = 0;
+      m->end = 0;
+      m->value = t;
+      m->init = 1;
+      m->update = sdl2_test_action_sleep;
+      array->current++;
+    }
+  }
+  return 0;
+}
 /* setter and getter functions */
 
 static int32_t

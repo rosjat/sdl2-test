@@ -56,7 +56,7 @@ sdl2_test_draw_blocks(struct sdl2_test *app)
         }
         else
         { 
-            if(b->solid == 1)
+            if((b->solid & BP_SOLID) && !(b->solid & BP_TEMP_SOLID))
                 sdl2_test_draw_block(app, b, app->key_color.r, app->key_color.g,
                                     app->key_color.b, app->key_color.a);
             else

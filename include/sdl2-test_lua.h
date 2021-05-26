@@ -56,12 +56,15 @@ static int32_t sdl2_test_lua_function_string_register(lua_State *L);
 
 static int32_t sdl2_test_lua_alpha_set(lua_State *L);
 
+static int32_t sdl2_test_lua_sleep(lua_State *L);
+
 void sdl2_test_lua_automation_start(struct sdl2_test *config);
 
 static int32_t sdl2_test_lua_entity_automation(lua_State *L);
 static int32_t sdl2_test_lua_gc_configuration(lua_State *L);
 static int32_t sdl2_test_lua_gc_stage(lua_State *L);
 
+void sdl2_test_lua_process_start(struct sdl2_test *app, struct sdl2_test_block *b);
 static const luaL_Reg sdl2_test_lua_configuration_meta_methods[] = {
     {"__gc", sdl2_test_lua_gc_configuration},
     {0,0}
@@ -78,6 +81,7 @@ static const luaL_Reg sdl2_test_lua_methods[] = {
     {"ImportFunctions", sdl2_test_lua_function_string_register},
     {"SetAlpha", sdl2_test_lua_alpha_set},
     {"GetBlock", sdl2_test_lua_get_block_by_id},
+    {"Sleep", sdl2_test_lua_sleep},
     {0,0}
 };
 

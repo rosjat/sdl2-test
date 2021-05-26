@@ -21,13 +21,13 @@ struct sdl2_test_array {
     union {
         struct sdl2_test_weapon *weapons;
         struct sdl2_test_entity *entities;
-        struct sdl2_test_manipulator *manipulators;
+        struct sdl2_test_action *manipulators;
         struct sdl2_test_block *blocks;
     };
     union {
          struct sdl2_test_weapon (* weapon) (struct sdl2_test_array *, enum sdl2_test_array_type, uint32_t) ;
          struct sdl2_test_entity (* entity) (struct sdl2_test_array *, enum sdl2_test_array_type, uint32_t) ;
-         struct sdl2_test_manipulator (* manipulator) (struct sdl2_test_array *, enum sdl2_test_array_type, uint32_t) ;
+         struct sdl2_test_action (* manipulator) (struct sdl2_test_array *, enum sdl2_test_array_type, uint32_t) ;
          struct sdl2_test_block (* block) (struct sdl2_test_array *, enum sdl2_test_array_type, uint32_t) ;
     } get_element;
 };
