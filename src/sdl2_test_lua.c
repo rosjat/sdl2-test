@@ -2,7 +2,11 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-#include "sdl2_test_lua.h"
+#include <unistd.h>
+
+#include "sdl2-test_private.h"
+#include "sdl2-test_array.h"
+#include "sdl2-test_lua.h"
 
 void
 sdl2_test_lua_state_close(void *L)
@@ -11,12 +15,12 @@ sdl2_test_lua_state_close(void *L)
 }
 
 int32_t
-sdl2_test_lua_check_script(lua_State* L, int32_t result)
+sdl2_test_lua_check_script(lua_State* L, int32_t result, double l)
 {
   if (result != LUA_OK)
   {
     const char* err = lua_tostring(L, -1);
-    printf("lua error: %s\n", err);
+    printf("line: %f lua error: %s\n", l, err);
     return 0;
   }
   return 1;
@@ -26,7 +30,7 @@ static int32_t
 sdl2_test_lua_gc_stage(lua_State* L)
 {
     if (!lua_isuserdata(L, 1)) return 0; 
-    sdl2_test_stage* s = lua_touserdata(L,1);
+    struct sdl2_test_stage* s = lua_touserdata(L,1);
     sdl2_test_stage_destroy(s);
     return 0;
 }
@@ -35,7 +39,7 @@ static int32_t
 sdl2_test_lua_gc_configuration(lua_State* L)
 {
     if (!lua_isuserdata(L, 1)) return 0; 
-    configuration_wrapper* w = lua_touserdata(L,1);
+    struct configuration_wrapper* w = lua_touserdata(L,1);
     sdl2_test_configuration_destroy(&w->config);
     return 0;
 }
@@ -49,16 +53,16 @@ sdl2_test_lua_state_init(void)
     return L;
 }
 
-sdl2_test_configuration *
+struct sdl2_test_configuration *
 sdl2_test_configuration_load(lua_State* L, char* fname)
 {
-    sdl2_test_configuration* config;
-    configuration_wrapper* wrapper;
-    if (sdl2_test_lua_check_script(L,luaL_dofile(L, fname)))
+    struct sdl2_test_configuration* config;
+    struct configuration_wrapper* wrapper;
+    if (sdl2_test_lua_check_script(L,luaL_dofile(L, fname), __LINE__))
     {
       lua_getglobal(L, "config");
       if (!lua_isuserdata(L, -1)) return NULL;
-      wrapper = (configuration_wrapper*)lua_touserdata(L, -1);
+      wrapper = (struct configuration_wrapper*)lua_touserdata(L, -1);
       config = &wrapper->config;
       lua_settop(L, 0);
       return config;
@@ -66,12 +70,13 @@ sdl2_test_configuration_load(lua_State* L, char* fname)
     return NULL;  
 }
 
-sdl2_test_stage *
-sdl2_test_stage_load(char* fname, lua_State* L) 
+struct sdl2_test_stage *
+sdl2_test_stage_load(char* fname, lua_State* L, struct sdl2_test *app) 
 {  
-    sdl2_test_stage* stages;
-    if (sdl2_test_lua_check_script(L, luaL_dofile(L, fname)))
+    struct sdl2_test_stage* stages;
+    if (sdl2_test_lua_check_script(L, luaL_dofile(L, fname), __LINE__))
     {
+        
         lua_getglobal(L, "stages");
         if (lua_istable(L, -1))
         {
@@ -84,7 +89,7 @@ sdl2_test_stage_load(char* fname, lua_State* L)
                 break;
             }
             if (!lua_isuserdata(L, -1)) break;
-            stages = (sdl2_test_stage *)lua_touserdata(L, -1);
+            stages = (struct sdl2_test_stage *)lua_touserdata(L, -1);
             lua_pop(L, 1);
             lua_settop(L, 0);
             lua_pop(L, 1); 
@@ -97,7 +102,7 @@ sdl2_test_stage_load(char* fname, lua_State* L)
 }
 
 int32_t
-sdl2_test_stage_reload(sdl2_test_stage* stages, char* fname, sdl2_test* app) 
+sdl2_test_stage_reload(struct sdl2_test_stage* stages, char* fname, struct sdl2_test* app) 
 { 
 
     lua_getglobal(app->L, "ReloadStage");
@@ -109,7 +114,7 @@ sdl2_test_stage_reload(sdl2_test_stage* stages, char* fname, sdl2_test* app)
 }
 
 void
-sdl2_test_lua_automation_start(sdl2_test* app)
+sdl2_test_lua_automation_start(struct sdl2_test* app)
 {
   lua_getglobal(app->L, "StartAutomation");
   if (lua_isfunction(app->L, -1))
@@ -117,6 +122,24 @@ sdl2_test_lua_automation_start(sdl2_test* app)
     lua_pcall(app->L,0,0,0);
   }
   lua_pop(app->L, 1);
+}
+
+void
+sdl2_test_lua_process(struct sdl2_test* app, struct sdl2_test_block *b)
+{
+  if(!b->animated)
+  {
+    lua_getglobal(app->L,"IssueNextTask");
+    if(lua_isfunction(app->L, -1))
+    {
+      lua_pushlightuserdata(app->L, app);
+      lua_pushlightuserdata(app->L, b);
+      if (sdl2_test_lua_check_script(app->L, lua_pcall(app->L, 2, 1, 0), __LINE__))
+      {
+        b->animated = 1;
+      }
+    }
+  }
 }
 
 /*
@@ -135,8 +158,8 @@ sdl2_test_lua_automation_start(sdl2_test* app)
 static int32_t
 sdl2_test_lua_configuration_init(lua_State* L)
 {   
-    configuration_wrapper* wrapper  = (configuration_wrapper*)lua_newuserdata(L,sizeof(configuration_wrapper));
-    sdl2_test_configuration* config = sdl2_test_configuration_create();
+    struct configuration_wrapper* wrapper  = ( struct configuration_wrapper*)lua_newuserdata(L,sizeof(struct configuration_wrapper));
+    struct sdl2_test_configuration* config = sdl2_test_configuration_create();
     wrapper->config = *config;
     luaL_getmetatable(L, "ConfigMeta");
     lua_setmetatable(L, -2);
@@ -153,22 +176,15 @@ sdl2_test_lua_stage_init(lua_State* L)
     lua_pop(L,1);
     screen_count = (int32_t)lua_tointeger(L, -1);
     lua_pop(L,1);
-    sdl2_test_stage* stg  = (sdl2_test_stage *)lua_newuserdata(L, sizeof(sdl2_test_stage));
+    struct sdl2_test_stage* stg  = (struct sdl2_test_stage *)lua_newuserdata(L, sizeof(struct sdl2_test_stage));
     stg->screen_count = screen_count;
     stg-> screen_active = screen_active;
-    int32_t t = lua_gettop(L);
-    luaL_getmetatable(L, "StageMeta");
-    lua_setmetatable(L, t);
-    lua_newtable(L);
-    sdl2_test_lua_add(L, sdl2_test_lua_stage_methods); 
-    t = lua_gettop(L);
-    lua_setuservalue(L,t);
-
-    stg->screens = (sdl2_test_screen *)malloc(sizeof(sdl2_test_screen) * stg->screen_count);
+    stg->screens = (struct sdl2_test_screen *)malloc(sizeof(struct sdl2_test_screen) * stg->screen_count);
     if (stg->screens)
     {
-        memset(stg->screens, 0, sizeof(sdl2_test_screen) * stg->screen_count);
+        memset(stg->screens, 0, sizeof(struct sdl2_test_screen) * stg->screen_count);
     }
+    lua_pushlightuserdata(L, stg);
     return 1;
   }
   return -1;
@@ -194,8 +210,8 @@ sdl2_test_lua_screen_init(lua_State* L)
     lua_pop(L,1);
     if (lua_isuserdata(L, -1))
     {
-        sdl2_test_stage * stg  = (sdl2_test_stage *)lua_touserdata(L, 1);
-        sdl2_test_screen *s = &stg->screens[_id];
+        struct sdl2_test_stage * stg  = (struct sdl2_test_stage *)lua_touserdata(L, 1);
+        struct sdl2_test_screen *s = &stg->screens[_id];
         s->id = _id;
         s->x = _x;
         s->y = _y;
@@ -204,26 +220,10 @@ sdl2_test_lua_screen_init(lua_State* L)
         s->exits = _exits;
         s->blk_used = 0;
         s->blk_size = 120;
-        //we asume we get max 10 enemies and then somewhat dynamically behaving 
-        s->objects = malloc(10 * (sizeof *s->objects));
-        if (!s->objects)
-        {
-          free(s->blocks);
-          exit(-1);
-        }
-        memset(s->objects, 0, (10 * sizeof *s->objects));
-        s->enemies = malloc(10 * (sizeof *s->enemies));
-        if (!s->enemies)
-        {
-          free(s->objects);
-          free(s->blocks);
-          exit(-1);
-        }
-        memset(s->enemies, 0, (10 * sizeof *s->enemies));
-        s->blocks = malloc(s->blk_size * (sizeof *s->blocks));
-        if (!s->blocks)
-          exit(-1);
-        memset(s->blocks, 0, s->blk_size * (sizeof *s->blocks));
+        // we have 10 enemies and maybe a few more objects so we make the manipulators size 20
+        s->manipulators = sdl2_test_array_create(AT_MANIPULATOR, 20);
+        s->manipulators = sdl2_test_array_create(AT_ENTITY, 10);
+        s->blocks = sdl2_test_array_create(AT_BLOCK, s->blk_size);
     }
   }
   return 0;
@@ -245,14 +245,17 @@ sdl2_test_lua_block_init(lua_State* L)
     lua_pop(L,1);
     if (lua_isuserdata(L, -1))
     {
-        sdl2_test_stage * stg  = (sdl2_test_stage *)lua_touserdata(L, 1);
-        sdl2_test_screen *s = &stg->screens[_s];  
+        struct sdl2_test_stage * stg  = (struct sdl2_test_stage *)lua_touserdata(L, 1);
+        struct sdl2_test_screen *s = &stg->screens[_s];  
+        struct sdl2_test_array *blks = s->blocks;
         if (_solid)
         {
-          sdl2_test_block *b = &s->blocks[s->blk_used];  
+          struct sdl2_test_block *b =  &blks->blocks[_id];
+          //sdl2_test_array_get_element_at_index(blks, b, AT_BLOCK, _id);
           b->id = _id;
           b->enter = _enter;
           b->solid = _solid;
+          b->animated = 0;
           switch (_solid)
           {
             case 0:
@@ -268,15 +271,16 @@ sdl2_test_lua_block_init(lua_State* L)
             } break;
             case 2:
             {
+              //TODO: add something to manipulators 
               b->color = sdl2_test_color_pallet[C_BLUE];
             } break;
           }
-          s->blk_used++;
-          if (s->blk_size == s->blk_used)
+          blks->current++;
+          if (blks->len == blks->current)
           {
-            s->blk_size *= 2;
-            s->blocks = realloc(s->blocks,s->blk_size * (sizeof *s->blocks));
-            if (!s->blocks)
+            blks->len *= 2;
+            blks->blocks = realloc(blks->blocks, blks->len * (sizeof * blks->blocks));
+            if (!blks->blocks)
               exit(-1);
           }
         }
@@ -307,9 +311,9 @@ sdl2_test_lua_init_rect(lua_State* L)
     lua_pop(L,1);
     if (lua_isuserdata(L, -1))
     {
-      sdl2_test_stage * stg = (sdl2_test_stage *)lua_touserdata(L, 1);
-      sdl2_test_screen *s = &stg->screens[_s];  
-      sdl2_test_block *b = &s->blocks[_b]; 
+      struct sdl2_test_stage * stg = (struct sdl2_test_stage *)lua_touserdata(L, 1);
+      struct sdl2_test_screen *s = &stg->screens[_s];  
+      struct sdl2_test_block *b = &s->blocks->blocks[_b]; 
       switch (rt)
       {
         case 0:
@@ -348,9 +352,9 @@ sdl2_test_lua_mod_rect(lua_State* L)
     lua_pop(L,1);
     if (lua_isuserdata(L, -1))
     {
-      sdl2_test_stage * stg = (sdl2_test_stage *)lua_touserdata(L, 1);
-      sdl2_test_screen *s = &stg->screens[_s];  
-      sdl2_test_block *b = &s->blocks[_b]; 
+      struct sdl2_test_stage * stg = (struct sdl2_test_stage *)lua_touserdata(L, 1);
+      struct sdl2_test_screen *s = &stg->screens[_s];  
+      struct sdl2_test_block *b = &s->blocks[_b]; 
       switch (rt)
       {
         case 0:
@@ -374,14 +378,75 @@ sdl2_test_lua_mod_rect(lua_State* L)
 }
 
 static int32_t
-sdl2_test_lua_pause(lua_State* L)
+sdl2_test_lua_alpha_set(lua_State* L)
+{
+  if (lua_gettop(L) == 5)
+  {
+    int32_t dir = (int32_t) lua_tointeger(L, -1);
+    lua_pop(L,1);
+    int32_t a = (int32_t) lua_tointeger(L, -1);
+    lua_pop(L,1);
+    int32_t aimed_alpha = (int32_t) lua_tointeger(L, -1);
+    lua_pop(L,1);
+    struct sdl2_test *app;
+    struct sdl2_test_block *b;
+
+    if (lua_isuserdata(L, -1))
+    {
+        b = (struct sdl2_test_block *)lua_touserdata(L, -1);
+        lua_pop(L, 1);
+    }
+    if (lua_isuserdata(L, -1))
+    {
+        app = (struct sdl2_test *)lua_touserdata(L, -1);
+        lua_pop(L, 1);
+    }
+    if(app && b)
+    {
+      switch(dir)
+      {
+        case 0:
+        {
+          if(b->color.a > 0 && b->color.a < 255)
+          {
+            b->color.a -= a;
+          }
+          if(b->color.a < aimed_alpha)
+            b->animated =0;
+        } break;
+        case 1:
+        {
+          if(b->color.a > 0 && b->color.a < 255)
+          {
+            b->color.a += a;
+          }
+          if(b->color.a > aimed_alpha)
+            b->animated =0;
+        } break;
+      }
+    }
+  }
+  return 0;
+}
+
+static int32_t
+sdl2_test_lua_get_block_by_id(lua_State *L)
 {
   if (lua_gettop(L) == 3)
   {
-    int32_t _ms;
-    _ms = (int32_t) lua_tointeger(L, -1);
+    uint32_t i , s;
+    i = (int32_t) lua_tointeger(L, -1);
     lua_pop(L,1);
-    usleep(_ms* 1000);
+    s = (int32_t) lua_tointeger(L, -1);
+    lua_pop(L,1);
+    if (lua_isuserdata(L, -1))
+    {
+      struct sdl2_test_stage *stg = (struct sdl2_test_stage *)lua_touserdata(L, -1);
+      lua_pop(L,1);
+      struct sdl2_test_block *b = &stg->screens[s].blocks->blocks[i];
+      lua_pushlightuserdata(L, b);
+      return 1;
+    }
   }
   return 0;
 }
@@ -399,7 +464,7 @@ sdl2_test_lua_configuration_font_init(lua_State* L)
     lua_pop(L,1);
     if (lua_isuserdata(L, -1))
     {
-      configuration_wrapper* wrapper  = (configuration_wrapper*)lua_touserdata(L, -1);
+      struct configuration_wrapper* wrapper  = (struct configuration_wrapper*)lua_touserdata(L, -1);
       TTF_Init();
       TTF_Font* f = TTF_OpenFont(_f, _s);
       if (!f)
@@ -460,35 +525,35 @@ sdl2_test_lua_set_string (lua_State *L, void *v)
 static int32_t 
 sdl2_test_lua_get_stage (lua_State *L, void *v)
 {
-  lua_pushlightuserdata(L, *((sdl2_test_stage**)v) );
+  lua_pushlightuserdata(L, *((struct sdl2_test_stage**)v) );
   return 1;
 }
 
 static int32_t
 sdl2_test_lua_get_screen (lua_State *L, void *v)
 {
-  lua_pushlightuserdata(L, *((sdl2_test_screen**)v) );
+  lua_pushlightuserdata(L, *((struct sdl2_test_screen**)v) );
   return 1;
 }
 
 static int32_t
 sdl2_test_lua_set_screen (lua_State *L, void *v)
 {
-  *((sdl2_test_screen**)v) = lua_touserdata(L, 3);
+  *((struct sdl2_test_screen**)v) = lua_touserdata(L, 3);
   return 0;
 }
 
 static int32_t
 sdl2_test_lua_get_block (lua_State *L, void *v)
 {
-  lua_pushlightuserdata(L, *((sdl2_test_block **)v) );
+  lua_pushlightuserdata(L, *((struct sdl2_test_block **)v) );
   return 1;
 }
 
 static int32_t
 sdl2_test_lua_set_block (lua_State *L, void *v)
 {
-  *((sdl2_test_block **)v) = lua_touserdata(L, 3);
+  *((struct sdl2_test_block **)v) = lua_touserdata(L, 3);
   return 0;
 }
 
@@ -592,18 +657,6 @@ sdl2_test_lua_register(lua_State *L)
                                  sdl2_test_lua_configuration_meta_methods,
                                  sdl2_test_configuration_getters,
                                  sdl2_test_configuration_setters);
-  sdl2_test_lua_metatable_register(L, "StageMeta", 
-                                 sdl2_test_lua_stage_meta_methods,
-                                 sdl2_test_stage_getters,
-                                 sdl2_test_stage_setters);
-  sdl2_test_lua_metatable_register(L, "ScreenMeta", 
-                                 sdl2_test_lua_screen_meta_methods,
-                                 sdl2_test_screen_getters,
-                                 sdl2_test_screen_setters);          
-  sdl2_test_lua_metatable_register(L, "BlockMeta", 
-                                 sdl2_test_lua_block_meta_methods,
-                                 sdl2_test_block_getters,
-                                 sdl2_test_block_setters);
   return 1;
 }
 
@@ -674,9 +727,9 @@ function read_entire_file_text(path) \
     f:close() \
     return text, nil \
 end";
-  if (sdl2_test_lua_check_script(L, luaL_dostring(L, str)))
+  if (sdl2_test_lua_check_script(L, luaL_dostring(L, str), __LINE__))
   {
-
+    /* do noting since we just evaluated our string without a problem and good ... */
   }
   return 0;
 }

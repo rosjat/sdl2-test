@@ -1,3 +1,5 @@
+
+#include "sdl2-test_array.h"
 #include "sdl2-test_private.h"
 
 int32_t
@@ -7,7 +9,7 @@ sdl2_test_collision_entity_vs_entity(int32_t x1, int32_t y1, int32_t w1, int32_t
 }
 
 void
-sdl2_test_collision_screen_boundaries_set(sdl2_test *app, sdl2_test_stage *stg)
+sdl2_test_collision_screen_boundaries_set(struct sdl2_test *app, struct sdl2_test_stage *stg)
 {
     if (app->p != NULL)
     {
@@ -61,7 +63,7 @@ sdl2_test_collision_screen_boundaries_set(sdl2_test *app, sdl2_test_stage *stg)
 }
 
 char *
-sdl2_test_collision_test(sdl2_test_stage** _stg, sdl2_test** _app) 
+sdl2_test_collision_test(struct sdl2_test_stage** _stg, struct sdl2_test** _app) 
 {
     int32_t blk_used, blk_size;
     blk_used = blk_size = 0;
@@ -70,8 +72,8 @@ sdl2_test_collision_test(sdl2_test_stage** _stg, sdl2_test** _app)
     if (msg)
         memset(msg,0,sizeof(char) * 256);
     
-    sdl2_test_stage* stg = *_stg;
-    sdl2_test* app = *_app;
+    struct sdl2_test_stage* stg = *_stg;
+    struct sdl2_test* app = *_app;
     
     sdl2_test_collision_screen_boundaries_set(app, stg);
     app->p->dy += app->config->g;
@@ -83,24 +85,31 @@ sdl2_test_collision_test(sdl2_test_stage** _stg, sdl2_test** _app)
               - maybe do the automation from lua 
     */
     stg->screen_active = app->screen_counter;
-    blk_size  = stg->screens[stg->screen_active].blk_size;
+    blk_size  = stg->screens[stg->screen_active].blocks->len;
     //HACK: just here to limit the screens so we dont run in trouble when blocks are not there... 
     //      Only 8 screen so far ....
     if (app->screen_counter < 8)
-        blk_used = stg->screens[stg->screen_active].blk_used;
+        blk_used = stg->screens[stg->screen_active].blocks->current;
     else
         blk_used = 0;
     for (int32_t b = 0 ; b < blk_used; b++) 
     {
-        sdl2_test_entity_to_screen_move(app, app->p, &stg->screens[app->screen_counter].blocks[b], app->p->dx, 0);
-        sdl2_test_entity_to_screen_move(app, app->p, &stg->screens[app->screen_counter].blocks[b], 0, app->p->dy);
+        struct sdl2_test_block *blk = &stg->screens[app->screen_counter].blocks->blocks[b];
+        if(blk->solid == 2)
+        {
+            //TODO: split process up in 2 function, 1 start the processing and 2 do the processing 
+           
+                //sdl2_test_lua_process(app, blk);
+        }
+        sdl2_test_entity_to_screen_move(app, app->p, blk, app->p->dx, 0);
+        sdl2_test_entity_to_screen_move(app, app->p, blk, 0, app->p->dy);
     }
     snprintf(msg, 255,"dy: %.2f dx: %.2f\n", app->p->dy, app->p->dx);
     return msg;
 }
 
 void
-sdl2_test_entity_to_screen_move(sdl2_test* app, sdl2_test_entity *e, sdl2_test_block *b,  float dx, float dy)
+sdl2_test_entity_to_screen_move(struct sdl2_test* app, struct sdl2_test_entity *e, struct sdl2_test_block *b,  float dx, float dy)
 {
 	int32_t mx, my, adj, hit;
     int32_t  bx = b->brect->x;
@@ -163,15 +172,15 @@ sdl2_test_entity_to_screen_move(sdl2_test* app, sdl2_test_entity *e, sdl2_test_b
 }
 
 int32_t
-sdl2_test_bullet_hit(sdl2_test *app, sdl2_test_entity *b, sdl2_test_screen *s)
+sdl2_test_bullet_hit(struct sdl2_test *app, struct sdl2_test_entity *b, struct sdl2_test_screen *s)
 {
     s->enemy_next = (s->enemy_next < s->max_enemies) ? s->enemy_next : s->max_enemies;
     for (int i = 0; i < s->enemy_next; i++)
     {
-        sdl2_test_entity *e = &s->enemies[i];
+        struct sdl2_test_entity *e = &s->enemies[i];
         if ( b->type != e->type && sdl2_test_collision_entity_vs_entity(b->x, b->y, b->w, b->h, e->x, e->y, e->w, e->h))
         {
-            s->enemies[i].health = 0;
+            s->enemies->entities[i].health = 0;
             b->health = 0;
             return 1;
         }
