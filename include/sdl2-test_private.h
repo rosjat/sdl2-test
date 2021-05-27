@@ -18,7 +18,7 @@
    is intended to do.
  */
 #define SDL2_TEST_DEFAULT_CONFIGURATION_LOAD(L) sdl2_test_configuration_load(L, "scripts/sdl2_test.config");
-#define SDL2_TEST_DEFAULT_STAGE_LOAD(L, app) sdl2_test_stage_load("scripts/sdl2_test_stages.config", L, app);
+#define SDL2_TEST_DEFAULT_STAGE_LOAD(L, app) sdl2_test_stage_load("scripts/sdl2_test_stages.lua", L, app);
 
 #define SDL2_TEST_MIN(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a < _b ? _a : _b; })
 #define SDL2_TEST_MAX(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a > _b ? _a : _b; })

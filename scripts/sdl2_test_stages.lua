@@ -18,35 +18,16 @@
    
 ]]--
 sdl2_test_lua.ImportFunctions()
-local dynamics = {}
+
+automation = require('scripts.sdl2_test_automation')
 
 
 -- we need this as a baseline for our lvl script reload
-lvl_base_line = read_entire_file_text('scripts/sdl2_test_lvl.config')
-
-
-function DoAutomation(app, b)
-   while true do
-      sdl2_test_lua.SetAlpha(app, b, 0, 255, 5)
-      coroutine.yield()
-      sdl2_test_lua.Sleep(app, 60)
-      coroutine.yield()
-      sdl2_test_lua.SetAlpha(app, b, 255, 0, -5)
-      coroutine.yield()
-      sdl2_test_lua.Sleep(app, 30)
-      coroutine.yield()
-   end
-end
-
-function IssueNextTask(app, b)
-   if coroutine.status(dynamics[b].behaviour, app, b) ~= "dead" then
-      coroutine.resume(dynamics[b].behaviour, app, b)
-   end
-end
-
+local lvl_config_path = 'scripts/sdl2_test_lvl.config'
+local lvl_base_line = read_entire_file_text(lvl_config_path)
 
 function InitAllStages()
-   local lvl_block_table = load_levels('scripts/sdl2_test_lvl.config')
+   local lvl_block_table = load_levels(lvl_config_path)
    local trect = 0
    local brect = 1
 
@@ -89,7 +70,7 @@ function InitAllStages()
             if(solid == 2) then
                local b = sdl2_test_lua.GetBlock(stage, (k -1), index)
                print(b)
-               dynamics[b] = { behaviour = coroutine.create(DoAutomation)}
+               automation.dynamics[b] = { behaviour = coroutine.create(automation.AlphaAutomation)}
             end
             col = (k2) % 16
             if (col == 0) and k2 > 15 then
@@ -103,40 +84,55 @@ function InitAllStages()
    table.insert(stages,  1 ,stage)
 end
 
--- we call this function from c, since its easier to do this kind of work here 
+--[[
+
+   TODO: this is broken again !!!
+   
+         Since we moved away from only solid and not solid we need to put in some
+         more work in here.
+
+         - how to handle blocks that where there but are gone
+         - how to handle blocks that are gone and hat automation
+         - how to handle blocks that are new with/without automation
+
+]]--    
 function ReloadStage(stg)
-   print("reload enter", stg)
-   local foo  = read_entire_file_text('scripts/sdl2_test_lvl.config')
-   if foo ~= lvl_base_line then
-      print("reload changes", stg)
-      local lvl_table = load_levels('scripts/sdl2_test_lvl.config')
-      local trect = 0
-      local brect = 1
-      local s = stages[stg]
-      for k,v in pairs(lvl_table) do
-         local row = 0
-         local col = 0
-         for k2,v2 in pairs(v) do
-               local bid = k2 -1
-               local solid = v2["solid"]
-               local enter = v2["enter"]
-               sdl2_test_lua.InitBlock(s, (k -1), bid, enter, solid)
-               print(solid, enter)
-               if solid == 1 and enter == 1 then
-                  sdl2_test_lua.SetRect(s, (k -1), bid, trect, 15, 15, 1, 1)
-               else
-                  sdl2_test_lua.SetRect(s, (k -1), bid, trect, 0, 0, 2, 2)
-               end
-               sdl2_test_lua.SetRect(s, (k -1), bid, brect, col * 32 , row * 32, 32, 32)
-               col = (k2) % 16
-               if (col == 0) and k2 > 15 then
-                  row = row + 1
-               end 
+   if false then
+      print("reload enter", stg)
+      local lvls  = read_entire_file_text(lvl_config_path)
+      if lvls ~= lvl_base_line then
+         print("reload changes", stg)
+         local lvl_table = load_levels(lvl_config_path)
+         local trect = 0
+         local brect = 1
+         local s = stages[stg]
+         for k,v in pairs(lvl_table) do
+            local row = 0
+            local col = 0
+            for k2,v2 in pairs(v) do
+                  local bid = k2 -1
+                  local solid = v2["solid"]
+                  local enter = v2["enter"]
+                  sdl2_test_lua.InitBlock(s, (k -1), bid, enter, solid)
+                  print(solid, enter)
+                  if solid == 1 and enter == 1 then
+                     sdl2_test_lua.SetRect(s, (k -1), bid, trect, 15, 15, 1, 1)
+                  else
+                     sdl2_test_lua.SetRect(s, (k -1), bid, trect, 0, 0, 2, 2)
+                  end
+                  sdl2_test_lua.SetRect(s, (k -1), bid, brect, col * 32 , row * 32, 32, 32)
+                  col = (k2) % 16
+                  if (col == 0) and k2 > 15 then
+                     row = row + 1
+                  end 
+            end
          end
+         lvl_base_line = lvls
       end
-      lvl_base_line = foo
+      print("reload exit")
+   else
+      print("reload is disabled for now ...")
    end
-   print("reload exit")
 end
 
 stages = {}

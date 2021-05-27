@@ -15,12 +15,12 @@ sdl2_test_lua_state_close(void *L)
 }
 
 int32_t
-sdl2_test_lua_check_script(lua_State* L, int32_t result, double l)
+sdl2_test_lua_check_script(lua_State* L, int32_t result, char *fn, double l)
 {
   if (result != LUA_OK)
   {
     const char* err = lua_tostring(L, -1);
-    printf("line: %f lua error: %s\n", l, err);
+    printf("%s line: %f lua error: %s\n", fn, l, err);
     return 0;
   }
   return 1;
@@ -58,7 +58,7 @@ sdl2_test_configuration_load(lua_State* L, char* fname)
 {
     struct sdl2_test_configuration* config;
     struct configuration_wrapper* wrapper;
-    if (sdl2_test_lua_check_script(L,luaL_dofile(L, fname), __LINE__))
+    if (sdl2_test_lua_check_script(L,luaL_dofile(L, fname), __FILE__, __LINE__))
     {
       lua_getglobal(L, "config");
       if (!lua_isuserdata(L, -1)) return NULL;
@@ -74,7 +74,7 @@ struct sdl2_test_stage *
 sdl2_test_stage_load(char* fname, lua_State* L, struct sdl2_test *app) 
 {  
     struct sdl2_test_stage* stages;
-    if (sdl2_test_lua_check_script(L, luaL_dofile(L, fname), __LINE__))
+    if (sdl2_test_lua_check_script(L, luaL_dofile(L, fname), __FILE__, __LINE__))
     {
         
         lua_getglobal(L, "stages");
@@ -127,20 +127,27 @@ sdl2_test_lua_automation_start(struct sdl2_test* app)
 void
 sdl2_test_lua_process_start(struct sdl2_test *app, struct sdl2_test_block *b)
 {
-  lua_getglobal(app->L,"IssueNextTask");
-  if(lua_isfunction(app->L, -1))
+  lua_getglobal(app->L,"automation");
+  if(lua_istable(app->L, -1))
   {
-    lua_pushlightuserdata(app->L, app);
-    lua_pushlightuserdata(app->L, b);
-    if (sdl2_test_lua_check_script(app->L, lua_pcall(app->L, 2, 1, 0), __LINE__))
+    lua_pushstring(app->L, "IssueNextTask");
+    lua_gettable(app->L, -2);
+    if(lua_isfunction(app->L, -1))
     {
+      lua_pushlightuserdata(app->L, app);
+      lua_pushlightuserdata(app->L, b);
+      if (sdl2_test_lua_check_script(app->L, lua_pcall(app->L, 2, 1, 0), __FILE__, __LINE__))
+      {
 
+      }
     }
   }
 }
 void
 sdl2_test_lua_process(struct sdl2_test* app, struct sdl2_test_block *b)
 {
+  // TODO: we might need to refactor this since we might wanna start an new automation even 
+  //       before all others are finished 
   struct sdl2_test_array *a = app->stages[app->stage_counter].screens[app->stages[app->stage_counter].screen_active].manipulators;
   if(a->current == 0)
     sdl2_test_lua_process_start(app, b);
@@ -756,7 +763,7 @@ function read_entire_file_text(path) \
     f:close() \
     return text, nil \
 end";
-  if (sdl2_test_lua_check_script(L, luaL_dostring(L, str), __LINE__))
+  if (sdl2_test_lua_check_script(L, luaL_dostring(L, str), __FILE__, __LINE__))
   {
     /* do noting since we just evaluated our string without a problem and good ... */
   }

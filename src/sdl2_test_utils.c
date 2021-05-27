@@ -325,6 +325,15 @@ sdl2_test_player_process(struct sdl2_test *app)
             app->d_info.bg_show =  1;
         }
 
+        if (app->keyboard[SDL_SCANCODE_R])
+        {
+            app->config->stg_reload =  1;
+        }
+        else
+        {
+            app->config->stg_reload =  0;
+        }
+
         if (app->keyboard[SDL_SCANCODE_P])
         {
             app->p->x = app->config->win_w / 2;
