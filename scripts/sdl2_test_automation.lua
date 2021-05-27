@@ -1,11 +1,6 @@
 local automation = {}
 
-
 automation.dynamics = {}
-
-function automation.hi()
-   print("Hi!")
-end
 
 --[[
 

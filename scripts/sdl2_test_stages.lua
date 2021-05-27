@@ -17,13 +17,15 @@
    the screens.
    
 ]]--
+local lvl_config_path = 'scripts/sdl2_test_lvl.config'
+
 sdl2_test_lua.ImportFunctions()
 
+-- we might move this some place else to have it available without requiring the automation  
 automation = require('scripts.sdl2_test_automation')
 
 
 -- we need this as a baseline for our lvl script reload
-local lvl_config_path = 'scripts/sdl2_test_lvl.config'
 local lvl_base_line = read_entire_file_text(lvl_config_path)
 
 function InitAllStages()
@@ -68,9 +70,8 @@ function InitAllStages()
             sdl2_test_lua.InitRect(stage, (k -1), index, trect, 0, 0, 1, 1)
             sdl2_test_lua.InitRect(stage, (k -1), index, brect, col * 32 , row * 32, 32, 32)
             if(solid == 2) then
-               local b = sdl2_test_lua.GetBlock(stage, (k -1), index)
-               print(b)
-               automation.dynamics[b] = { behaviour = coroutine.create(automation.AlphaAutomation)}
+               automation.AddAutomationToBlock(sdl2_test_lua.GetBlock(stage, (k -1), index),
+                                                automation.AlphaAutomation)
             end
             col = (k2) % 16
             if (col == 0) and k2 > 15 then
